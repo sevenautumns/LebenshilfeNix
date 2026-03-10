@@ -12,6 +12,7 @@
     ./postgresql.nix
     ./software.nix
     ./backup.nix
+    ./lebenshilfe-cms.nix
   ];
 
   boot.tmp.cleanOnBoot = true;
@@ -26,7 +27,7 @@
 
   networking.networkmanager.enable = true;
   networking.hostName = "lebenshilfe-uslar";
-  networking.domain = "";
+  networking.domain = "de";
 
   fileSystems."/" = { device = "/dev/vda1"; fsType = "ext4"; };
 

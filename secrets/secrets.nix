@@ -8,4 +8,5 @@ in
   "nextcloud-secret.age".publicKeys = [ lebenshilfe-uslar ] ++ users;
   "nextcloud-backup-pj92-env.age".publicKeys = [ lebenshilfe-uslar ] ++ users;
   "nextcloud-backup-pj92-encryption.age".publicKeys = [ lebenshilfe-uslar ] ++ users;
+  "lebenshilfe-cms-secret.age".publicKeys = [ lebenshilfe-uslar ] ++ users;
 }

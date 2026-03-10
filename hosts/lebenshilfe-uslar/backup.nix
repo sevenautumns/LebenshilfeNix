@@ -1,14 +1,14 @@
 
-{ pkgs, config, flakeRoot, ... }:
+{ self, pkgs, config, ... }:
 {
   age.secrets = {
     nextcloud-backup-pj92-env = {
-      file = flakeRoot + "/secrets/nextcloud-backup-pj92-env.age";
+      file = "${self}/secrets/nextcloud-backup-pj92-env.age";
       mode = "700";
       owner = "nextcloud";
     };
     nextcloud-backup-pj92-encryption = {
-      file = flakeRoot + "/secrets/nextcloud-backup-pj92-encryption.age";
+      file = "${self}/secrets/nextcloud-backup-pj92-encryption.age";
       mode = "700";
       owner = "nextcloud";
     };

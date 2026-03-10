@@ -3,37 +3,55 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
-
+    flake-utils.url = "github:numtide/flake-utils";
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs =
-    {
-      nixpkgs,
-      agenix,
-      ...
-    }@inputs:
-    let
-      lib = nixpkgs.lib;
-      pkgs = import nixpkgs {
-        system = "x86_64-linux";
-      };
-    in
-    {
-      nixosConfigurations.lebenshilfe-uslar = lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          { networking.hostName = "lebenshilfe-uslar"; }
-          agenix.nixosModules.default
-          ./server.nix
-        ];
-        specialArgs = {
-          inherit inputs;
-          flakeRoot = ./.;
+  outputs = { self, nixpkgs, flake-utils, agenix, ... }@inputs:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        packages = rec {
+          django-unfold = pkgs.callPackage ./pkgs/django-unfold.nix { };
+
+          lebenshilfe-cms = pkgs.callPackage ./apps/lebenshilfe-cms/default.nix { 
+            inherit django-unfold; 
+          };
         };
+        
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [ self.packages."${system}".lebenshilfe-cms ];
+          buildInputs = [
+            agenix.packages.${system}.default
+            pkgs.nixos-rebuild-ng
+          ];
+
+          shellHook = ''
+            export DEBUG=True
+            export SECRET_KEY='django-insecure-dev-only'
+            export DATABASE_URL="sqlite:///$(pwd)/db.sqlite3"
+    
+            # # Optional: tell Django where to put collected assets locally
+            # export STATIC_ROOT="$(pwd)/staticfiles"
+          '';
+        };
+      }
+    ) // {
+      nixosModules.lebenshilfe-cms = import ./modules/lebenshilfe-cms.nix;
+
+      nixosConfigurations.lebenshilfe-uslar = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit self inputs; };
+        modules = [
+          ./hosts/lebenshilfe-uslar/configuration.nix
+          self.nixosModules.lebenshilfe-cms
+          agenix.nixosModules.default
+        ];
       };
     };
 }

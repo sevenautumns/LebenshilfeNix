@@ -1,8 +1,8 @@
-{ pkgs, config, flakeRoot, ... }:
+{ self, pkgs, config, ... }:
 {
   age.secrets = {
     nextcloud-secret = {
-      file = flakeRoot + "/secrets/nextcloud-secret.age";
+      file = "${self}/secrets/nextcloud-secret.age";
       mode = "700";
       owner = "nextcloud";
     };

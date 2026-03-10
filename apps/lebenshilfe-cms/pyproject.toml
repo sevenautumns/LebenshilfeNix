@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lebenshilfe-cms"
+version = "1.0.0"
+dependencies = [
+    "django",
+    "psycopg",
+    "dj-database-url",
+    "django-unfold",
+]
+
+[tool.setuptools]
+packages = { find = {} }
