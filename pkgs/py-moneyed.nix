@@ -1,27 +1,27 @@
 { pkgs, python3Packages }:
 
 python3Packages.buildPythonPackage rec {
-  pname = "django-unfold";
-  version = "0.83.1";
+  pname = "py-moneyed";
+  version = "3.0";
   pyproject = true;
 
   src = pkgs.fetchFromGitHub {
-    owner = "unfoldadmin";
+    owner = "py-moneyed";
     repo = pname;
-    rev = version;
-    sha256 = "sha256-hWN3g+dDAW5lsYiKZNxY+ERjSeexHkRV4HjCESrmgU0=";
+    rev = "v${version}";
+    sha256 = "sha256-k0ZbLwog6TYxKDLZV7eH1Br8buMPfpOkgp+pMN/qdB8=";
   };
 
   build-system = with python3Packages; [
-    hatchling
+    setuptools
   ];
 
   nativeCheckInputs = with python3Packages; [
-    pytest
-    pytest-django
+    babel
+    typing-extensions
   ];
 
-  pythonImportsCheck = [ "unfold" ];
+  pythonImportsCheck = [ "moneyed" ];
 
   doCheck = true;
 }

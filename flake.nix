@@ -10,20 +10,34 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, agenix, ... }@inputs:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      agenix,
+      ...
+    }@inputs:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
         packages = rec {
           django-unfold = pkgs.callPackage ./pkgs/django-unfold.nix { };
+          # FIXME: use 26.05 py-moneyed
+          py-moneyed = pkgs.callPackage ./pkgs/py-moneyed.nix { };
 
-          lebenshilfe-cms = pkgs.callPackage ./apps/lebenshilfe-cms/default.nix { 
-            inherit django-unfold; 
+          django-money = pkgs.callPackage ./pkgs/django-money.nix {
+            inherit py-moneyed;
+          };
+
+          lebenshilfe-cms = pkgs.callPackage ./apps/lebenshilfe-cms/default.nix {
+            inherit django-unfold django-money;
           };
         };
-        
+
         devShells.default = pkgs.mkShell {
           inputsFrom = [ self.packages."${system}".lebenshilfe-cms ];
           buildInputs = [
@@ -35,13 +49,14 @@
             export DEBUG=True
             export SECRET_KEY='django-insecure-dev-only'
             export DATABASE_URL="sqlite:///$(pwd)/db.sqlite3"
-    
+
             # # Optional: tell Django where to put collected assets locally
             # export STATIC_ROOT="$(pwd)/staticfiles"
           '';
         };
       }
-    ) // {
+    )
+    // {
       nixosModules.lebenshilfe-cms = import ./modules/lebenshilfe-cms.nix;
 
       nixosConfigurations.lebenshilfe-uslar = nixpkgs.lib.nixosSystem {

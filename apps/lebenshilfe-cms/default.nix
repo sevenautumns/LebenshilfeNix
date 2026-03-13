@@ -1,4 +1,9 @@
-{ pkgs, python3Packages, django-unfold }:
+{
+  pkgs,
+  python3Packages,
+  django-unfold,
+  django-money,
+}:
 
 python3Packages.buildPythonApplication rec {
   pname = "lebenshilfe-cms";
@@ -19,6 +24,7 @@ python3Packages.buildPythonApplication rec {
     psycopg
     dj-database-url
     django-unfold
+    django-money
     gunicorn
   ];
 
