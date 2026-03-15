@@ -16,12 +16,10 @@ python3Packages.buildPythonPackage rec {
     setuptools
   ];
 
-  nativeCheckInputs = with python3Packages; [
+  propagatedBuildInputs = with python3Packages; [
     babel
     typing-extensions
   ];
 
   pythonImportsCheck = [ "moneyed" ];
-
-  doCheck = true;
 }

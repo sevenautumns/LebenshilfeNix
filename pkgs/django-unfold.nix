@@ -16,12 +16,9 @@ python3Packages.buildPythonPackage rec {
     hatchling
   ];
 
-  nativeCheckInputs = with python3Packages; [
-    pytest
-    pytest-django
+  propagatedBuildInputs = with python3Packages; [
+    django
   ];
 
   pythonImportsCheck = [ "unfold" ];
-
-  doCheck = true;
 }

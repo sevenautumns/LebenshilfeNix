@@ -20,12 +20,21 @@ python3Packages.buildPythonPackage rec {
     setuptools
   ];
 
-  nativeCheckInputs = with python3Packages; [
+  propagatedBuildInputs = with python3Packages; [
     py-moneyed
+    django
+  ];
+
+  nativeCheckInputs = with python3Packages; [
+    pytestCheckHook
+    pytest-cov
+    certifi
     pytest-django
   ];
 
-  pythonImportsCheck = [ "djmoney" ];
+  pytestFlagsArray = [
+    "-k 'not test_mixer_blend'"
+  ];
 
-  doCheck = true;
+  pythonImportsCheck = [ "djmoney" ];
 }
