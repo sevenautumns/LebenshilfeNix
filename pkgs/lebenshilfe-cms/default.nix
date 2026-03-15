@@ -34,6 +34,7 @@ python3Packages.buildPythonApplication rec {
     LIB_DIR=$out/${python3Packages.python.sitePackages}
     cp manage.py $LIB_DIR/
     cp -r static $LIB_DIR/
+    cp -r templates $LIB_DIR/
 
     makeWrapper ${python3Packages.python.interpreter} $out/bin/lebenshilfe-manage \
       --add-flags "$LIB_DIR/manage.py" \

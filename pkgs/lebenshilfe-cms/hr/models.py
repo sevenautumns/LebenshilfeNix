@@ -1,3 +1,5 @@
+from django.contrib import admin 
+from django.utils import timezone
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from base.models import Person
@@ -13,7 +15,7 @@ class TrainingType(models.Model):
         return self.name
 
 class VocationalTraining(models.Model):
-    identifier = models.CharField(max_length=255, unique=True, verbose_name="Name")
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
     qualified = models.BooleanField(default=False, verbose_name="Qualifiziert")
 
     class Meta:
@@ -21,7 +23,7 @@ class VocationalTraining(models.Model):
         verbose_name_plural = "Berufsbildungen"
 
     def __str__(self):
-        return self.identifier
+        return self.name
 
 class SalaryAgreement(models.Model):
     salary_standard = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)")
@@ -63,12 +65,14 @@ class Employee(Person):
     country_of_birth = models.ForeignKey('base.Country', on_delete=models.PROTECT, related_name='born_employees', verbose_name="Geburtsland")
     citizenship = models.ForeignKey('base.Country', on_delete=models.PROTECT, related_name='citizens', verbose_name="Staatsangehörigkeit")
 
+    personnel_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Personal-Nr. Lohnprogramm")
+    
     # Familiärer Status
     marital_status = models.CharField(max_length=50, choices=MARITAL_STATUS_CHOICES, verbose_name="Familienstand")
     number_of_children = models.PositiveIntegerField(default=0, verbose_name="Kinderzahl")
 
     # Steuer- und Sozialversicherungsdaten
-    social_security_number = models.CharField(max_length=50, verbose_name="Sozialversicherungs-Nr.")
+    social_security_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Sozialversicherungs-Nr.")
     tax_id = models.CharField(max_length=50, verbose_name="Steuer-ID")
     tax_class = models.CharField(max_length=10, choices=TAX_CLASS_CHOICES, blank=True, null=True, verbose_name="Steuerklasse")
     
@@ -103,7 +107,6 @@ class Employee(Person):
 
 class Employment(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='employments', verbose_name="Mitarbeiter:in")
-    personnel_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Personal-Nr. Lohnprogramm")
     start_date = models.DateField(verbose_name="Beginn Arbeitsverhältnis")
     end_date = models.DateField(blank=True, null=True, verbose_name="Ende Arbeitsverhältnis")
     working_hours = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Stundenumfang")
@@ -171,6 +174,13 @@ class TrainingRecord(models.Model):
     class Meta:
         verbose_name = "Fortbildungsnachweis"
         verbose_name_plural = "Fortbildungsnachweise"
+
+    @property
+    def is_valid(self):
+        today = timezone.now().date()
+        starts_ok = self.valid_from <= today
+        ends_ok = self.valid_to is None or self.valid_to >= today
+        return starts_ok and ends_ok    
 
     def __str__(self):
         return f"Fortbildung {self.training_type} für {self.staff.full_name}"

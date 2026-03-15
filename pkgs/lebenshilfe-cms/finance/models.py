@@ -13,6 +13,7 @@ class CostPayer(models.Model):
         return self.identifier
 
 class FeeAgreement(models.Model):
+    label = models.CharField(max_length=255, verbose_name="Bezeichnung")
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
     price_standard = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)")
@@ -25,7 +26,7 @@ class FeeAgreement(models.Model):
         verbose_name_plural = "Entgeltvereinbarungen"
 
     def __str__(self):
-        return f"Entgeltvereinbarung ({self.valid_from} - {self.valid_to})"
+        return f"{self.label} ({self.valid_from} - {self.valid_to})"
 
 class PoolAgreement(models.Model):
     valid_from = models.DateField(verbose_name="Gültig von")
