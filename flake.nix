@@ -33,7 +33,7 @@
             inherit py-moneyed;
           };
 
-          lebenshilfe-cms = pkgs.callPackage ./apps/lebenshilfe-cms/default.nix {
+          lebenshilfe-cms = pkgs.callPackage ./pkgs/lebenshilfe-cms/default.nix {
             inherit django-unfold django-money;
           };
         };
