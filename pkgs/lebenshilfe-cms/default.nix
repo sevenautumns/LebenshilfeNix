@@ -25,6 +25,8 @@ python3Packages.buildPythonApplication rec {
     dj-database-url
     django-unfold
     django-money
+    django-allauth
+    requests
     gunicorn
   ];
 

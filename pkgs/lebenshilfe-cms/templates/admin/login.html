@@ -1,0 +1,16 @@
+{% extends 'admin/login.html' %}
+{% load i18n static socialaccount %}
+
+{% block login_after %}
+<div class="oauth-buttons flex justify-center mt-4">
+    <div class="w-full sm:w-96">
+        <form method="post" action="{% provider_login_url 'nextcloud' next='/' %}">
+            {% csrf_token %}
+            <button type="submit" class="border flex flex-row font-semibold items-center justify-center py-2 rounded-md text-sm w-full shadow-md hover:bg-gray-50">
+                <i class="material-symbols-outlined mr-2 text-lg">cloud</i>
+                {% trans "Mit Nextcloud anmelden" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
