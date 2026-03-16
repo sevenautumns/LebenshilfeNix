@@ -10,10 +10,12 @@ class CostPayerAdmin(BaseModelAdmin):
 class FeeAgreementAdmin(BaseModelAdmin):
     list_display = ('valid_from', 'valid_to')
     inlines = [CostPayerLinkInline]
+    currency_fields = ('price_standard','price_tandem','price_coordination')
 
 @admin.register(PoolAgreement)
 class PoolAgreementAdmin(BaseModelAdmin):
     autocomplete_fields = ('payer',)
+    currency_fields = ('installment',)
 
 @admin.register(Payment)
 class PaymentAdmin(BaseModelAdmin):
@@ -21,3 +23,4 @@ class PaymentAdmin(BaseModelAdmin):
     list_filter = ('payment_date', 'payer')
     autocomplete_fields = ('payer','supervision')
     search_fields = ('payer__identifier', 'note')
+    currency_fields = ('amount',)

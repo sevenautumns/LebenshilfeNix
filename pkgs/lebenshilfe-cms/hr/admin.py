@@ -35,8 +35,10 @@ class EmployeeAdmin(BaseModelAdmin):
 
 @admin.register(Employment)
 class EmploymentAdmin(BaseModelAdmin):
+    hour_minute_fields = ('working_hours',)
+    display_working_hours = BaseModelAdmin.duration_display("working_hours", description="Wochenstunden")
     list_display = ('employee', 'start_date', 'end_date', 'working_hours')
-    search_fields = ('employee__first_name', 'employee__last_name', 'personnel_number')
+    search_fields = ('employee__first_name', 'employee__last_name', 'personnel_number', 'display_working_hours')
     autocomplete_fields = ('employee',)
     list_filter = ('start_date', 'end_date')
 

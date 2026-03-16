@@ -11,7 +11,9 @@ class StudentAdmin(BaseModelAdmin):
 
 @admin.register(Supervision)
 class SupervisionAdmin(BaseModelAdmin):
-    list_display = ('student', 'caretaker', 'school', 'start', 'end')
+    hour_minute_fields = ('weekly_hours',)
+    display_weekly_hours = BaseModelAdmin.duration_display("weekly_hours", description="Wochenstunden")
+    list_display = ('student', 'caretaker', 'school', 'start', 'end', "display_weekly_hours")
     list_filter = ('school', 'start')
     search_fields = ('student', 'start')
     autocomplete_fields = ('student', 'tandem', 'caretaker', 'school')
