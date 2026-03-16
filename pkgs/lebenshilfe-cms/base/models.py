@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from phonenumber_field.modelfields import PhoneNumberField
 
 class Denomination(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Name")
@@ -36,7 +37,7 @@ class Address(models.Model):
         return f"{self.street} {self.house_number}, {ort}"
 
 class Phone(models.Model):
-    telephone_number = models.CharField(max_length=100, verbose_name="Telefonnummer")
+    telephone_number = PhoneNumberField(region="DE", verbose_name="Telefonnummer")
     primary = models.BooleanField(default=False, verbose_name="Primär")
     
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
