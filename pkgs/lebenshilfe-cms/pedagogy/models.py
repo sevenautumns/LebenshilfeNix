@@ -50,7 +50,7 @@ class Request(models.Model):
     school = models.ForeignKey(School, on_delete=models.PROTECT, verbose_name="Schule")
     start = models.DateField(verbose_name="Beginn")
     valid_to = models.DateField(blank=True, null=True, verbose_name="Gültig bis")
-    demand = models.DurationField(verbose_name="Betreuungsbedarf pro Woche (in Stunden)")
+    demand = models.DurationField(verbose_name="Betreuungsbedarf pro Woche")
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default='draft', verbose_name="Zustand")
     notes = models.TextField(blank=True, null=True, verbose_name="Notizen")
 

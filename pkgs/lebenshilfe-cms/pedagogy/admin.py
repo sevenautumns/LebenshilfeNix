@@ -18,7 +18,9 @@ class SupervisionAdmin(BaseModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(BaseModelAdmin):
-    list_display = ('student', 'state', 'start', 'demand')
+    hour_minute_fields = ('demand',)
+    display_demand = BaseModelAdmin.duration_display("demand", description="Bedarf (Std.)")
+    list_display = ('student', 'state', 'start', 'display_demand')
     list_filter = ('state',)
     autocomplete_fields = ('student', 'school')
 
