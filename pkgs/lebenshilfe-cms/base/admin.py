@@ -6,7 +6,13 @@ from .models import (
     CostPayerLink, MasterData, ExternalIdentifier, 
     Denomination
 )
+from allauth.socialaccount.models import SocialApp, SocialAccount, SocialToken, EmailAddress
 from .widgets import *
+
+admin.site.unregister(SocialApp)
+admin.site.unregister(SocialAccount)
+admin.site.unregister(SocialToken)
+admin.site.unregister(EmailAddress)
 
 class BaseModelAdmin(UnfoldModelAdmin):
     hour_minute_fields = []
