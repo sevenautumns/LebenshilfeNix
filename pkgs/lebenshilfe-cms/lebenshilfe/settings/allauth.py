@@ -10,8 +10,9 @@ SOCIALACCOUNT_ADAPTER = 'lebenshilfe.adapter.StaffSocialAccountAdapter'
 NC_CLIENT_ID = env("NEXTCLOUD_CLIENT_ID", default=None)
 NC_SECRET = env("NEXTCLOUD_SECRET", default=None)
 NC_SERVER = env("NEXTCLOUD_SERVER", default=None)
+NC_ACTIVE = all([NC_CLIENT_ID, NC_SECRET, NC_SERVER])
 
-if all([NC_CLIENT_ID, NC_SECRET, NC_SERVER]):
+if NC_ACTIVE:
     SOCIALACCOUNT_PROVIDERS = {
         "nextcloud": {
             "APPS": [
