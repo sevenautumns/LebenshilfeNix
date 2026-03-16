@@ -43,9 +43,6 @@
             export DEBUG=True
             export SECRET_KEY='django-insecure-dev-only'
             export DATABASE_URL="sqlite:///$(pwd)/db.sqlite3"
-
-            # # Optional: tell Django where to put collected assets locally
-            # export STATIC_ROOT="$(pwd)/staticfiles"
           '';
         };
       }

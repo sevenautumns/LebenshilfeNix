@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Case, When, Value, F
+from django.db.models.functions import Concat
 from phonenumber_field.modelfields import PhoneNumberField
 
 class Denomination(models.Model):
@@ -117,6 +119,25 @@ class Person(models.Model):
     middle_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Mittlerer Name")
     last_name = models.CharField(max_length=255, verbose_name="Nachname")
 
+    full_name = models.GeneratedField(
+        expression=Concat(
+            F('first_name'),
+            Case(
+                When(
+                    middle_name__isnull=False,
+                    middle_name__gt="", # Handles both NULL and empty strings
+                    then=Concat(Value(' '), F('middle_name'))
+                ),
+                default=Value(''),
+            ),
+            Value(' '),
+            F('last_name'),
+        ),
+        output_field=models.CharField(max_length=765),
+        db_persist=True,
+        verbose_name="Name",
+    )
+
     phones = GenericRelation(Phone)
     emails = GenericRelation(Email)
     addresses = GenericRelation(Address)
@@ -125,11 +146,6 @@ class Person(models.Model):
     class Meta:
         verbose_name = "Person"
         verbose_name_plural = "Personen"
-
-    @property
-    def full_name(self):
-        parts = [self.first_name, self.middle_name, self.last_name]
-        return " ".join([p for p in parts if p])
 
     def __str__(self):
         return self.full_name
