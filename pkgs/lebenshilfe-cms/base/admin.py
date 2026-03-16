@@ -1,6 +1,6 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from django.contrib.contenttypes.admin import GenericTabularInline
+from unfold.admin import GenericTabularInline
 from .models import (
     Person, Address, Phone, Email, BankAccount, 
     CostPayerLink, MasterData, ExternalIdentifier, 

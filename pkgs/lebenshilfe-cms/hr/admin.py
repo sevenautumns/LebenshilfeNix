@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
+from unfold.admin import TabularInline
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline, BankAccountInline
 from .models import (
     Employee, 
@@ -13,7 +14,7 @@ from .models import (
     OtherEmployment
 )
 
-class OtherEmploymentInline(admin.TabularInline):
+class OtherEmploymentInline(TabularInline):
     model = OtherEmployment
     extra = 0
 
