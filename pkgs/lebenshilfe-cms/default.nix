@@ -2,7 +2,6 @@
   pkgs,
   python3Packages,
   django-unfold,
-  django-money,
 }:
 
 python3Packages.buildPythonApplication rec {
@@ -24,7 +23,6 @@ python3Packages.buildPythonApplication rec {
     psycopg
     dj-database-url
     django-unfold
-    django-money
     django-allauth
     requests
     gunicorn

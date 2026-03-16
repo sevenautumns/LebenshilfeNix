@@ -26,15 +26,9 @@
       {
         packages = rec {
           django-unfold = pkgs.callPackage ./pkgs/django-unfold.nix { };
-          # FIXME: use 26.05 py-moneyed
-          py-moneyed = pkgs.callPackage ./pkgs/py-moneyed.nix { };
-
-          django-money = pkgs.callPackage ./pkgs/django-money.nix {
-            inherit py-moneyed;
-          };
 
           lebenshilfe-cms = pkgs.callPackage ./pkgs/lebenshilfe-cms/default.nix {
-            inherit django-unfold django-money;
+            inherit django-unfold;
           };
         };
 
