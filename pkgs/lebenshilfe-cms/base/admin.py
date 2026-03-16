@@ -4,7 +4,7 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import (
     Person, Address, Phone, Email, BankAccount, 
     CostPayerLink, MasterData, ExternalIdentifier, 
-    Country, Denomination
+    Denomination
 )
 from .widgets import *
 
@@ -65,10 +65,6 @@ class CostPayerLinkInline(GenericTabularInline):
     model = CostPayerLink
     extra = 0
     autocomplete_fields = ('identifier',)
-
-@admin.register(Country)
-class CountryAdmin(BaseModelAdmin):
-    search_fields = ('name',)
 
 @admin.register(Denomination)
 class DenominationAdmin(BaseModelAdmin):

@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from base.models import Person
+from base.utils import COUNTRY_CHOICES, NATIONALITY_CHOICES
 
 class TrainingType(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="Name")
@@ -62,9 +63,18 @@ class Employee(Person):
     maiden_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Geburtsname")
     birthday = models.DateField(verbose_name="Geburtstag")
     birthplace = models.CharField(max_length=255, verbose_name="Geburtsort")
-    country_of_birth = models.ForeignKey('base.Country', on_delete=models.PROTECT, related_name='born_employees', verbose_name="Geburtsland")
-    citizenship = models.ForeignKey('base.Country', on_delete=models.PROTECT, related_name='citizens', verbose_name="Staatsangehörigkeit")
-
+    country_of_birth = models.CharField(
+        max_length=2,
+        choices=COUNTRY_CHOICES,
+        default="DE",
+        verbose_name="Geburtsland"
+    )
+    citizenship = models.CharField(
+        max_length=3,
+        choices=NATIONALITY_CHOICES,
+        default="000",
+        verbose_name="Staatsangehörigkeit"
+    )
     personnel_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="Personal-Nr. Lohnprogramm")
     
     # Familiärer Status

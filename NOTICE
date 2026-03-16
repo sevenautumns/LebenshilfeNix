@@ -14,3 +14,11 @@ Das Logo ist ein rechtlich geschütztes Markenzeichen der **Bundesvereinigung Le
 Weitere Informationen zur Marke und zum Corporate Design können bei der Bundesvereinigung erfragt werden:
 * E-Mail: bundesvereinigung@lebenshilfe.de
 * Web: www.lebenshilfe.de
+
+## 4. Statistische Daten
+Dieses Repository enthält Daten des Statistischen Bundesamtes (Destatis).
+
+* **Datenquelle:** Codeliste Staatsangehörigkeit aus der Staats- und Gebietssystematik des Statistischen Bundesamtes (XRepository).
+* **Herausgeber:** Statistisches Bundesamt (Destatis).
+* **Lizenz:** Vervielfältigung und Verbreitung mit Quellennachweis gestattet (gemäß allgemeinem Copyright von Destatis).
+* **Hinweis zur Bearbeitung:** Die Originaldaten wurden zur technischen Verwendung im CMS gefiltert und in das JSON-Format transformiert.

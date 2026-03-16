@@ -22,7 +22,7 @@ class EmployeeAdmin(BaseModelAdmin):
     list_display = ('personnel_number', 'full_name', 'birthday', 'citizenship')
     search_fields = ('first_name', 'last_name') 
     filter_horizontal = ('vocational_trainings',)
-    autocomplete_fields = ('country_of_birth', 'citizenship', 'church_membership')
+    autocomplete_fields = ('church_membership',)
     
     inlines = [
         OtherEmploymentInline, 

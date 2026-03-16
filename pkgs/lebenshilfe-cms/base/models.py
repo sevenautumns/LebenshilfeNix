@@ -2,17 +2,6 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
-class Country(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Name")
-
-    class Meta:
-        verbose_name = "Land"
-        verbose_name_plural = "Länder"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
 class Denomination(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Name")
 
