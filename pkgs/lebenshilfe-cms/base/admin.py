@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.forms import NumberInput
+from unfold.widgets import UnfoldPrefixSuffixMixin, INPUT_CLASSES
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import (
@@ -7,7 +9,26 @@ from .models import (
     Country, Denomination
 )
 
+class EuroDecimalWidget(UnfoldPrefixSuffixMixin, NumberInput):
+    template_name = "unfold/widgets/text.html"
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "class": " ".join(INPUT_CLASSES),
+            "prefix_icon": "euro_symbol",
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(default_attrs)        
+
 class BaseModelAdmin(UnfoldModelAdmin):
+    currency_fields = []
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name in self.currency_fields:
+            kwargs["widget"] = EuroDecimalWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         for field in form.base_fields.values():

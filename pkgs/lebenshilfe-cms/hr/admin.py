@@ -95,4 +95,9 @@ class VocationalTrainingAdmin(BaseModelAdmin):
 
 @admin.register(SalaryAgreement)
 class SalaryAgreementAdmin(BaseModelAdmin):
-    pass
+    currency_fields = [
+        "salary_standard",
+        "salary_tandem",
+        "salary_coordination",
+        "salary_management",
+    ]
