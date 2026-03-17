@@ -102,6 +102,10 @@ LANGUAGES = (
     ("de", _("Deutsch")),
 )
 
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
 STATIC_URL = 'static/'
 STATIC_ROOT = env('STATIC_ROOT', default=None)
 MEDIA_ROOT = env('MEDIA_ROOT', default=None)

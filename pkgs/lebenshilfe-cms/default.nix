@@ -15,6 +15,7 @@ python3Packages.buildPythonApplication rec {
     python3Packages.setuptools
     python3Packages.wheel
     pkgs.makeWrapper
+    pkgs.gettext
   ];
 
   propagatedBuildInputs = with python3Packages; [
@@ -29,11 +30,14 @@ python3Packages.buildPythonApplication rec {
     gunicorn
   ];
 
+  preBuild = "${python3Packages.python.interpreter} -m django compilemessages";
+
   postInstall = ''
     LIB_DIR=$out/${python3Packages.python.sitePackages}
     cp manage.py $LIB_DIR/
     cp -r static $LIB_DIR/
     cp -r templates $LIB_DIR/
+    cp -r locale $LIB_DIR/
 
     makeWrapper ${python3Packages.python.interpreter} $out/bin/lebenshilfe-manage \
       --add-flags "$LIB_DIR/manage.py" \
