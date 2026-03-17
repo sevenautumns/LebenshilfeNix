@@ -44,29 +44,37 @@ class BaseModelAdmin(ModelAdmin):
             return "-"
         return display_fn
 
-class AddressInline(GenericTabularInline):
+class BaseGenericTabularInline(GenericTabularInline):
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        for field in formset.form.base_fields.values():
+            if hasattr(field.widget, "can_delete_related"):
+                field.widget.can_delete_related = False
+        return formset
+
+class AddressInline(BaseGenericTabularInline):
     model = Address
     extra = 0
 
-class PhoneInline(GenericTabularInline):
+class PhoneInline(BaseGenericTabularInline):
     model = Phone
     extra = 0
 
-class EmailInline(GenericTabularInline):
+class EmailInline(BaseGenericTabularInline):
     model = Email
     extra = 0
 
-class BankAccountInline(GenericTabularInline):
+class BankAccountInline(BaseGenericTabularInline):
     model = BankAccount
     extra = 0
 
-class ExternalIdentifierInline(GenericTabularInline):
+class ExternalIdentifierInline(BaseGenericTabularInline):
     model = ExternalIdentifier
     extra = 0
     verbose_name = "Identifikator"
     verbose_name_plural = "Identifikatoren"
 
-class CostPayerLinkInline(GenericTabularInline):
+class CostPayerLinkInline(BaseGenericTabularInline):
     model = CostPayerLink
     extra = 0
     autocomplete_fields = ('identifier',)
