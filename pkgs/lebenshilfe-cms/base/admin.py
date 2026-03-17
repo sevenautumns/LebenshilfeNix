@@ -1,6 +1,5 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from unfold.admin import GenericTabularInline
+from unfold.admin import ModelAdmin, GenericTabularInline
 from .models import (
     Person, Address, Phone, Email, BankAccount, 
     CostPayerLink, MasterData, ExternalIdentifier, 
@@ -14,7 +13,7 @@ admin.site.unregister(SocialAccount)
 admin.site.unregister(SocialToken)
 admin.site.unregister(EmailAddress)
 
-class BaseModelAdmin(UnfoldModelAdmin):
+class BaseModelAdmin(ModelAdmin):
     hour_minute_fields = []
     currency_fields = []
 

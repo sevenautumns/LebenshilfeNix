@@ -16,21 +16,6 @@ UNFOLD = {
             "600": "#005a9a",  # Shade of LH Blau
             "950": "#001a2d",  # Dark shade of LH Blau
         },
-        "base": {
-            "50": "#E2E7F3",   # LH Hellblau (Background Color) 
-            "100": "#d1d9ea",
-            "500": "#7f8da8",
-            "900": "#1a1a1a",
-            "950": "#000000",  # LH Schwarz
-        },
-        "font": {
-            "subtle-light": "var(--color-base-500)",
-            "subtle-dark": "var(--color-base-400)",
-            "default-light": "var(--color-base-950)", # LH Schwarz for default text
-            "default-dark": "var(--color-base-50)",    # LH Hellblau for dark mode text
-            "important-light": "var(--color-primary-500)", # LH Blau for highlights
-            "important-dark": "var(--color-base-100)",
-        },
     },
 }
 
