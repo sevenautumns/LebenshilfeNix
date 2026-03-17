@@ -99,8 +99,7 @@ in {
         ExecStart = ''
           ${cfg.package}/bin/lebenshilfe-gunicorn \
             --workers 4 \
-            --bind unix:${cfg.socketPath} \
-            lebenshilfe.wsgi:application
+            --bind unix:${cfg.socketPath}
         '';
 
         Restart = "always";

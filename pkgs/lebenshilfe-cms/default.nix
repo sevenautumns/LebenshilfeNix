@@ -44,7 +44,8 @@ python3Packages.buildPythonApplication rec {
       --prefix PYTHONPATH : "$LIB_DIR:$PYTHONPATH"
 
     makeWrapper ${python3Packages.gunicorn}/bin/gunicorn $out/bin/lebenshilfe-gunicorn \
-      --prefix PYTHONPATH : "$LIB_DIR:$PYTHONPATH"
+      --prefix PYTHONPATH : "$LIB_DIR:$PYTHONPATH" \
+      --append-flag lebenshilfe.wsgi:application
       
     mkdir -p $out/share/doc/${pname}
     cp ${../../NOTICE} $out/share/doc/${pname}/NOTICE
