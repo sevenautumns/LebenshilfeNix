@@ -1,6 +1,5 @@
 from django.templatetags.static import static
 
-# Unfold Configuration
 UNFOLD = {
     "SITE_TITLE": "Lebenshilfe Verwaltung",
     "SITE_HEADER": "Lebenshilfe",
@@ -8,6 +7,15 @@ UNFOLD = {
         "light": lambda request: static("logo-light.svg"),
         "dark": lambda request: static("logo-dark.svg"),
     },
+    "ACCOUNT": {
+        "navigation": [
+            {
+                "title": "Gehe zu Nextcloud",
+                "link": "https://nextcloud.lebenshilfe-uslar.de",
+            },
+        ],
+    },
+    "SITE_URL": (),
     "SHOW_LANGUAGES": False,
     "COLORS": {
         "primary": {
