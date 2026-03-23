@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from django.conf import settings
 
-
 def get_destatis_choices():
     file_path = (
         Path(settings.BASE_DIR)
@@ -19,25 +18,31 @@ def get_destatis_choices():
 
     cols = {s["spaltennameTechnisch"]: i for i, s in enumerate(data["spalten"])}
 
-    raw_data = [
-        entry
-        for entry in data["daten"]
-        if entry[cols["ISO-2"]] and entry[cols["ISO-2"]] != "··"
-    ]
+    id_idx = cols["DESTATIS-Schluessel-Staatsangehoerigkeit"]
+    iso_idx = cols["ISO-2"]
+    name_idx = cols["Staatsname-kurz"]
+    nat_idx = cols["Staatsangehoerigkeit"]
 
-    countries = [(e[cols["ISO-2"]], e[cols["Staatsname-kurz"]]) for e in raw_data]
-    nationalities = [
-        (
-            e[cols["DESTATIS-Schluessel-Staatsangehoerigkeit"]],
-            e[cols["Staatsangehoerigkeit"]],
-        )
-        for e in raw_data
-    ]
+    def is_valid_iso(val):
+        return isinstance(val, str) and len(val) == 2 and val.isalpha()
 
-    return (
-        sorted(countries, key=lambda x: x[1]),
-        sorted(nationalities, key=lambda x: x[1]),
-    )
+    filtered_data = []
+    for entry in data["daten"]:
+        try:
+            raw_id = entry[id_idx]
+            iso = entry[iso_idx]
 
+            # Filter: ID unter 900 und valider ISO-Code
+            if int(raw_id) < 900 and is_valid_iso(iso):
+                filtered_data.append(entry)
+        except (ValueError, TypeError):
+            continue
+
+    filtered_data.sort(key=lambda x: int(x[id_idx]))
+
+    countries = [(e[iso_idx], e[name_idx]) for e in filtered_data]
+    nationalities = [(e[id_idx], e[nat_idx]) for e in filtered_data]
+
+    return countries, nationalities
 
 COUNTRY_CHOICES, NATIONALITY_CHOICES = get_destatis_choices()
