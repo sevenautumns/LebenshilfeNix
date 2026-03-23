@@ -1,5 +1,7 @@
 from django.forms import MultiWidget, NumberInput
 from unfold.widgets import UnfoldPrefixSuffixMixin, INPUT_CLASSES
+from django.utils.dateparse import parse_duration
+from datetime import timedelta
 
 
 class HourMinuteDurationWidget(MultiWidget):
@@ -27,8 +29,12 @@ class HourMinuteDurationWidget(MultiWidget):
 
     def decompress(self, value):
         if value:
-            total_seconds = int(value.total_seconds())
-            return [total_seconds // 3600, (total_seconds % 3600) // 60]
+            if isinstance(value, str):
+                value = parse_duration(value)
+
+            if isinstance(value, timedelta):
+                total_seconds = int(value.total_seconds())
+                return [total_seconds // 3600, (total_seconds % 3600) // 60]
         return [None, None]
 
     def value_from_datadict(self, data, files, name):
@@ -36,7 +42,7 @@ class HourMinuteDurationWidget(MultiWidget):
         if parts[0] or parts[1]:
             hours = int(parts[0] or 0)
             minutes = int(parts[1] or 0)
-            return f"{hours}:{minutes:02d}:00"
+            return timedelta(hours=hours, minutes=minutes)
         return None
 
 

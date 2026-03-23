@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from django.conf import settings
 
+
 def get_destatis_choices():
     file_path = (
         Path(settings.BASE_DIR)
@@ -44,5 +45,6 @@ def get_destatis_choices():
     nationalities = [(e[id_idx], e[nat_idx]) for e in filtered_data]
 
     return countries, nationalities
+
 
 COUNTRY_CHOICES, NATIONALITY_CHOICES = get_destatis_choices()
