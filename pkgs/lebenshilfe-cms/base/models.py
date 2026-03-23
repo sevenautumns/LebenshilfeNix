@@ -108,24 +108,6 @@ class ExternalIdentifier(models.Model):
         return f"{self.label}: {self.value}"
 
 
-class CostPayerLink(models.Model):
-    primary = models.BooleanField(default=False, verbose_name="Primär")
-    identifier = models.ForeignKey(
-        "finance.CostPayer", on_delete=models.PROTECT, verbose_name="Kostenzahler"
-    )
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
-
-    class Meta:
-        verbose_name = "Kostenzahler-Verknüpfung"
-        verbose_name_plural = "Kostenzahler-Verknüpfungen"
-
-    def __str__(self):
-        return str(self.identifier)
-
-
 class Person(models.Model):
     first_name = models.CharField(max_length=255, verbose_name="Vorname")
     middle_name = models.CharField(

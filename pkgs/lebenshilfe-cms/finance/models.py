@@ -1,6 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericRelation
-from base.models import CostPayerLink
 
 
 class CostPayer(models.Model):
@@ -27,7 +25,18 @@ class FeeAgreement(models.Model):
     price_coordination = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Koordination"
     )
-    payers = GenericRelation(CostPayerLink)
+    responsible_payer = models.ForeignKey(
+        CostPayer,
+        on_delete=models.PROTECT,
+        verbose_name="Zuständiger Kostenzahler",
+        related_name="responsible_fee_agreements",
+    )
+    additional_payers = models.ManyToManyField(
+        CostPayer,
+        blank=True,
+        verbose_name="Weitere Kostenzahler",
+        related_name="additional_fee_agreements",
+    )
 
     class Meta:
         verbose_name = "Entgeltvereinbarung"

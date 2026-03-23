@@ -1,18 +1,19 @@
 from django.contrib import admin
-from base.admin import BaseModelAdmin, CostPayerLinkInline
+from base.admin import BaseModelAdmin
 from .models import CostPayer, FeeAgreement, PoolAgreement, Payment
 
 
 @admin.register(CostPayer)
 class CostPayerAdmin(BaseModelAdmin):
+    list_display = ("identifier",)
     search_fields = ("identifier",)
 
 
 @admin.register(FeeAgreement)
 class FeeAgreementAdmin(BaseModelAdmin):
     list_display = ("valid_from", "valid_to")
-    inlines = [CostPayerLinkInline]
     currency_fields = ("price_standard", "price_tandem", "price_coordination")
+    filter_horizontal = ("additional_payers",)
 
 
 @admin.register(PoolAgreement)

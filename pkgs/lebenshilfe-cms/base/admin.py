@@ -5,7 +5,6 @@ from .models import (
     Phone,
     Email,
     BankAccount,
-    CostPayerLink,
     MasterData,
     ExternalIdentifier,
     Denomination,
@@ -67,12 +66,6 @@ class ExternalIdentifierInline(BaseGenericTabularInline):
     extra = 0
     verbose_name = "Identifikator"
     verbose_name_plural = "Identifikatoren"
-
-
-class CostPayerLinkInline(BaseGenericTabularInline):
-    model = CostPayerLink
-    extra = 0
-    autocomplete_fields = ("identifier",)
 
 
 @admin.register(Denomination)
