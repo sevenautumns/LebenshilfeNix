@@ -148,6 +148,7 @@ class Person(models.Model):
 
 
 class MasterData(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Name")
     identifiers = GenericRelation(ExternalIdentifier)
     accounts = GenericRelation(BankAccount)
 

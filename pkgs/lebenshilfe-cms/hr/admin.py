@@ -1,4 +1,4 @@
-from unfold.contrib.filters.admin import BooleanRadioFilter
+from unfold.contrib.filters.admin import BooleanRadioFilter, ChoicesDropdownFilter
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -19,6 +19,7 @@ from .models import (
     TrainingRecord,
     Employment,
     OtherEmployment,
+    Applicant,
 )
 
 
@@ -33,6 +34,7 @@ class EmployeeAdmin(BaseModelAdmin):
     search_fields = ("first_name", "last_name")
     filter_horizontal = ("vocational_trainings",)
     autocomplete_fields = ("church_membership",)
+    list_filter = (["citizenship", ChoicesDropdownFilter],)
 
     inlines = [
         OtherEmploymentInline,
@@ -45,16 +47,11 @@ class EmployeeAdmin(BaseModelAdmin):
 
 @admin.register(Employment)
 class EmploymentAdmin(BaseModelAdmin):
-    hour_minute_fields = ("working_hours",)
-    display_working_hours = BaseModelAdmin.duration_display(
-        "working_hours", description="Wochenstunden"
-    )
     list_display = ("employee", "start_date", "end_date", "working_hours")
     search_fields = (
         "employee__first_name",
         "employee__last_name",
-        "personnel_number",
-        "display_working_hours",
+        "employee__personnel_number",
     )
     autocomplete_fields = ("employee",)
     list_filter = ("start_date", "end_date")
@@ -113,6 +110,19 @@ class VocationalTrainingAdmin(BaseModelAdmin):
     list_display = ("name", "qualified")
     list_filter = [("qualified", BooleanRadioFilter)]
     search_fields = ("name",)
+
+
+@admin.register(Applicant)
+class ApplicantAdmin(BaseModelAdmin):
+    list_display = ("full_name", "application_date")
+    search_fields = ("first_name", "last_name")
+    autocomplete_fields = ("desired_school",)
+    inlines = [
+        AddressInline,
+        PhoneInline,
+        EmailInline,
+        BankAccountInline,
+    ]
 
 
 @admin.register(SalaryAgreement)

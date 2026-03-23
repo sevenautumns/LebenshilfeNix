@@ -75,4 +75,6 @@ class DenominationAdmin(BaseModelAdmin):
 
 @admin.register(MasterData)
 class MasterDataAdmin(BaseModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
     inlines = [ExternalIdentifierInline, BankAccountInline]

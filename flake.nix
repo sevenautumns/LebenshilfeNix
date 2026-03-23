@@ -39,6 +39,7 @@
             pkgs.nixos-rebuild-ng
             pkgs.ty
             pkgs.ruff
+            pkgs.jujutsu
           ];
 
           shellHook = ''
