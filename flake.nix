@@ -37,6 +37,8 @@
           buildInputs = [
             agenix.packages.${system}.default
             pkgs.nixos-rebuild-ng
+            pkgs.ty
+            pkgs.ruff
           ];
 
           shellHook = ''

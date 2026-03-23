@@ -4,20 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0002_initial'),
+        ("hr", "0002_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='employee',
-            name='citizenship',
-            field=models.CharField(choices=[], max_length=3, verbose_name='Staatsangehörigkeit'),
+            model_name="employee",
+            name="citizenship",
+            field=models.CharField(
+                choices=[], max_length=3, verbose_name="Staatsangehörigkeit"
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='country_of_birth',
-            field=models.CharField(choices=[], max_length=2, verbose_name='Geburtsland'),
+            model_name="employee",
+            name="country_of_birth",
+            field=models.CharField(
+                choices=[], max_length=2, verbose_name="Geburtsland"
+            ),
         ),
     ]

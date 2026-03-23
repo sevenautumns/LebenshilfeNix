@@ -1,22 +1,27 @@
 from django.forms import MultiWidget, NumberInput
 from unfold.widgets import UnfoldPrefixSuffixMixin, INPUT_CLASSES
 
+
 class HourMinuteDurationWidget(MultiWidget):
-    template_name = "unfold/widgets/range.html" 
+    template_name = "unfold/widgets/range.html"
 
     def __init__(self, attrs=None):
         widgets = (
-            NumberInput(attrs={
-                "placeholder": "Stunden", 
-                "class": " ".join(INPUT_CLASSES),
-                "min": "0"
-            }),
-            NumberInput(attrs={
-                "placeholder": "Minuten", 
-                "class": " ".join(INPUT_CLASSES),
-                "min": "0",
-                "max": "59"
-            }),
+            NumberInput(
+                attrs={
+                    "placeholder": "Stunden",
+                    "class": " ".join(INPUT_CLASSES),
+                    "min": "0",
+                }
+            ),
+            NumberInput(
+                attrs={
+                    "placeholder": "Minuten",
+                    "class": " ".join(INPUT_CLASSES),
+                    "min": "0",
+                    "max": "59",
+                }
+            ),
         )
         super().__init__(widgets, attrs)
 
@@ -34,6 +39,7 @@ class HourMinuteDurationWidget(MultiWidget):
             return f"{hours}:{minutes:02d}:00"
         return None
 
+
 class EuroDecimalWidget(UnfoldPrefixSuffixMixin, NumberInput):
     template_name = "unfold/widgets/text.html"
 
@@ -44,5 +50,4 @@ class EuroDecimalWidget(UnfoldPrefixSuffixMixin, NumberInput):
         }
         if attrs:
             default_attrs.update(attrs)
-        super().__init__(default_attrs)        
-
+        super().__init__(default_attrs)

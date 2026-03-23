@@ -5,7 +5,7 @@ env = environ.Env(
 )
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
-SOCIALACCOUNT_ADAPTER = 'lebenshilfe.adapter.StaffSocialAccountAdapter'
+SOCIALACCOUNT_ADAPTER = "lebenshilfe.adapter.StaffSocialAccountAdapter"
 
 NC_CLIENT_ID = env("NEXTCLOUD_CLIENT_ID", default=None)
 NC_SECRET = env("NEXTCLOUD_SECRET", default=None)
@@ -21,7 +21,7 @@ if NC_ACTIVE:
                     "secret": NC_SECRET,
                     "settings": {
                         "server": NC_SERVER,
-                    }
+                    },
                 }
             ]
         }

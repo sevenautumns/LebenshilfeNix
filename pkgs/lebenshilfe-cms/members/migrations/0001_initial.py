@@ -5,27 +5,51 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('base', '0001_initial'),
+        ("base", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Member',
+            name="Member",
             fields=[
-                ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('entrance_date', models.DateField(verbose_name='Eintrittsdatum')),
-                ('leaving_date', models.DateField(blank=True, null=True, verbose_name='Austrittsdatum')),
-                ('membership_fee', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Beitragshöhe')),
-                ('authorization_id', models.CharField(max_length=100, verbose_name='Mandatsreferenz-Nr.')),
+                (
+                    "person_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="base.person",
+                    ),
+                ),
+                ("entrance_date", models.DateField(verbose_name="Eintrittsdatum")),
+                (
+                    "leaving_date",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Austrittsdatum"
+                    ),
+                ),
+                (
+                    "membership_fee",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Beitragshöhe"
+                    ),
+                ),
+                (
+                    "authorization_id",
+                    models.CharField(
+                        max_length=100, verbose_name="Mandatsreferenz-Nr."
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Mitglied',
-                'verbose_name_plural': 'Mitglieder',
+                "verbose_name": "Mitglied",
+                "verbose_name_plural": "Mitglieder",
             },
-            bases=('base.person',),
+            bases=("base.person",),
         ),
     ]

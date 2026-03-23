@@ -5,15 +5,16 @@ import phonenumber_field.modelfields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0003_delete_country'),
+        ("base", "0003_delete_country"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='phone',
-            name='telephone_number',
-            field=phonenumber_field.modelfields.PhoneNumberField(max_length=128, region='DE', verbose_name='Telefonnummer'),
+            model_name="phone",
+            name="telephone_number",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                max_length=128, region="DE", verbose_name="Telefonnummer"
+            ),
         ),
     ]

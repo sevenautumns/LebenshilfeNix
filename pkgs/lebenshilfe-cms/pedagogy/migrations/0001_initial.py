@@ -5,73 +5,191 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('finance', '0001_initial'),
-        ('hr', '0001_initial'),
-        ('base', '0002_initial'),
+        ("finance", "0001_initial"),
+        ("hr", "0001_initial"),
+        ("base", "0002_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='School',
+            name="School",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('school_name', models.CharField(max_length=255, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "school_name",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Schule',
-                'verbose_name_plural': 'Schulen',
+                "verbose_name": "Schule",
+                "verbose_name_plural": "Schulen",
             },
         ),
         migrations.CreateModel(
-            name='Student',
+            name="Student",
             fields=[
-                ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler')),
+                (
+                    "person_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="base.person",
+                    ),
+                ),
+                (
+                    "payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="finance.costpayer",
+                        verbose_name="Kostenzahler",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Schulkind',
-                'verbose_name_plural': 'Schulkinder',
+                "verbose_name": "Schulkind",
+                "verbose_name_plural": "Schulkinder",
             },
-            bases=('base.person',),
+            bases=("base.person",),
         ),
         migrations.CreateModel(
-            name='Supervision',
+            name="Supervision",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('class_name', models.CharField(blank=True, max_length=100, null=True, verbose_name='Klasse')),
-                ('start', models.DateField(verbose_name='Beginn')),
-                ('end', models.DateField(verbose_name='Ende')),
-                ('weekly_hours', models.DurationField(verbose_name='Wochenstunden')),
-                ('school_days', models.PositiveIntegerField(verbose_name='Schultage')),
-                ('caretaker', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hr.employee', verbose_name='Betreuer:in')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='pedagogy.student', verbose_name='Schulkind')),
-                ('tandem', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tandem_supervisions', to='pedagogy.student', verbose_name='Tandem')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "class_name",
+                    models.CharField(
+                        blank=True, max_length=100, null=True, verbose_name="Klasse"
+                    ),
+                ),
+                ("start", models.DateField(verbose_name="Beginn")),
+                ("end", models.DateField(verbose_name="Ende")),
+                ("weekly_hours", models.DurationField(verbose_name="Wochenstunden")),
+                ("school_days", models.PositiveIntegerField(verbose_name="Schultage")),
+                (
+                    "caretaker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="hr.employee",
+                        verbose_name="Betreuer:in",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="pedagogy.school",
+                        verbose_name="Schule",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="supervisions",
+                        to="pedagogy.student",
+                        verbose_name="Schulkind",
+                    ),
+                ),
+                (
+                    "tandem",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="tandem_supervisions",
+                        to="pedagogy.student",
+                        verbose_name="Tandem",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Betreuung',
-                'verbose_name_plural': 'Betreuungen',
+                "verbose_name": "Betreuung",
+                "verbose_name_plural": "Betreuungen",
             },
         ),
         migrations.CreateModel(
-            name='Request',
+            name="Request",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateField(verbose_name='Beginn')),
-                ('valid_to', models.DateField(blank=True, null=True, verbose_name='Gültig bis')),
-                ('demand', models.DurationField(verbose_name='Betreuungsbedarf pro Woche (in Stunden)')),
-                ('state', models.CharField(choices=[('draft', 'Entwurf'), ('in_coordination', 'In Abstimmung'), ('rejected', 'Abgelehnt'), ('approved', 'Genehmigt')], default='draft', max_length=50, verbose_name='Zustand')),
-                ('notes', models.TextField(blank=True, null=True, verbose_name='Notizen')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.student', verbose_name='Schulkind')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("start", models.DateField(verbose_name="Beginn")),
+                (
+                    "valid_to",
+                    models.DateField(blank=True, null=True, verbose_name="Gültig bis"),
+                ),
+                (
+                    "demand",
+                    models.DurationField(
+                        verbose_name="Betreuungsbedarf pro Woche (in Stunden)"
+                    ),
+                ),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Entwurf"),
+                            ("in_coordination", "In Abstimmung"),
+                            ("rejected", "Abgelehnt"),
+                            ("approved", "Genehmigt"),
+                        ],
+                        default="draft",
+                        max_length=50,
+                        verbose_name="Zustand",
+                    ),
+                ),
+                (
+                    "notes",
+                    models.TextField(blank=True, null=True, verbose_name="Notizen"),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="pedagogy.school",
+                        verbose_name="Schule",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="pedagogy.student",
+                        verbose_name="Schulkind",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Antrag',
-                'verbose_name_plural': 'Anträge',
+                "verbose_name": "Antrag",
+                "verbose_name_plural": "Anträge",
             },
         ),
     ]

@@ -1,11 +1,18 @@
 from django.db import models
 from base.models import Person
 
+
 class Member(Person):
     entrance_date = models.DateField(verbose_name="Eintrittsdatum")
-    leaving_date = models.DateField(blank=True, null=True, verbose_name="Austrittsdatum")
-    membership_fee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Beitragshöhe")
-    authorization_id = models.CharField(max_length=100, verbose_name="Mandatsreferenz-Nr.")
+    leaving_date = models.DateField(
+        blank=True, null=True, verbose_name="Austrittsdatum"
+    )
+    membership_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Beitragshöhe"
+    )
+    authorization_id = models.CharField(
+        max_length=100, verbose_name="Mandatsreferenz-Nr."
+    )
 
     class Meta:
         verbose_name = "Mitglied"

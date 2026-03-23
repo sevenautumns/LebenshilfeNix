@@ -5,155 +5,482 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('base', '0002_initial'),
+        ("base", "0002_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Absence',
+            name="Absence",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateField(blank=True, null=True, verbose_name='Beginn')),
-                ('end', models.DateField(blank=True, null=True, verbose_name='Ende')),
-                ('reason', models.CharField(choices=[('illness', 'Krankheit'), ('child_sick', 'Kind Krank'), ('appointment', 'Termin'), ('other', 'Sonstiges')], max_length=50, verbose_name='Grund')),
-                ('certificate', models.BooleanField(default=False, verbose_name='Mit AU')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start",
+                    models.DateField(blank=True, null=True, verbose_name="Beginn"),
+                ),
+                ("end", models.DateField(blank=True, null=True, verbose_name="Ende")),
+                (
+                    "reason",
+                    models.CharField(
+                        choices=[
+                            ("illness", "Krankheit"),
+                            ("child_sick", "Kind Krank"),
+                            ("appointment", "Termin"),
+                            ("other", "Sonstiges"),
+                        ],
+                        max_length=50,
+                        verbose_name="Grund",
+                    ),
+                ),
+                (
+                    "certificate",
+                    models.BooleanField(default=False, verbose_name="Mit AU"),
+                ),
             ],
             options={
-                'verbose_name': 'Abwesenheit',
-                'verbose_name_plural': 'Abwesenheiten',
+                "verbose_name": "Abwesenheit",
+                "verbose_name_plural": "Abwesenheiten",
             },
         ),
         migrations.CreateModel(
-            name='Applicant',
+            name="Applicant",
             fields=[
-                ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('application_date', models.DateField(verbose_name='Datum der Bewerbung')),
-                ('desired_hours', models.DecimalField(blank=True, decimal_places=2, max_digits=5, null=True, verbose_name='Stundenwunsch')),
-                ('notice_period', models.CharField(blank=True, max_length=255, null=True, verbose_name='Kündigungsfristen')),
-                ('suitability_rating', models.CharField(blank=True, max_length=255, null=True, verbose_name='Einstufung nach Eignung')),
+                (
+                    "person_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="base.person",
+                    ),
+                ),
+                (
+                    "application_date",
+                    models.DateField(verbose_name="Datum der Bewerbung"),
+                ),
+                (
+                    "desired_hours",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        max_digits=5,
+                        null=True,
+                        verbose_name="Stundenwunsch",
+                    ),
+                ),
+                (
+                    "notice_period",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Kündigungsfristen",
+                    ),
+                ),
+                (
+                    "suitability_rating",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Einstufung nach Eignung",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Bewerber:in',
-                'verbose_name_plural': 'Bewerber:innen',
+                "verbose_name": "Bewerber:in",
+                "verbose_name_plural": "Bewerber:innen",
             },
-            bases=('base.person',),
+            bases=("base.person",),
         ),
         migrations.CreateModel(
-            name='Employee',
+            name="Employee",
             fields=[
-                ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('maiden_name', models.CharField(blank=True, max_length=255, null=True, verbose_name='Geburtsname')),
-                ('birthday', models.DateField(verbose_name='Geburtstag')),
-                ('birthplace', models.CharField(max_length=255, verbose_name='Geburtsort')),
-                ('personnel_number', models.CharField(blank=True, max_length=50, null=True, verbose_name='Personal-Nr. Lohnprogramm')),
-                ('marital_status', models.CharField(choices=[('single', 'ledig'), ('married', 'verheiratet'), ('divorced', 'geschieden'), ('widowed', 'verwitwet'), ('other', 'sonstiges')], max_length=50, verbose_name='Familienstand')),
-                ('number_of_children', models.PositiveIntegerField(default=0, verbose_name='Kinderzahl')),
-                ('social_security_number', models.CharField(blank=True, max_length=50, null=True, verbose_name='Sozialversicherungs-Nr.')),
-                ('tax_id', models.CharField(max_length=50, verbose_name='Steuer-ID')),
-                ('tax_class', models.CharField(blank=True, choices=[('1', 'Klasse 1'), ('2', 'Klasse 2'), ('3', 'Klasse 3'), ('4', 'Klasse 4'), ('5', 'Klasse 5'), ('6', 'Klasse 6')], max_length=10, null=True, verbose_name='Steuerklasse')),
-                ('health_insurance', models.CharField(max_length=255, verbose_name='Krankenkasse')),
-                ('severe_disability_percentage', models.PositiveIntegerField(blank=True, null=True, verbose_name='GdB (Prozentsatz)')),
-                ('measles_protection', models.BooleanField(default=False, verbose_name='Nachweis Masernschutz')),
-                ('criminal_record_certificate', models.DateField(verbose_name='Erweitertes Führungszeugnis (Datum)')),
-                ('risk_assessment', models.TextField(blank=True, null=True, verbose_name='Erläut. Gefährdungsbeurteilung')),
-                ('lh_start', models.DateField(blank=True, null=True, verbose_name='Beschäftigt bei LH seit')),
-                ('church_membership', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='base.denomination', verbose_name='Kirchenmitgliedschaft')),
-                ('citizenship', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='citizens', to='base.country', verbose_name='Staatsangehörigkeit')),
-                ('country_of_birth', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='born_employees', to='base.country', verbose_name='Geburtsland')),
+                (
+                    "person_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="base.person",
+                    ),
+                ),
+                (
+                    "maiden_name",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Geburtsname",
+                    ),
+                ),
+                ("birthday", models.DateField(verbose_name="Geburtstag")),
+                (
+                    "birthplace",
+                    models.CharField(max_length=255, verbose_name="Geburtsort"),
+                ),
+                (
+                    "personnel_number",
+                    models.CharField(
+                        blank=True,
+                        max_length=50,
+                        null=True,
+                        verbose_name="Personal-Nr. Lohnprogramm",
+                    ),
+                ),
+                (
+                    "marital_status",
+                    models.CharField(
+                        choices=[
+                            ("single", "ledig"),
+                            ("married", "verheiratet"),
+                            ("divorced", "geschieden"),
+                            ("widowed", "verwitwet"),
+                            ("other", "sonstiges"),
+                        ],
+                        max_length=50,
+                        verbose_name="Familienstand",
+                    ),
+                ),
+                (
+                    "number_of_children",
+                    models.PositiveIntegerField(default=0, verbose_name="Kinderzahl"),
+                ),
+                (
+                    "social_security_number",
+                    models.CharField(
+                        blank=True,
+                        max_length=50,
+                        null=True,
+                        verbose_name="Sozialversicherungs-Nr.",
+                    ),
+                ),
+                ("tax_id", models.CharField(max_length=50, verbose_name="Steuer-ID")),
+                (
+                    "tax_class",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("1", "Klasse 1"),
+                            ("2", "Klasse 2"),
+                            ("3", "Klasse 3"),
+                            ("4", "Klasse 4"),
+                            ("5", "Klasse 5"),
+                            ("6", "Klasse 6"),
+                        ],
+                        max_length=10,
+                        null=True,
+                        verbose_name="Steuerklasse",
+                    ),
+                ),
+                (
+                    "health_insurance",
+                    models.CharField(max_length=255, verbose_name="Krankenkasse"),
+                ),
+                (
+                    "severe_disability_percentage",
+                    models.PositiveIntegerField(
+                        blank=True, null=True, verbose_name="GdB (Prozentsatz)"
+                    ),
+                ),
+                (
+                    "measles_protection",
+                    models.BooleanField(
+                        default=False, verbose_name="Nachweis Masernschutz"
+                    ),
+                ),
+                (
+                    "criminal_record_certificate",
+                    models.DateField(
+                        verbose_name="Erweitertes Führungszeugnis (Datum)"
+                    ),
+                ),
+                (
+                    "risk_assessment",
+                    models.TextField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Erläut. Gefährdungsbeurteilung",
+                    ),
+                ),
+                (
+                    "lh_start",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Beschäftigt bei LH seit"
+                    ),
+                ),
+                (
+                    "church_membership",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="base.denomination",
+                        verbose_name="Kirchenmitgliedschaft",
+                    ),
+                ),
+                (
+                    "citizenship",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="citizens",
+                        to="base.country",
+                        verbose_name="Staatsangehörigkeit",
+                    ),
+                ),
+                (
+                    "country_of_birth",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="born_employees",
+                        to="base.country",
+                        verbose_name="Geburtsland",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Angestellte:r',
-                'verbose_name_plural': 'Angestellte',
+                "verbose_name": "Angestellte:r",
+                "verbose_name_plural": "Angestellte",
             },
-            bases=('base.person',),
+            bases=("base.person",),
         ),
         migrations.CreateModel(
-            name='SalaryAgreement',
+            name="SalaryAgreement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('salary_standard', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Schulbegleitung (allgemein)')),
-                ('salary_tandem', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Tandem')),
-                ('salary_coordination', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Koordination')),
-                ('salary_management', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Geschäftsführung')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(verbose_name='Gültig bis')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "salary_standard",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=10,
+                        verbose_name="Schulbegleitung (allgemein)",
+                    ),
+                ),
+                (
+                    "salary_tandem",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Tandem"
+                    ),
+                ),
+                (
+                    "salary_coordination",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Koordination"
+                    ),
+                ),
+                (
+                    "salary_management",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Geschäftsführung"
+                    ),
+                ),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                ("valid_to", models.DateField(verbose_name="Gültig bis")),
             ],
             options={
-                'verbose_name': 'Gehaltsvereinbarung',
-                'verbose_name_plural': 'Gehaltsvereinbarungen',
+                "verbose_name": "Gehaltsvereinbarung",
+                "verbose_name_plural": "Gehaltsvereinbarungen",
             },
         ),
         migrations.CreateModel(
-            name='TrainingType',
+            name="TrainingType",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Fortbildungstyp',
-                'verbose_name_plural': 'Fortbildungstypen',
+                "verbose_name": "Fortbildungstyp",
+                "verbose_name_plural": "Fortbildungstypen",
             },
         ),
         migrations.CreateModel(
-            name='VocationalTraining',
+            name="VocationalTraining",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True, verbose_name='Name')),
-                ('qualified', models.BooleanField(default=False, verbose_name='Qualifiziert')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
+                (
+                    "qualified",
+                    models.BooleanField(default=False, verbose_name="Qualifiziert"),
+                ),
             ],
             options={
-                'verbose_name': 'Berufsbildung',
-                'verbose_name_plural': 'Berufsbildungen',
+                "verbose_name": "Berufsbildung",
+                "verbose_name_plural": "Berufsbildungen",
             },
         ),
         migrations.CreateModel(
-            name='TrainingRecord',
+            name="TrainingRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(blank=True, null=True, verbose_name='Gültig bis')),
-                ('staff', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hr.employee', verbose_name='Personalfall')),
-                ('training_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hr.trainingtype', verbose_name='Fortbildungstyp')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                (
+                    "valid_to",
+                    models.DateField(blank=True, null=True, verbose_name="Gültig bis"),
+                ),
+                (
+                    "staff",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="hr.employee",
+                        verbose_name="Personalfall",
+                    ),
+                ),
+                (
+                    "training_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="hr.trainingtype",
+                        verbose_name="Fortbildungstyp",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Fortbildungsnachweis',
-                'verbose_name_plural': 'Fortbildungsnachweise',
+                "verbose_name": "Fortbildungsnachweis",
+                "verbose_name_plural": "Fortbildungsnachweise",
             },
         ),
         migrations.CreateModel(
-            name='OtherEmployment',
+            name="OtherEmployment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('employer', models.CharField(blank=True, max_length=255, null=True, verbose_name='Arbeitgeber (Sonstige)')),
-                ('working_hours', models.DecimalField(decimal_places=2, max_digits=5, verbose_name='Stundenumfang')),
-                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='other_employments', to='hr.employee', verbose_name='Mitarbeiter:in')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "employer",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Arbeitgeber (Sonstige)",
+                    ),
+                ),
+                (
+                    "working_hours",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=5, verbose_name="Stundenumfang"
+                    ),
+                ),
+                (
+                    "employee",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="other_employments",
+                        to="hr.employee",
+                        verbose_name="Mitarbeiter:in",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Weiteres Arbeitsverhältnis',
-                'verbose_name_plural': 'Weitere Arbeitsverhältnisse',
+                "verbose_name": "Weiteres Arbeitsverhältnis",
+                "verbose_name_plural": "Weitere Arbeitsverhältnisse",
             },
         ),
         migrations.CreateModel(
-            name='Employment',
+            name="Employment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start_date', models.DateField(verbose_name='Beginn Arbeitsverhältnis')),
-                ('end_date', models.DateField(blank=True, null=True, verbose_name='Ende Arbeitsverhältnis')),
-                ('working_hours', models.DecimalField(decimal_places=2, max_digits=5, verbose_name='Stundenumfang')),
-                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='employments', to='hr.employee', verbose_name='Mitarbeiter:in')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start_date",
+                    models.DateField(verbose_name="Beginn Arbeitsverhältnis"),
+                ),
+                (
+                    "end_date",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Ende Arbeitsverhältnis"
+                    ),
+                ),
+                (
+                    "working_hours",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=5, verbose_name="Stundenumfang"
+                    ),
+                ),
+                (
+                    "employee",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="employments",
+                        to="hr.employee",
+                        verbose_name="Mitarbeiter:in",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Arbeitsverhältnis',
-                'verbose_name_plural': 'Arbeitsverhältnisse',
+                "verbose_name": "Arbeitsverhältnis",
+                "verbose_name_plural": "Arbeitsverhältnisse",
             },
         ),
         migrations.AddField(
-            model_name='employee',
-            name='vocational_trainings',
-            field=models.ManyToManyField(blank=True, to='hr.vocationaltraining', verbose_name='Berufsbildungen'),
+            model_name="employee",
+            name="vocational_trainings",
+            field=models.ManyToManyField(
+                blank=True, to="hr.vocationaltraining", verbose_name="Berufsbildungen"
+            ),
         ),
     ]

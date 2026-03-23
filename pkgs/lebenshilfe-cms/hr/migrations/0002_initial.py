@@ -5,23 +5,32 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('hr', '0001_initial'),
-        ('pedagogy', '0001_initial'),
+        ("hr", "0001_initial"),
+        ("pedagogy", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicant',
-            name='desired_school',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='pedagogy.school', verbose_name='Schulwunsch'),
+            model_name="applicant",
+            name="desired_school",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="pedagogy.school",
+                verbose_name="Schulwunsch",
+            ),
         ),
         migrations.AddField(
-            model_name='absence',
-            name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hr.employee', verbose_name='Mitarbeiter:in'),
+            model_name="absence",
+            name="employee",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                to="hr.employee",
+                verbose_name="Mitarbeiter:in",
+            ),
         ),
     ]

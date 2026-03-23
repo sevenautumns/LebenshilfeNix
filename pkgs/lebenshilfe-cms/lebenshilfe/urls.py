@@ -2,6 +2,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('accounts/', include('allauth.urls')),
-    path('', admin.site.urls),
+    path("accounts/", include("allauth.urls")),
+    path("", admin.site.urls),
 ]

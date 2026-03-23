@@ -5,66 +5,140 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='CostPayer',
+            name="CostPayer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('identifier', models.CharField(max_length=255, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "identifier",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Kostenzahler',
-                'verbose_name_plural': 'Kostenzahler',
+                "verbose_name": "Kostenzahler",
+                "verbose_name_plural": "Kostenzahler",
             },
         ),
         migrations.CreateModel(
-            name='FeeAgreement',
+            name="FeeAgreement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('label', models.CharField(max_length=255, verbose_name='Bezeichnung')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(verbose_name='Gültig bis')),
-                ('price_standard', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Schulbegleitung (allgemein)')),
-                ('price_tandem', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Tandem')),
-                ('price_coordination', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Koordination')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("label", models.CharField(max_length=255, verbose_name="Bezeichnung")),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                ("valid_to", models.DateField(verbose_name="Gültig bis")),
+                (
+                    "price_standard",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=10,
+                        verbose_name="Schulbegleitung (allgemein)",
+                    ),
+                ),
+                (
+                    "price_tandem",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Tandem"
+                    ),
+                ),
+                (
+                    "price_coordination",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Koordination"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Entgeltvereinbarung',
-                'verbose_name_plural': 'Entgeltvereinbarungen',
+                "verbose_name": "Entgeltvereinbarung",
+                "verbose_name_plural": "Entgeltvereinbarungen",
             },
         ),
         migrations.CreateModel(
-            name='PoolAgreement',
+            name="PoolAgreement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(verbose_name='Gültig bis')),
-                ('installment', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Abschlag')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                ("valid_to", models.DateField(verbose_name="Gültig bis")),
+                (
+                    "installment",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Abschlag"
+                    ),
+                ),
+                (
+                    "payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="finance.costpayer",
+                        verbose_name="Kostenzahler",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Poolvereinbarung',
-                'verbose_name_plural': 'Poolvereinbarungen',
+                "verbose_name": "Poolvereinbarung",
+                "verbose_name_plural": "Poolvereinbarungen",
             },
         ),
         migrations.CreateModel(
-            name='Payment',
+            name="Payment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Betrag')),
-                ('payment_date', models.DateField(verbose_name='Zahlungsdatum')),
-                ('note', models.TextField(blank=True, null=True, verbose_name='Notiz')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "amount",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Betrag"
+                    ),
+                ),
+                ("payment_date", models.DateField(verbose_name="Zahlungsdatum")),
+                ("note", models.TextField(blank=True, null=True, verbose_name="Notiz")),
+                (
+                    "payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="finance.costpayer",
+                        verbose_name="Kostenzahler",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Zahlung',
-                'verbose_name_plural': 'Zahlungen',
+                "verbose_name": "Zahlung",
+                "verbose_name_plural": "Zahlungen",
             },
         ),
     ]

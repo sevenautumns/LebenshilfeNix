@@ -5,15 +5,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0004_alter_phone_telephone_number'),
+        ("base", "0004_alter_phone_telephone_number"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='person',
-            name='full_name',
-            field=models.GeneratedField(db_persist=True, expression=django.db.models.functions.text.Concat(models.F('first_name'), models.Case(models.When(middle_name__gt='', middle_name__isnull=False, then=django.db.models.functions.text.Concat(models.Value(' '), models.F('middle_name'))), default=models.Value('')), models.Value(' '), models.F('last_name')), output_field=models.CharField(max_length=765)),
+            model_name="person",
+            name="full_name",
+            field=models.GeneratedField(
+                db_persist=True,
+                expression=django.db.models.functions.text.Concat(
+                    models.F("first_name"),
+                    models.Case(
+                        models.When(
+                            middle_name__gt="",
+                            middle_name__isnull=False,
+                            then=django.db.models.functions.text.Concat(
+                                models.Value(" "), models.F("middle_name")
+                            ),
+                        ),
+                        default=models.Value(""),
+                    ),
+                    models.Value(" "),
+                    models.F("last_name"),
+                ),
+                output_field=models.CharField(max_length=765),
+            ),
         ),
     ]

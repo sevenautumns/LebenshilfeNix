@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0001_initial'),
+        ("pedagogy", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='request',
-            name='demand',
-            field=models.DurationField(verbose_name='Betreuungsbedarf pro Woche'),
+            model_name="request",
+            name="demand",
+            field=models.DurationField(verbose_name="Betreuungsbedarf pro Woche"),
         ),
     ]

@@ -5,18 +5,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('finance', '0001_initial'),
-        ('pedagogy', '0001_initial'),
+        ("finance", "0001_initial"),
+        ("pedagogy", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='supervision',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.supervision', verbose_name='Betreuung'),
+            model_name="payment",
+            name="supervision",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                to="pedagogy.supervision",
+                verbose_name="Betreuung",
+            ),
         ),
     ]

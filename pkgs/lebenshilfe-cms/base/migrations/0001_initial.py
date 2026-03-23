@@ -5,145 +5,282 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Address',
+            name="Address",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('primary', models.BooleanField(default=False, verbose_name='Primär')),
-                ('street', models.CharField(max_length=255, verbose_name='Straße')),
-                ('house_number', models.CharField(max_length=50, verbose_name='Hausnummer')),
-                ('postcode', models.PositiveIntegerField(verbose_name='Postleitzahl')),
-                ('city', models.CharField(max_length=255, verbose_name='Stadt')),
-                ('district', models.CharField(blank=True, max_length=255, null=True, verbose_name='Ortsteil')),
-                ('object_id', models.PositiveIntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("primary", models.BooleanField(default=False, verbose_name="Primär")),
+                ("street", models.CharField(max_length=255, verbose_name="Straße")),
+                (
+                    "house_number",
+                    models.CharField(max_length=50, verbose_name="Hausnummer"),
+                ),
+                ("postcode", models.PositiveIntegerField(verbose_name="Postleitzahl")),
+                ("city", models.CharField(max_length=255, verbose_name="Stadt")),
+                (
+                    "district",
+                    models.CharField(
+                        blank=True, max_length=255, null=True, verbose_name="Ortsteil"
+                    ),
+                ),
+                ("object_id", models.PositiveIntegerField()),
             ],
             options={
-                'verbose_name': 'Adresse',
-                'verbose_name_plural': 'Adressen',
+                "verbose_name": "Adresse",
+                "verbose_name_plural": "Adressen",
             },
         ),
         migrations.CreateModel(
-            name='BankAccount',
+            name="BankAccount",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('holder', models.CharField(max_length=255, verbose_name='Kontoinhaber:in')),
-                ('bank', models.CharField(max_length=255, verbose_name='Bank')),
-                ('iban', models.CharField(max_length=50, verbose_name='IBAN')),
-                ('object_id', models.PositiveIntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "holder",
+                    models.CharField(max_length=255, verbose_name="Kontoinhaber:in"),
+                ),
+                ("bank", models.CharField(max_length=255, verbose_name="Bank")),
+                ("iban", models.CharField(max_length=50, verbose_name="IBAN")),
+                ("object_id", models.PositiveIntegerField()),
             ],
             options={
-                'verbose_name': 'Bankverbindung',
-                'verbose_name_plural': 'Bankverbindungen',
+                "verbose_name": "Bankverbindung",
+                "verbose_name_plural": "Bankverbindungen",
             },
         ),
         migrations.CreateModel(
-            name='Country',
+            name="Country",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(max_length=100, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Land',
-                'verbose_name_plural': 'Länder',
-                'ordering': ['name'],
+                "verbose_name": "Land",
+                "verbose_name_plural": "Länder",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Denomination',
+            name="Denomination",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(max_length=100, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Konfession',
-                'verbose_name_plural': 'Konfessionen',
-                'ordering': ['name'],
+                "verbose_name": "Konfession",
+                "verbose_name_plural": "Konfessionen",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='MasterData',
+            name="MasterData",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Stammdaten',
-                'verbose_name_plural': 'Stammdaten',
+                "verbose_name": "Stammdaten",
+                "verbose_name_plural": "Stammdaten",
             },
         ),
         migrations.CreateModel(
-            name='Person',
+            name="Person",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('first_name', models.CharField(max_length=255, verbose_name='Vorname')),
-                ('middle_name', models.CharField(blank=True, max_length=255, null=True, verbose_name='Mittlerer Name')),
-                ('last_name', models.CharField(max_length=255, verbose_name='Nachname')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "first_name",
+                    models.CharField(max_length=255, verbose_name="Vorname"),
+                ),
+                (
+                    "middle_name",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Mittlerer Name",
+                    ),
+                ),
+                (
+                    "last_name",
+                    models.CharField(max_length=255, verbose_name="Nachname"),
+                ),
             ],
             options={
-                'verbose_name': 'Person',
-                'verbose_name_plural': 'Personen',
+                "verbose_name": "Person",
+                "verbose_name_plural": "Personen",
             },
         ),
         migrations.CreateModel(
-            name='Phone',
+            name="Phone",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('telephone_number', models.CharField(max_length=100, verbose_name='Telefonnummer')),
-                ('primary', models.BooleanField(default=False, verbose_name='Primär')),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "telephone_number",
+                    models.CharField(max_length=100, verbose_name="Telefonnummer"),
+                ),
+                ("primary", models.BooleanField(default=False, verbose_name="Primär")),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Telefonnummer',
-                'verbose_name_plural': 'Telefonnummern',
+                "verbose_name": "Telefonnummer",
+                "verbose_name_plural": "Telefonnummern",
             },
         ),
         migrations.CreateModel(
-            name='ExternalIdentifier',
+            name="ExternalIdentifier",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('label', models.CharField(max_length=255, verbose_name='Bezeichnung')),
-                ('value', models.CharField(max_length=255, verbose_name='Nummer/Wert')),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("label", models.CharField(max_length=255, verbose_name="Bezeichnung")),
+                ("value", models.CharField(max_length=255, verbose_name="Nummer/Wert")),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Identifikator',
-                'verbose_name_plural': 'Identifikatoren',
+                "verbose_name": "Identifikator",
+                "verbose_name_plural": "Identifikatoren",
             },
         ),
         migrations.CreateModel(
-            name='Email',
+            name="Email",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(max_length=254, verbose_name='E-Mail')),
-                ('primary', models.BooleanField(default=False, verbose_name='Primär')),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("email", models.EmailField(max_length=254, verbose_name="E-Mail")),
+                ("primary", models.BooleanField(default=False, verbose_name="Primär")),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'E-Mail-Adresse',
-                'verbose_name_plural': 'E-Mail-Adressen',
+                "verbose_name": "E-Mail-Adresse",
+                "verbose_name_plural": "E-Mail-Adressen",
             },
         ),
         migrations.CreateModel(
-            name='CostPayerLink',
+            name="CostPayerLink",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('primary', models.BooleanField(default=False, verbose_name='Primär')),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("primary", models.BooleanField(default=False, verbose_name="Primär")),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Kostenzahler-Verknüpfung',
-                'verbose_name_plural': 'Kostenzahler-Verknüpfungen',
+                "verbose_name": "Kostenzahler-Verknüpfung",
+                "verbose_name_plural": "Kostenzahler-Verknüpfungen",
             },
         ),
     ]

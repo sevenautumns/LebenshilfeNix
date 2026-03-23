@@ -5,29 +5,38 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('finance', '0001_initial'),
-        ('base', '0001_initial'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("finance", "0001_initial"),
+        ("base", "0001_initial"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='costpayerlink',
-            name='identifier',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler'),
+            model_name="costpayerlink",
+            name="identifier",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                to="finance.costpayer",
+                verbose_name="Kostenzahler",
+            ),
         ),
         migrations.AddField(
-            model_name='bankaccount',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype'),
+            model_name="bankaccount",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='address',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype'),
+            model_name="address",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="contenttypes.contenttype",
+            ),
         ),
     ]

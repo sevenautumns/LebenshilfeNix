@@ -1,17 +1,18 @@
 from django.contrib.auth.models import Group
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
+
 class StaffSocialAccountAdapter(DefaultSocialAccountAdapter):
     def _sync_user_data(self, user, sociallogin):
-        nextcloud_groups = sociallogin.account.extra_data.get('groups', [])
+        nextcloud_groups = sociallogin.account.extra_data.get("groups", [])
         user.is_staff = True
-        user.is_superuser = 'admin' in nextcloud_groups
-        
+        user.is_superuser = "admin" in nextcloud_groups
+
         if user.pk:
             user.save()
             django_groups = []
             for group_name in nextcloud_groups:
-                if group_name == 'admin':
+                if group_name == "admin":
                     continue
                 group, _ = Group.objects.get_or_create(name=group_name)
                 django_groups.append(group)
