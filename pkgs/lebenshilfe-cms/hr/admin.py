@@ -1,3 +1,4 @@
+from unfold.contrib.filters.admin import BooleanRadioFilter
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -110,7 +111,7 @@ class TrainingTypeAdmin(BaseModelAdmin):
 @admin.register(VocationalTraining)
 class VocationalTrainingAdmin(BaseModelAdmin):
     list_display = ("name", "qualified")
-    list_filter = ("qualified",)
+    list_filter = [("qualified", BooleanRadioFilter)]
     search_fields = ("name",)
 
 
