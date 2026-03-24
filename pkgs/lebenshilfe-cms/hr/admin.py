@@ -60,8 +60,12 @@ class EmploymentAdmin(BaseModelAdmin):
 @admin.register(Absence)
 class AbsenceAdmin(BaseModelAdmin):
     list_display = ("employee", "reason", "start", "end", "certificate")
-    list_filter = ("employee", "reason", "certificate")
+    list_filter = ("reason", "certificate")
+    search_fields = ("employee__first_name", "employee__last_name")
     autocomplete_fields = ("employee",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("employee")
 
 
 class TrainingValidityFilter(admin.SimpleListFilter):
@@ -127,6 +131,8 @@ class ApplicantAdmin(BaseModelAdmin):
 
 @admin.register(SalaryAgreement)
 class SalaryAgreementAdmin(BaseModelAdmin):
+    list_display = ("valid_from", "valid_to", "salary_standard")
+    list_filter = ("valid_from", "valid_to")
     currency_fields = [
         "salary_standard",
         "salary_tandem",
