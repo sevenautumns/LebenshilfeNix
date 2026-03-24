@@ -53,7 +53,7 @@ class PoolAgreement(models.Model):
         max_digits=10, decimal_places=2, verbose_name="Abschlag"
     )
     payer = models.ForeignKey(
-        CostPayer, on_delete=models.PROTECT, verbose_name="Kostenzahler"
+        CostPayer, on_delete=models.PROTECT, verbose_name="Kostenzahler", related_name="pool_agreements"
     )
 
     class Meta:
