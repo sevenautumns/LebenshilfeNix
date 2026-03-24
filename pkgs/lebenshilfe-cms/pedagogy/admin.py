@@ -26,8 +26,11 @@ class SupervisionAdmin(BaseModelAdmin):
         "display_weekly_hours",
     )
     list_filter = ("school", "start")
-    search_fields = ("student", "start")
+    search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("student", "caretaker", "school", "tandem")
 
 
 @admin.register(Request)
@@ -38,7 +41,11 @@ class RequestAdmin(BaseModelAdmin):
     )
     list_display = ("student", "state", "start", "display_demand")
     list_filter = ("state",)
+    search_fields = ("student__first_name", "student__last_name", "notes")
     autocomplete_fields = ("student", "school")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("student", "school")
 
 
 @admin.register(School)
