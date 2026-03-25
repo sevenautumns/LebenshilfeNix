@@ -66,10 +66,16 @@ class PoolAgreement(models.Model):
 
 class Payment(models.Model):
     supervision = models.ForeignKey(
-        "pedagogy.Supervision", on_delete=models.PROTECT, verbose_name="Betreuung"
+        "pedagogy.Supervision",
+        on_delete=models.PROTECT,
+        related_name="payments",
+        verbose_name="Betreuung",
     )
     payer = models.ForeignKey(
-        CostPayer, on_delete=models.PROTECT, verbose_name="Kostenzahler"
+        CostPayer,
+        on_delete=models.PROTECT,
+        related_name="payments",
+        verbose_name="Kostenzahler",
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
     payment_date = models.DateField(verbose_name="Zahlungsdatum")

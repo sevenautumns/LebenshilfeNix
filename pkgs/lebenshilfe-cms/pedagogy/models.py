@@ -15,7 +15,10 @@ class School(models.Model):
 
 class Student(Person):
     payer = models.ForeignKey(
-        "finance.CostPayer", on_delete=models.PROTECT, verbose_name="Kostenzahler"
+        "finance.CostPayer",
+        on_delete=models.PROTECT,
+        related_name="students",
+        verbose_name="Kostenzahler",
     )
 
     class Meta:
@@ -42,16 +45,27 @@ class Supervision(models.Model):
         verbose_name="Tandem",
     )
     caretaker = models.ForeignKey(
-        "hr.Employee", on_delete=models.PROTECT, verbose_name="Betreuer:in"
+        "hr.Employee",
+        on_delete=models.PROTECT,
+        related_name="supervisions",
+        verbose_name="Betreuer:in",
     )
     class_name = models.CharField(
         max_length=100, blank=True, null=True, verbose_name="Klasse"
     )
-    school = models.ForeignKey(School, on_delete=models.PROTECT, verbose_name="Schule")
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="supervisions",
+        verbose_name="Schule",
+    )
     start = models.DateField(verbose_name="Beginn")
     end = models.DateField(verbose_name="Ende")
     weekly_hours = models.DurationField(verbose_name="Wochenstunden")
-    school_days = models.PositiveIntegerField(verbose_name="Schultage")
+    school_days = models.PositiveIntegerField(
+        verbose_name="Schultage",
+        help_text="Anzahl der Schultage im Betreuungszeitraum",
+    )
 
     class Meta:
         verbose_name = "Betreuung"
@@ -98,12 +112,28 @@ class Request(models.Model):
         ("approved", "Genehmigt"),
     ]
     student = models.ForeignKey(
-        Student, on_delete=models.PROTECT, verbose_name="Schulkind"
+        Student,
+        on_delete=models.PROTECT,
+        related_name="requests",
+        verbose_name="Schulkind",
     )
-    school = models.ForeignKey(School, on_delete=models.PROTECT, verbose_name="Schule")
+    school = models.ForeignKey(
+        School,
+        on_delete=models.PROTECT,
+        related_name="requests",
+        verbose_name="Schule",
+    )
     start = models.DateField(verbose_name="Beginn")
-    valid_to = models.DateField(blank=True, null=True, verbose_name="Gültig bis")
-    demand = models.DurationField(verbose_name="Betreuungsbedarf pro Woche")
+    valid_to = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Gültig bis",
+        help_text="Ende der Bewilligungsperiode. Leer lassen, wenn unbefristet.",
+    )
+    demand = models.DurationField(
+        verbose_name="Betreuungsbedarf pro Woche",
+        help_text="Genehmigter wöchentlicher Betreuungsumfang",
+    )
     state = models.CharField(
         max_length=50, choices=STATE_CHOICES, default="draft", verbose_name="Zustand"
     )

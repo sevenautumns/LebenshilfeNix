@@ -28,7 +28,7 @@ class Address(models.Model):
         max_length=255, blank=True, null=True, verbose_name="Ortsteil"
     )
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
@@ -47,7 +47,7 @@ class Phone(models.Model):
     telephone_number = PhoneNumberField(region="DE", verbose_name="Telefonnummer")
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
@@ -63,7 +63,7 @@ class Email(models.Model):
     email = models.EmailField(verbose_name="E-Mail")
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
@@ -80,7 +80,7 @@ class BankAccount(models.Model):
     bank = models.CharField(max_length=255, verbose_name="Bank")
     iban = models.CharField(max_length=50, verbose_name="IBAN")
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
@@ -96,7 +96,7 @@ class ExternalIdentifier(models.Model):
     label = models.CharField(max_length=255, verbose_name="Bezeichnung")
     value = models.CharField(max_length=255, verbose_name="Nummer/Wert")
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 

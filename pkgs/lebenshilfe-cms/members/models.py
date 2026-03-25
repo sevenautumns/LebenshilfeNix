@@ -8,10 +8,15 @@ class Member(Person):
         blank=True, null=True, verbose_name="Austrittsdatum"
     )
     membership_fee = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Beitragshöhe"
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Beitragshöhe",
+        help_text="Monatlicher Mitgliedsbeitrag in Euro",
     )
     authorization_id = models.CharField(
-        max_length=100, verbose_name="Mandatsreferenz-Nr."
+        max_length=100,
+        verbose_name="Mandatsreferenz-Nr.",
+        help_text="Referenznummer des SEPA-Lastschriftmandats",
     )
 
     class Meta:

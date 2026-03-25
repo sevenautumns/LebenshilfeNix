@@ -85,7 +85,11 @@ class Employee(Person):
         verbose_name="Staatsangehörigkeit",
     )
     personnel_number = models.CharField(
-        max_length=50, blank=True, null=True, verbose_name="Personal-Nr. Lohnprogramm"
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Personal-Nr. Lohnprogramm",
+        help_text="Personalnummer im Lohnprogramm (optional)",
     )
 
     # Familiärer Status
@@ -98,9 +102,17 @@ class Employee(Person):
 
     # Steuer- und Sozialversicherungsdaten
     social_security_number = models.CharField(
-        max_length=50, blank=True, null=True, verbose_name="Sozialversicherungs-Nr."
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Sozialversicherungs-Nr.",
+        help_text="12-stellige Sozialversicherungsnummer",
     )
-    tax_id = models.CharField(max_length=50, verbose_name="Steuer-ID")
+    tax_id = models.CharField(
+        max_length=50,
+        verbose_name="Steuer-ID",
+        help_text="11-stellige Steueridentifikationsnummer",
+    )
     tax_class = models.CharField(
         max_length=10,
         choices=TAX_CLASS_CHOICES,
@@ -115,6 +127,7 @@ class Employee(Person):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
+        related_name="employees",
         verbose_name="Kirchenmitgliedschaft",
     )
 
@@ -122,7 +135,10 @@ class Employee(Person):
     health_insurance = models.CharField(max_length=255, verbose_name="Krankenkasse")
     # GdB: Wenn NULL, liegt keine festgestellte Schwerbehinderung vor
     severe_disability_percentage = models.PositiveIntegerField(
-        blank=True, null=True, verbose_name="GdB (Prozentsatz)"
+        blank=True,
+        null=True,
+        verbose_name="GdB (Prozentsatz)",
+        help_text="Anerkannter GdB in Prozent. Leer lassen, wenn keine Schwerbehinderung vorliegt.",
     )
     measles_protection = models.BooleanField(
         default=False, verbose_name="Nachweis Masernschutz"
@@ -130,7 +146,8 @@ class Employee(Person):
 
     # Dokumentation
     criminal_record_certificate = models.DateField(
-        verbose_name="Erweitertes Führungszeugnis (Datum)"
+        verbose_name="Erweitertes Führungszeugnis (Datum)",
+        help_text="Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)",
     )
     risk_assessment = models.TextField(
         blank=True, null=True, verbose_name="Erläut. Gefährdungsbeurteilung"
@@ -138,7 +155,10 @@ class Employee(Person):
 
     # Allgemeine interne Daten
     lh_start = models.DateField(
-        blank=True, null=True, verbose_name="Beschäftigt bei LH seit"
+        blank=True,
+        null=True,
+        verbose_name="Beschäftigt bei LH seit",
+        help_text="Erstmaliger Beschäftigungsbeginn bei der Lebenshilfe",
     )
     vocational_trainings = models.ManyToManyField(
         VocationalTraining, blank=True, verbose_name="Berufsbildungen"
@@ -164,7 +184,10 @@ class Employment(models.Model):
         blank=True, null=True, verbose_name="Ende Arbeitsverhältnis"
     )
     working_hours = models.DecimalField(
-        max_digits=5, decimal_places=2, verbose_name="Stundenumfang"
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Stundenumfang",
+        help_text="Wöchentlicher Stundenumfang laut Arbeitsvertrag",
     )
 
     class Meta:
@@ -212,6 +235,7 @@ class Applicant(Person):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
+        related_name="applicants",
         verbose_name="Schulwunsch",
     )
     notice_period = models.CharField(
@@ -237,14 +261,21 @@ class Absence(models.Model):
         ("other", "Sonstiges"),
     ]
     employee = models.ForeignKey(
-        Employee, on_delete=models.PROTECT, verbose_name="Mitarbeiter:in"
+        Employee,
+        on_delete=models.PROTECT,
+        related_name="absences",
+        verbose_name="Mitarbeiter:in",
     )
     start = models.DateField(blank=True, null=True, verbose_name="Beginn")
     end = models.DateField(blank=True, null=True, verbose_name="Ende")
     reason = models.CharField(
         max_length=50, choices=REASON_CHOICES, verbose_name="Grund"
     )
-    certificate = models.BooleanField(default=False, verbose_name="Mit AU")
+    certificate = models.BooleanField(
+        default=False,
+        verbose_name="Mit AU",
+        help_text="Liegt eine ärztliche Arbeitsunfähigkeitsbescheinigung vor?",
+    )
 
     class Meta:
         verbose_name = "Abwesenheit"
@@ -256,13 +287,24 @@ class Absence(models.Model):
 
 class TrainingRecord(models.Model):
     staff = models.ForeignKey(
-        Employee, on_delete=models.PROTECT, verbose_name="Personalfall"
+        Employee,
+        on_delete=models.PROTECT,
+        related_name="training_records",
+        verbose_name="Personalfall",
     )
     training_type = models.ForeignKey(
-        TrainingType, on_delete=models.PROTECT, verbose_name="Fortbildungstyp"
+        TrainingType,
+        on_delete=models.PROTECT,
+        related_name="training_records",
+        verbose_name="Fortbildungstyp",
     )
     valid_from = models.DateField(verbose_name="Gültig von")
-    valid_to = models.DateField(blank=True, null=True, verbose_name="Gültig bis")
+    valid_to = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Gültig bis",
+        help_text="Leer lassen, wenn die Fortbildung dauerhaft gültig ist",
+    )
 
     class Meta:
         verbose_name = "Fortbildungsnachweis"
