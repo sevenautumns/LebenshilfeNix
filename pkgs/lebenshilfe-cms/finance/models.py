@@ -15,7 +15,6 @@ class CostPayer(models.Model):
 
 
 class FeeAgreement(models.Model):
-    label = models.CharField(max_length=255, verbose_name="Bezeichnung")
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
     price_standard = models.DecimalField(
@@ -52,7 +51,7 @@ class FeeAgreement(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.label} ({self.valid_from} - {self.valid_to})"
+        return f"{self.responsible_payer} ({self.valid_from} – {self.valid_to})"
 
 
 class PoolAgreement(models.Model):
