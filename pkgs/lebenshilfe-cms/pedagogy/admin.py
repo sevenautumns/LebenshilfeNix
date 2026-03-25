@@ -1,6 +1,6 @@
 from django.contrib import admin
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
-from .models import School, Student, Supervision, Request, PoolSchoolAgreement
+from .models import School, Student, Supervision, Request
 
 
 @admin.register(Student)
@@ -51,15 +51,3 @@ class RequestAdmin(BaseModelAdmin):
 @admin.register(School)
 class SchoolAdmin(BaseModelAdmin):
     search_fields = ("school_name",)
-
-
-@admin.register(PoolSchoolAgreement)
-class PoolSchoolAgreementAdmin(BaseModelAdmin):
-    list_display = ("payer", "flat_rate", "max_supervisions", "start", "end")
-    list_filter = ("payer",)
-    search_fields = ("payer__identifier",)
-    autocomplete_fields = ("payer",)
-    date_hierarchy = "start"
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related("payer")

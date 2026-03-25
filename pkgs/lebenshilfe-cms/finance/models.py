@@ -56,14 +56,24 @@ class FeeAgreement(models.Model):
 
 
 class PoolAgreement(models.Model):
+    payer = models.ForeignKey(
+        CostPayer,
+        on_delete=models.PROTECT,
+        related_name="pool_agreements",
+        verbose_name="Kostenzahler",
+    )
+    flat_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Pauschalentgelt pro Fall",
+        help_text="Pauschalentgelt in Euro pro betreutem Fall",
+    )
+    max_supervisions = models.PositiveIntegerField(
+        verbose_name="Max. Betreuungen",
+        help_text="Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung",
+    )
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
-    installment = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Abschlag"
-    )
-    payer = models.ForeignKey(
-        CostPayer, on_delete=models.PROTECT, verbose_name="Kostenzahler", related_name="pool_agreements"
-    )
 
     class Meta:
         verbose_name = "Poolvereinbarung"

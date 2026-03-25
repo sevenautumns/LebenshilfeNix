@@ -85,40 +85,6 @@ class Supervision(models.Model):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
 
 
-class PoolSchoolAgreement(models.Model):
-    payer = models.ForeignKey(
-        "finance.CostPayer",
-        on_delete=models.PROTECT,
-        related_name="pool_school_agreements",
-        verbose_name="Kostenzahler",
-    )
-    flat_rate = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        verbose_name="Pauschalentgelt pro Fall",
-        help_text="Pauschalentgelt in Euro pro betreutem Fall",
-    )
-    max_supervisions = models.PositiveIntegerField(
-        verbose_name="Max. Betreuungen",
-        help_text="Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung",
-    )
-    start = models.DateField(verbose_name="Beginn")
-    end = models.DateField(verbose_name="Ende")
-
-    class Meta:
-        verbose_name = "Poolschulen-Vereinbarung"
-        verbose_name_plural = "Poolschulen-Vereinbarungen"
-        ordering = ["-start"]
-        constraints = [
-            CheckConstraint(
-                condition=Q(end__gte=F("start")),
-                name="poolschoolagreement_end_after_start",
-            )
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.payer} ({self.start} – {self.end})"
-
 
 class Request(models.Model):
     STATE_CHOICES = [
