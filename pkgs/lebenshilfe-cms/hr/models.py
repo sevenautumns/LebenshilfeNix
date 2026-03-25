@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.db import models
+from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 from base.utils import COUNTRY_CHOICES, NATIONALITY_CHOICES
 
@@ -10,6 +11,7 @@ class TrainingType(models.Model):
     class Meta:
         verbose_name = "Fortbildungstyp"
         verbose_name_plural = "Fortbildungstypen"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -22,6 +24,7 @@ class VocationalTraining(models.Model):
     class Meta:
         verbose_name = "Berufsbildung"
         verbose_name_plural = "Berufsbildungen"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -46,6 +49,13 @@ class SalaryAgreement(models.Model):
     class Meta:
         verbose_name = "Gehaltsvereinbarung"
         verbose_name_plural = "Gehaltsvereinbarungen"
+        ordering = ["-valid_from"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__gte=F("valid_from")),
+                name="salaryagreement_valid_to_after_valid_from",
+            )
+        ]
 
     def __str__(self):
         return f"Gehaltsvereinbarung ({self.valid_from} - {self.valid_to})"
@@ -167,6 +177,7 @@ class Employee(Person):
     class Meta:
         verbose_name = "Angestellte:r"
         verbose_name_plural = "Angestellte"
+        ordering = ["last_name", "first_name"]
 
     def __str__(self):
         return super().__str__()
@@ -193,6 +204,13 @@ class Employment(models.Model):
     class Meta:
         verbose_name = "Arbeitsverhältnis"
         verbose_name_plural = "Arbeitsverhältnisse"
+        ordering = ["-start_date"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(end_date__isnull=True) | Q(end_date__gte=F("start_date")),
+                name="employment_end_date_after_start_date",
+            )
+        ]
 
     def __str__(self):
         end = self.end_date.strftime("%d.%m.%Y") if self.end_date else "laufend"
@@ -216,6 +234,7 @@ class OtherEmployment(models.Model):
     class Meta:
         verbose_name = "Weiteres Arbeitsverhältnis"
         verbose_name_plural = "Weitere Arbeitsverhältnisse"
+        ordering = ["employee__last_name", "employee__first_name", "employer"]
 
     def __str__(self):
         return f"{self.employer or 'Unbekannter Arbeitgeber'} ({self.working_hours}h) - {self.employee.full_name}"
@@ -248,6 +267,7 @@ class Applicant(Person):
     class Meta:
         verbose_name = "Bewerber:in"
         verbose_name_plural = "Bewerber:innen"
+        ordering = ["-application_date"]
 
     def __str__(self):
         return super().__str__()
@@ -280,6 +300,13 @@ class Absence(models.Model):
     class Meta:
         verbose_name = "Abwesenheit"
         verbose_name_plural = "Abwesenheiten"
+        ordering = ["-start"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(start__isnull=True) | Q(end__isnull=True) | Q(end__gte=F("start")),
+                name="absence_end_after_start",
+            )
+        ]
 
     def __str__(self):
         return f"Abwesenheit: {self.employee.full_name} ({self.get_reason_display()})"
@@ -309,6 +336,13 @@ class TrainingRecord(models.Model):
     class Meta:
         verbose_name = "Fortbildungsnachweis"
         verbose_name_plural = "Fortbildungsnachweise"
+        ordering = ["-valid_from"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__isnull=True) | Q(valid_to__gte=F("valid_from")),
+                name="trainingrecord_valid_to_after_valid_from",
+            )
+        ]
 
     @property
     def is_valid(self):

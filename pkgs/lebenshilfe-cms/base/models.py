@@ -35,6 +35,7 @@ class Address(models.Model):
     class Meta:
         verbose_name = "Adresse"
         verbose_name_plural = "Adressen"
+        ordering = ["-primary", "street"]
 
     def __str__(self):
         ort = f"{self.postcode} {self.city}"
@@ -54,6 +55,7 @@ class Phone(models.Model):
     class Meta:
         verbose_name = "Telefonnummer"
         verbose_name_plural = "Telefonnummern"
+        ordering = ["-primary"]
 
     def __str__(self):
         return self.telephone_number
@@ -70,6 +72,7 @@ class Email(models.Model):
     class Meta:
         verbose_name = "E-Mail-Adresse"
         verbose_name_plural = "E-Mail-Adressen"
+        ordering = ["-primary"]
 
     def __str__(self):
         return self.email
@@ -87,6 +90,7 @@ class BankAccount(models.Model):
     class Meta:
         verbose_name = "Bankverbindung"
         verbose_name_plural = "Bankverbindungen"
+        ordering = ["holder"]
 
     def __str__(self):
         return f"{self.bank} - {self.iban}"
@@ -103,6 +107,7 @@ class ExternalIdentifier(models.Model):
     class Meta:
         verbose_name = "Identifikator"
         verbose_name_plural = "Identifikatoren"
+        ordering = ["label"]
 
     def __str__(self):
         return f"{self.label}: {self.value}"
@@ -142,6 +147,7 @@ class Person(models.Model):
     class Meta:
         verbose_name = "Person"
         verbose_name_plural = "Personen"
+        ordering = ["last_name", "first_name"]
 
     def __str__(self):
         return self.full_name
@@ -155,6 +161,7 @@ class MasterData(models.Model):
     class Meta:
         verbose_name = "Stammdaten"
         verbose_name_plural = "Stammdaten"
+        ordering = ["name"]
 
     def __str__(self):
         return f"Stammdaten: {self.name}"

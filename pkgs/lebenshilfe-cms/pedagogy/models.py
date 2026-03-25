@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 
 
@@ -8,6 +9,7 @@ class School(models.Model):
     class Meta:
         verbose_name = "Schule"
         verbose_name_plural = "Schulen"
+        ordering = ["school_name"]
 
     def __str__(self):
         return self.school_name
@@ -24,6 +26,7 @@ class Student(Person):
     class Meta:
         verbose_name = "Schulkind"
         verbose_name_plural = "Schulkinder"
+        ordering = ["last_name", "first_name"]
 
     def __str__(self):
         return super().__str__()
@@ -70,6 +73,13 @@ class Supervision(models.Model):
     class Meta:
         verbose_name = "Betreuung"
         verbose_name_plural = "Betreuungen"
+        ordering = ["-start"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(end__gte=F("start")),
+                name="supervision_end_after_start",
+            )
+        ]
 
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
@@ -99,6 +109,12 @@ class PoolSchoolAgreement(models.Model):
         verbose_name = "Poolschulen-Vereinbarung"
         verbose_name_plural = "Poolschulen-Vereinbarungen"
         ordering = ["-start"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(end__gte=F("start")),
+                name="poolschoolagreement_end_after_start",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.payer} ({self.start} – {self.end})"
@@ -142,6 +158,13 @@ class Request(models.Model):
     class Meta:
         verbose_name = "Antrag"
         verbose_name_plural = "Anträge"
+        ordering = ["-start"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__isnull=True) | Q(valid_to__gte=F("start")),
+                name="request_valid_to_after_start",
+            )
+        ]
 
     def __str__(self):
         return f"Antrag: {self.student.full_name} ({self.get_state_display()})"

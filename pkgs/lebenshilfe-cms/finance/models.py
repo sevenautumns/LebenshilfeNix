@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q, F, CheckConstraint
 
 
 class CostPayer(models.Model):
@@ -7,6 +8,7 @@ class CostPayer(models.Model):
     class Meta:
         verbose_name = "Kostenzahler"
         verbose_name_plural = "Kostenzahler"
+        ordering = ["identifier"]
 
     def __str__(self):
         return self.identifier
@@ -41,6 +43,13 @@ class FeeAgreement(models.Model):
     class Meta:
         verbose_name = "Entgeltvereinbarung"
         verbose_name_plural = "Entgeltvereinbarungen"
+        ordering = ["-valid_from"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__gte=F("valid_from")),
+                name="feeagreement_valid_to_after_valid_from",
+            )
+        ]
 
     def __str__(self):
         return f"{self.label} ({self.valid_from} - {self.valid_to})"
@@ -59,6 +68,13 @@ class PoolAgreement(models.Model):
     class Meta:
         verbose_name = "Poolvereinbarung"
         verbose_name_plural = "Poolvereinbarungen"
+        ordering = ["-valid_from"]
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__gte=F("valid_from")),
+                name="poolagreement_valid_to_after_valid_from",
+            )
+        ]
 
     def __str__(self):
         return f"Poolvereinbarung {self.payer} ({self.valid_from})"
@@ -84,6 +100,7 @@ class Payment(models.Model):
     class Meta:
         verbose_name = "Zahlung"
         verbose_name_plural = "Zahlungen"
+        ordering = ["-payment_date"]
 
     def __str__(self):
         return f"Zahlung: {self.amount}€ von {self.payer}"
