@@ -276,7 +276,7 @@ class Applicant(Person):
 class Absence(models.Model):
     REASON_CHOICES = [
         ("illness", "Krankheit"),
-        ("child_sick", "Kind Krank"),
+        ("child_sick", "Kind krank"),
         ("appointment", "Termin"),
         ("other", "Sonstiges"),
     ]
