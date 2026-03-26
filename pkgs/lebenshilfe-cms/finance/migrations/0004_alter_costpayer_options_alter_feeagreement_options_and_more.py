@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='costpayer',
-            options={'ordering': ['identifier'], 'verbose_name': 'Kostenzahler', 'verbose_name_plural': 'Kostenzahler'},
+            options={'ordering': ['identifier'], 'verbose_name': 'Kostenträger', 'verbose_name_plural': 'Kostenträger'},
         ),
         migrations.AlterModelOptions(
             name='feeagreement',
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='payment',
             name='payer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='payments', to='finance.costpayer', verbose_name='Kostenzahler'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='payments', to='finance.costpayer', verbose_name='Kostenträger'),
         ),
         migrations.AlterField(
             model_name='payment',

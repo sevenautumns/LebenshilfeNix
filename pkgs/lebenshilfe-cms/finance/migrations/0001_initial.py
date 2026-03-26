@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
                 ('identifier', models.CharField(max_length=255, unique=True, verbose_name='Name')),
             ],
             options={
-                'verbose_name': 'Kostenzahler',
-                'verbose_name_plural': 'Kostenzahler',
+                'verbose_name': 'Kostenträger',
+                'verbose_name_plural': 'Kostenträger',
             },
         ),
         migrations.CreateModel(
@@ -46,8 +46,8 @@ class Migration(migrations.Migration):
                 ('price_standard', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Schulbegleitung (allgemein)')),
                 ('price_tandem', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Tandem')),
                 ('price_coordination', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Koordination')),
-                ('additional_payers', models.ManyToManyField(blank=True, related_name='additional_fee_agreements', to='finance.costpayer', verbose_name='Weitere Kostenzahler')),
-                ('responsible_payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='responsible_fee_agreements', to='finance.costpayer', verbose_name='Zuständiger Kostenzahler')),
+                ('additional_payers', models.ManyToManyField(blank=True, related_name='additional_fee_agreements', to='finance.costpayer', verbose_name='Weitere Kostenträger')),
+                ('responsible_payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='responsible_fee_agreements', to='finance.costpayer', verbose_name='Zuständiger Kostenträger')),
             ],
             options={
                 'verbose_name': 'Entgeltvereinbarung',
@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
                 ('amount', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Betrag')),
                 ('payment_date', models.DateField(verbose_name='Zahlungsdatum')),
                 ('note', models.TextField(blank=True, null=True, verbose_name='Notiz')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler')),
+                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenträger')),
             ],
             options={
                 'verbose_name': 'Zahlung',

@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('max_supervisions', models.PositiveIntegerField(help_text='Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung', verbose_name='Max. Betreuungen')),
                 ('start', models.DateField(verbose_name='Beginn')),
                 ('end', models.DateField(verbose_name='Ende')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pool_school_agreements', to='finance.costpayer', verbose_name='Kostenzahler')),
+                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pool_school_agreements', to='finance.costpayer', verbose_name='Kostenträger')),
             ],
             options={
                 'verbose_name': 'Poolschulen-Vereinbarung',

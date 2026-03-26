@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='student',
-            options={'ordering': ['last_name', 'first_name'], 'verbose_name': 'Schulkind', 'verbose_name_plural': 'Schulkinder'},
+            options={'ordering': ['last_name', 'first_name'], 'verbose_name': 'Schüler:in', 'verbose_name_plural': 'Schüler:innen'},
         ),
         migrations.AlterModelOptions(
             name='supervision',
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='request',
             name='student',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requests', to='pedagogy.student', verbose_name='Schulkind'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requests', to='pedagogy.student', verbose_name='Schüler:in'),
         ),
         migrations.AlterField(
             model_name='request',
@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='student',
             name='payer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='students', to='finance.costpayer', verbose_name='Kostenzahler'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='students', to='finance.costpayer', verbose_name='Kostenträger'),
         ),
         migrations.AlterField(
             model_name='supervision',

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='poolagreement',
             name='payer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pool_agreements', to='finance.costpayer', verbose_name='Kostenzahler'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pool_agreements', to='finance.costpayer', verbose_name='Kostenträger'),
         ),
     ]

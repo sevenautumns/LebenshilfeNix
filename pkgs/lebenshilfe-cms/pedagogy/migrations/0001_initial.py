@@ -30,11 +30,11 @@ class Migration(migrations.Migration):
             name='Student',
             fields=[
                 ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenzahler')),
+                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='finance.costpayer', verbose_name='Kostenträger')),
             ],
             options={
-                'verbose_name': 'Schulkind',
-                'verbose_name_plural': 'Schulkinder',
+                'verbose_name': 'Schüler:in',
+                'verbose_name_plural': 'Schüler:innen',
             },
             bases=('base.person',),
         ),
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                 ('state', models.CharField(choices=[('draft', 'Entwurf'), ('in_coordination', 'In Abstimmung'), ('rejected', 'Abgelehnt'), ('approved', 'Genehmigt')], default='draft', max_length=50, verbose_name='Zustand')),
                 ('notes', models.TextField(blank=True, null=True, verbose_name='Notizen')),
                 ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.student', verbose_name='Schulkind')),
+                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.student', verbose_name='Schüler:in')),
             ],
             options={
                 'verbose_name': 'Antrag',
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                 ('school_days', models.PositiveIntegerField(verbose_name='Schultage')),
                 ('caretaker', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='hr.employee', verbose_name='Betreuer:in')),
                 ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='pedagogy.student', verbose_name='Schulkind')),
+                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='pedagogy.student', verbose_name='Schüler:in')),
                 ('tandem', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tandem_supervisions', to='pedagogy.student', verbose_name='Tandem')),
             ],
             options={

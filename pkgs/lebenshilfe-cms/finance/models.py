@@ -6,8 +6,8 @@ class CostPayer(models.Model):
     identifier = models.CharField(max_length=255, unique=True, verbose_name="Name")
 
     class Meta:
-        verbose_name = "Kostenzahler"
-        verbose_name_plural = "Kostenzahler"
+        verbose_name = "Kostenträger"
+        verbose_name_plural = "Kostenträger"
         ordering = ["identifier"]
 
     def __str__(self):
@@ -29,13 +29,13 @@ class FeeAgreement(models.Model):
     responsible_payer = models.ForeignKey(
         CostPayer,
         on_delete=models.PROTECT,
-        verbose_name="Zuständiger Kostenzahler",
+        verbose_name="Zuständiger Kostenträger",
         related_name="responsible_fee_agreements",
     )
     additional_payers = models.ManyToManyField(
         CostPayer,
         blank=True,
-        verbose_name="Weitere Kostenzahler",
+        verbose_name="Weitere Kostenträger",
         related_name="additional_fee_agreements",
     )
 
@@ -59,7 +59,7 @@ class PoolAgreement(models.Model):
         CostPayer,
         on_delete=models.PROTECT,
         related_name="pool_agreements",
-        verbose_name="Kostenzahler",
+        verbose_name="Kostenträger",
     )
     flat_rate = models.DecimalField(
         max_digits=10,
@@ -100,7 +100,7 @@ class Payment(models.Model):
         CostPayer,
         on_delete=models.PROTECT,
         related_name="payments",
-        verbose_name="Kostenzahler",
+        verbose_name="Kostenträger",
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
     payment_date = models.DateField(verbose_name="Zahlungsdatum")

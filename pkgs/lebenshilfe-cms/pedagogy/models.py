@@ -20,12 +20,12 @@ class Student(Person):
         "finance.CostPayer",
         on_delete=models.PROTECT,
         related_name="students",
-        verbose_name="Kostenzahler",
+        verbose_name="Kostenträger",
     )
 
     class Meta:
-        verbose_name = "Schulkind"
-        verbose_name_plural = "Schulkinder"
+        verbose_name = "Schüler:in"
+        verbose_name_plural = "Schüler:innen"
         ordering = ["last_name", "first_name"]
 
     def __str__(self):
@@ -37,7 +37,7 @@ class Supervision(models.Model):
         Student,
         related_name="supervisions",
         on_delete=models.PROTECT,
-        verbose_name="Schulkind",
+        verbose_name="Schüler:in",
     )
     tandem = models.ForeignKey(
         Student,
@@ -97,7 +97,7 @@ class Request(models.Model):
         Student,
         on_delete=models.PROTECT,
         related_name="requests",
-        verbose_name="Schulkind",
+        verbose_name="Schüler:in",
     )
     school = models.ForeignKey(
         School,
