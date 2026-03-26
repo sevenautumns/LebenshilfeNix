@@ -5,8 +5,6 @@ from .models import (
     Phone,
     Email,
     BankAccount,
-    MasterData,
-    ExternalIdentifier,
     Denomination,
 )
 from .mixins import EditModeMixin, CustomWidgetsMixin, AdminDisplayMixin
@@ -61,20 +59,6 @@ class BankAccountInline(BaseGenericTabularInline):
     extra = 0
 
 
-class ExternalIdentifierInline(BaseGenericTabularInline):
-    model = ExternalIdentifier
-    extra = 0
-    verbose_name = "Identifikator"
-    verbose_name_plural = "Identifikatoren"
-
-
 @admin.register(Denomination)
 class DenominationAdmin(BaseModelAdmin):
     search_fields = ("name",)
-
-
-@admin.register(MasterData)
-class MasterDataAdmin(BaseModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    inlines = [ExternalIdentifierInline, BankAccountInline]

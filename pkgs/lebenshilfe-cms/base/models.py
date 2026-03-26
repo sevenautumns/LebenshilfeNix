@@ -96,23 +96,6 @@ class BankAccount(models.Model):
         return f"{self.bank} - {self.iban}"
 
 
-class ExternalIdentifier(models.Model):
-    label = models.CharField(max_length=255, verbose_name="Bezeichnung")
-    value = models.CharField(max_length=255, verbose_name="Nummer/Wert")
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="+")
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
-
-    class Meta:
-        verbose_name = "Identifikator"
-        verbose_name_plural = "Identifikatoren"
-        ordering = ["label"]
-
-    def __str__(self):
-        return f"{self.label}: {self.value}"
-
-
 class Person(models.Model):
     first_name = models.CharField(max_length=255, verbose_name="Vorname")
     middle_name = models.CharField(
@@ -151,17 +134,3 @@ class Person(models.Model):
 
     def __str__(self):
         return self.full_name
-
-
-class MasterData(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Name")
-    identifiers = GenericRelation(ExternalIdentifier)
-    accounts = GenericRelation(BankAccount)
-
-    class Meta:
-        verbose_name = "Stammdaten"
-        verbose_name_plural = "Stammdaten"
-        ordering = ["name"]
-
-    def __str__(self):
-        return f"Stammdaten: {self.name}"
