@@ -27,7 +27,8 @@ class Member(Person):
         ordering = ["last_name", "first_name"]
         constraints = [
             CheckConstraint(
-                condition=Q(leaving_date__isnull=True) | Q(leaving_date__gte=F("entrance_date")),
+                condition=Q(leaving_date__isnull=True)
+                | Q(leaving_date__gte=F("entrance_date")),
                 name="member_leaving_date_after_entrance_date",
             )
         ]

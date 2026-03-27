@@ -304,7 +304,9 @@ class Absence(models.Model):
         ordering = ["-start"]
         constraints = [
             CheckConstraint(
-                condition=Q(start__isnull=True) | Q(end__isnull=True) | Q(end__gte=F("start")),
+                condition=Q(start__isnull=True)
+                | Q(end__isnull=True)
+                | Q(end__gte=F("start")),
                 name="absence_end_after_start",
             )
         ]

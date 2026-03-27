@@ -5,31 +5,46 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('finance', '0001_initial'),
-        ('pedagogy', '0001_initial'),
+        ("finance", "0001_initial"),
+        ("pedagogy", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='supervision',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='payments', to='pedagogy.supervision', verbose_name='Betreuung'),
+            model_name="payment",
+            name="supervision",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="payments",
+                to="pedagogy.supervision",
+                verbose_name="Betreuung",
+            ),
         ),
         migrations.AddField(
-            model_name='poolagreement',
-            name='payer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pool_agreements', to='finance.costpayer', verbose_name='Kostenträger'),
+            model_name="poolagreement",
+            name="payer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="pool_agreements",
+                to="finance.costpayer",
+                verbose_name="Kostenträger",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='feeagreement',
-            constraint=models.CheckConstraint(condition=models.Q(('valid_to__gte', models.F('valid_from'))), name='feeagreement_valid_to_after_valid_from'),
+            model_name="feeagreement",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("valid_to__gte", models.F("valid_from"))),
+                name="feeagreement_valid_to_after_valid_from",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='poolagreement',
-            constraint=models.CheckConstraint(condition=models.Q(('valid_to__gte', models.F('valid_from'))), name='poolagreement_valid_to_after_valid_from'),
+            model_name="poolagreement",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("valid_to__gte", models.F("valid_from"))),
+                name="poolagreement_valid_to_after_valid_from",
+            ),
         ),
     ]

@@ -6,71 +6,164 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='CostPayer',
+            name="CostPayer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('identifier', models.CharField(max_length=255, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "identifier",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Kostenträger',
-                'verbose_name_plural': 'Kostenträger',
-                'ordering': ['identifier'],
+                "verbose_name": "Kostenträger",
+                "verbose_name_plural": "Kostenträger",
+                "ordering": ["identifier"],
             },
         ),
         migrations.CreateModel(
-            name='PoolAgreement',
+            name="PoolAgreement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('flat_rate', base.fields.EuroDecimalField(decimal_places=2, help_text='Pauschalentgelt in Euro pro betreutem Fall', max_digits=10, verbose_name='Pauschalentgelt pro Fall')),
-                ('max_supervisions', models.PositiveIntegerField(help_text='Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung', verbose_name='Max. Betreuungen')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(verbose_name='Gültig bis')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "flat_rate",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2,
+                        help_text="Pauschalentgelt in Euro pro betreutem Fall",
+                        max_digits=10,
+                        verbose_name="Pauschalentgelt pro Fall",
+                    ),
+                ),
+                (
+                    "max_supervisions",
+                    models.PositiveIntegerField(
+                        help_text="Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung",
+                        verbose_name="Max. Betreuungen",
+                    ),
+                ),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                ("valid_to", models.DateField(verbose_name="Gültig bis")),
             ],
             options={
-                'verbose_name': 'Poolvereinbarung',
-                'verbose_name_plural': 'Poolvereinbarungen',
-                'ordering': ['-valid_from'],
+                "verbose_name": "Poolvereinbarung",
+                "verbose_name_plural": "Poolvereinbarungen",
+                "ordering": ["-valid_from"],
             },
         ),
         migrations.CreateModel(
-            name='FeeAgreement',
+            name="FeeAgreement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('valid_from', models.DateField(verbose_name='Gültig von')),
-                ('valid_to', models.DateField(verbose_name='Gültig bis')),
-                ('price_standard', base.fields.EuroDecimalField(decimal_places=2, max_digits=10, verbose_name='Schulbegleitung (allgemein)')),
-                ('price_tandem', base.fields.EuroDecimalField(decimal_places=2, max_digits=10, verbose_name='Tandem')),
-                ('price_coordination', base.fields.EuroDecimalField(decimal_places=2, max_digits=10, verbose_name='Koordination')),
-                ('additional_payers', models.ManyToManyField(blank=True, related_name='additional_fee_agreements', to='finance.costpayer', verbose_name='Weitere Kostenträger')),
-                ('responsible_payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='responsible_fee_agreements', to='finance.costpayer', verbose_name='Zuständiger Kostenträger')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("valid_from", models.DateField(verbose_name="Gültig von")),
+                ("valid_to", models.DateField(verbose_name="Gültig bis")),
+                (
+                    "price_standard",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2,
+                        max_digits=10,
+                        verbose_name="Schulbegleitung (allgemein)",
+                    ),
+                ),
+                (
+                    "price_tandem",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Tandem"
+                    ),
+                ),
+                (
+                    "price_coordination",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Koordination"
+                    ),
+                ),
+                (
+                    "additional_payers",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="additional_fee_agreements",
+                        to="finance.costpayer",
+                        verbose_name="Weitere Kostenträger",
+                    ),
+                ),
+                (
+                    "responsible_payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="responsible_fee_agreements",
+                        to="finance.costpayer",
+                        verbose_name="Zuständiger Kostenträger",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Entgeltvereinbarung',
-                'verbose_name_plural': 'Entgeltvereinbarungen',
-                'ordering': ['-valid_from'],
+                "verbose_name": "Entgeltvereinbarung",
+                "verbose_name_plural": "Entgeltvereinbarungen",
+                "ordering": ["-valid_from"],
             },
         ),
         migrations.CreateModel(
-            name='Payment',
+            name="Payment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', base.fields.EuroDecimalField(decimal_places=2, max_digits=10, verbose_name='Betrag')),
-                ('payment_date', models.DateField(verbose_name='Zahlungsdatum')),
-                ('note', models.TextField(blank=True, null=True, verbose_name='Notiz')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='payments', to='finance.costpayer', verbose_name='Kostenträger')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "amount",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2, max_digits=10, verbose_name="Betrag"
+                    ),
+                ),
+                ("payment_date", models.DateField(verbose_name="Zahlungsdatum")),
+                ("note", models.TextField(blank=True, null=True, verbose_name="Notiz")),
+                (
+                    "payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="payments",
+                        to="finance.costpayer",
+                        verbose_name="Kostenträger",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Zahlung',
-                'verbose_name_plural': 'Zahlungen',
-                'ordering': ['-payment_date'],
+                "verbose_name": "Zahlung",
+                "verbose_name_plural": "Zahlungen",
+                "ordering": ["-payment_date"],
             },
         ),
     ]

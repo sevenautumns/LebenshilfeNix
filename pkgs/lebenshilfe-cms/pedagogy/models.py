@@ -86,7 +86,6 @@ class Supervision(models.Model):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
 
 
-
 class Request(models.Model):
     STATE_CHOICES = [
         ("draft", "Entwurf"),
