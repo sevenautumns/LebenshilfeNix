@@ -133,9 +133,3 @@ class ApplicantAdmin(BaseModelAdmin):
 class SalaryAgreementAdmin(BaseModelAdmin):
     list_display = ("valid_from", "valid_to", "salary_standard")
     list_filter = ("valid_from", "valid_to")
-    currency_fields = [
-        "salary_standard",
-        "salary_tandem",
-        "salary_coordination",
-        "salary_management",
-    ]

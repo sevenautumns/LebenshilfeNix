@@ -7,7 +7,7 @@ from .models import (
     BankAccount,
     Denomination,
 )
-from .mixins import EditModeMixin, CustomWidgetsMixin, AdminDisplayMixin
+from .mixins import EditModeMixin, AdminDisplayMixin
 from allauth.socialaccount.models import (
     SocialApp,
     SocialAccount,
@@ -21,7 +21,7 @@ admin.site.unregister(SocialToken)
 admin.site.unregister(EmailAddress)
 
 
-class BaseModelAdmin(EditModeMixin, CustomWidgetsMixin, AdminDisplayMixin, ModelAdmin):
+class BaseModelAdmin(EditModeMixin, AdminDisplayMixin, ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         for field in form.base_fields.values():

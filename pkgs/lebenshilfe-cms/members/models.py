@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
+from base.fields import EuroDecimalField
 
 
 class Member(Person):
@@ -8,7 +9,7 @@ class Member(Person):
     leaving_date = models.DateField(
         blank=True, null=True, verbose_name="Austrittsdatum"
     )
-    membership_fee = models.DecimalField(
+    membership_fee = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
         verbose_name="Beitragshöhe",

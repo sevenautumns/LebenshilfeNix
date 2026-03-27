@@ -13,7 +13,6 @@ class StudentAdmin(BaseModelAdmin):
 
 @admin.register(Supervision)
 class SupervisionAdmin(BaseModelAdmin):
-    hour_minute_fields = ("weekly_hours",)
     display_weekly_hours = BaseModelAdmin.duration_display(
         "weekly_hours", description="Wochenstunden"
     )
@@ -35,7 +34,6 @@ class SupervisionAdmin(BaseModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(BaseModelAdmin):
-    hour_minute_fields = ("demand",)
     display_demand = BaseModelAdmin.duration_display(
         "demand", description="Bedarf (Std.)"
     )

@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
+from base.fields import HourMinuteDurationField
 
 
 class School(models.Model):
@@ -64,7 +65,7 @@ class Supervision(models.Model):
     )
     start = models.DateField(verbose_name="Beginn")
     end = models.DateField(verbose_name="Ende")
-    weekly_hours = models.DurationField(verbose_name="Wochenstunden")
+    weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
     school_days = models.PositiveIntegerField(
         verbose_name="Schultage",
         help_text="Anzahl der Schultage im Betreuungszeitraum",
@@ -112,7 +113,7 @@ class Request(models.Model):
         verbose_name="Gültig bis",
         help_text="Ende der Bewilligungsperiode. Leer lassen, wenn unbefristet.",
     )
-    demand = models.DurationField(
+    demand = HourMinuteDurationField(
         verbose_name="Betreuungsbedarf pro Woche",
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
     )

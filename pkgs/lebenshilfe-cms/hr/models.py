@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 from base.utils import COUNTRY_CHOICES, NATIONALITY_CHOICES
+from base.fields import EuroDecimalField
 
 
 class TrainingType(models.Model):
@@ -31,16 +32,16 @@ class VocationalTraining(models.Model):
 
 
 class SalaryAgreement(models.Model):
-    salary_standard = models.DecimalField(
+    salary_standard = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)"
     )
-    salary_tandem = models.DecimalField(
+    salary_tandem = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Tandem"
     )
-    salary_coordination = models.DecimalField(
+    salary_coordination = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Koordination"
     )
-    salary_management = models.DecimalField(
+    salary_management = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Geschäftsführung"
     )
     valid_from = models.DateField(verbose_name="Gültig von")

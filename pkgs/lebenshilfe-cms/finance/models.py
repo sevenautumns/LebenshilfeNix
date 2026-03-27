@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
+from base.fields import EuroDecimalField
 
 
 class CostPayer(models.Model):
@@ -17,13 +18,13 @@ class CostPayer(models.Model):
 class FeeAgreement(models.Model):
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
-    price_standard = models.DecimalField(
+    price_standard = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)"
     )
-    price_tandem = models.DecimalField(
+    price_tandem = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Tandem"
     )
-    price_coordination = models.DecimalField(
+    price_coordination = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Koordination"
     )
     responsible_payer = models.ForeignKey(
@@ -61,7 +62,7 @@ class PoolAgreement(models.Model):
         related_name="pool_agreements",
         verbose_name="Kostenträger",
     )
-    flat_rate = models.DecimalField(
+    flat_rate = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
         verbose_name="Pauschalentgelt pro Fall",
@@ -102,7 +103,7 @@ class Payment(models.Model):
         related_name="payments",
         verbose_name="Kostenträger",
     )
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
+    amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
     payment_date = models.DateField(verbose_name="Zahlungsdatum")
     note = models.TextField(blank=True, null=True, verbose_name="Notiz")
 

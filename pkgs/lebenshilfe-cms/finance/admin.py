@@ -12,7 +12,6 @@ class CostPayerAdmin(BaseModelAdmin):
 @admin.register(FeeAgreement)
 class FeeAgreementAdmin(BaseModelAdmin):
     list_display = ("responsible_payer", "valid_from", "valid_to")
-    currency_fields = ("price_standard", "price_tandem", "price_coordination")
     filter_horizontal = ("additional_payers",)
     search_fields = ("responsible_payer__identifier",)
     autocomplete_fields = ("responsible_payer",)
@@ -27,7 +26,6 @@ class PoolAgreementAdmin(BaseModelAdmin):
     list_filter = ("payer",)
     search_fields = ("payer__identifier",)
     autocomplete_fields = ("payer",)
-    currency_fields = ("flat_rate",)
     date_hierarchy = "valid_from"
 
     def get_queryset(self, request):
@@ -40,7 +38,6 @@ class PaymentAdmin(BaseModelAdmin):
     list_filter = ("payment_date", "payer")
     autocomplete_fields = ("payer", "supervision")
     search_fields = ("payer__identifier", "note")
-    currency_fields = ("amount",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("payer", "supervision__student")

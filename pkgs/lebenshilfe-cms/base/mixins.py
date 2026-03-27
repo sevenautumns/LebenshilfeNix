@@ -4,7 +4,6 @@ from django.http import HttpRequest
 from django.shortcuts import redirect
 from unfold.decorators import action
 from unfold.enums import ActionVariant
-from .widgets import EuroDecimalWidget, HourMinuteDurationWidget
 
 
 class EditModeMixin:
@@ -37,18 +36,6 @@ class EditModeMixin:
         if not has_class_permission:
             return False
         return self.is_edit(request)
-
-
-class CustomWidgetsMixin:
-    hour_minute_fields = []
-    currency_fields = []
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if db_field.name in self.currency_fields:
-            kwargs["widget"] = EuroDecimalWidget
-        if db_field.name in self.hour_minute_fields:
-            kwargs["widget"] = HourMinuteDurationWidget
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
 class AdminDisplayMixin:
