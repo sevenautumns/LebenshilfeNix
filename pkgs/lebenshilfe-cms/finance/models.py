@@ -17,7 +17,7 @@ class SalaryAgreement(models.Model):
     salary_management = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Geschäftsführung"
     )
-    valid_from = models.DateField(db_index=True, verbose_name="Gültig von")
+    valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
 
     class Meta:
@@ -25,6 +25,9 @@ class SalaryAgreement(models.Model):
         verbose_name_plural = "Gehaltsvereinbarungen"
         ordering = ["-valid_from"]
         db_table = "hr_salaryagreement"
+        indexes = [
+            models.Index(fields=["valid_from"], name="salaryagreement_valid_from_idx"),
+        ]
         constraints = [
             CheckConstraint(
                 condition=Q(valid_to__gte=F("valid_from")),
@@ -158,13 +161,16 @@ class Payment(models.Model):
         verbose_name="Kostenträger",
     )
     amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
-    payment_date = models.DateField(db_index=True, verbose_name="Zahlungsdatum")
+    payment_date = models.DateField(verbose_name="Zahlungsdatum")
     note = models.TextField(blank=True, null=True, verbose_name="Notiz")
 
     class Meta:
         verbose_name = "Zahlung"
         verbose_name_plural = "Zahlungen"
         ordering = ["-payment_date"]
+        indexes = [
+            models.Index(fields=["payment_date"], name="payment_payment_date_idx"),
+        ]
 
     def __str__(self):
         return f"Zahlung: {self.amount}€ von {self.payer}"

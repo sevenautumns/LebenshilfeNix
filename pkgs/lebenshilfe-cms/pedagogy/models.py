@@ -63,7 +63,7 @@ class Supervision(models.Model):
         related_name="supervisions",
         verbose_name="Schule",
     )
-    start_date = models.DateField(db_index=True, verbose_name="Beginn")
+    start_date = models.DateField(verbose_name="Beginn")
     end_date = models.DateField(verbose_name="Ende")
     weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
     school_days = models.PositiveIntegerField(
@@ -75,6 +75,9 @@ class Supervision(models.Model):
         verbose_name = "Betreuung"
         verbose_name_plural = "Betreuungen"
         ordering = ["-start_date"]
+        indexes = [
+            models.Index(fields=["start_date"], name="supervision_start_date_idx"),
+        ]
         constraints = [
             CheckConstraint(
                 condition=Q(end_date__gte=F("start_date")),
@@ -105,7 +108,7 @@ class Request(models.Model):
         related_name="requests",
         verbose_name="Schule",
     )
-    start_date = models.DateField(db_index=True, verbose_name="Beginn")
+    start_date = models.DateField(verbose_name="Beginn")
     end_date = models.DateField(
         blank=True,
         null=True,
@@ -117,7 +120,7 @@ class Request(models.Model):
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
     )
     state = models.CharField(
-        max_length=50, choices=STATE_CHOICES, default="draft", db_index=True, verbose_name="Zustand"
+        max_length=50, choices=STATE_CHOICES, default="draft", verbose_name="Zustand"
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Notizen")
 
@@ -125,6 +128,10 @@ class Request(models.Model):
         verbose_name = "Antrag"
         verbose_name_plural = "Anträge"
         ordering = ["-start_date"]
+        indexes = [
+            models.Index(fields=["start_date"], name="request_start_date_idx"),
+            models.Index(fields=["state"], name="request_state_idx"),
+        ]
         constraints = [
             CheckConstraint(
                 condition=Q(end_date__isnull=True) | Q(end_date__gte=F("start_date")),

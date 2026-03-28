@@ -81,7 +81,6 @@ class Employee(Person):
         max_length=50,
         blank=True,
         null=True,
-        db_index=True,
         verbose_name="Personal-Nr. Lohnprogramm",
         help_text="Personalnummer im Lohnprogramm (optional)",
     )
@@ -162,6 +161,9 @@ class Employee(Person):
         verbose_name = "Angestellte:r"
         verbose_name_plural = "Angestellte"
         ordering = ["last_name", "first_name"]
+        indexes = [
+            models.Index(fields=["personnel_number"], name="employee_personnel_number_idx"),
+        ]
 
     def __str__(self):
         return super().__str__()
@@ -270,7 +272,7 @@ class Absence(models.Model):
         related_name="absences",
         verbose_name="Mitarbeiter:in",
     )
-    start_date = models.DateField(blank=True, null=True, db_index=True, verbose_name="Beginn")
+    start_date = models.DateField(blank=True, null=True, verbose_name="Beginn")
     end_date = models.DateField(blank=True, null=True, verbose_name="Ende")
     reason = models.CharField(
         max_length=50, choices=REASON_CHOICES, verbose_name="Grund"
@@ -285,6 +287,9 @@ class Absence(models.Model):
         verbose_name = "Abwesenheit"
         verbose_name_plural = "Abwesenheiten"
         ordering = ["-start_date"]
+        indexes = [
+            models.Index(fields=["start_date"], name="absence_start_date_idx"),
+        ]
         constraints = [
             CheckConstraint(
                 condition=Q(start_date__isnull=True)
@@ -311,7 +316,7 @@ class TrainingRecord(models.Model):
         related_name="training_records",
         verbose_name="Fortbildungstyp",
     )
-    valid_from = models.DateField(db_index=True, verbose_name="Gültig von")
+    valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(
         blank=True,
         null=True,
@@ -323,6 +328,9 @@ class TrainingRecord(models.Model):
         verbose_name = "Fortbildungsnachweis"
         verbose_name_plural = "Fortbildungsnachweise"
         ordering = ["-valid_from"]
+        indexes = [
+            models.Index(fields=["valid_from"], name="trainingrecord_valid_from_idx"),
+        ]
         constraints = [
             CheckConstraint(
                 condition=Q(valid_to__isnull=True) | Q(valid_to__gte=F("valid_from")),
