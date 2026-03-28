@@ -162,7 +162,7 @@ class Payment(models.Model):
     )
     amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
     payment_date = models.DateField(verbose_name="Zahlungsdatum")
-    note = models.TextField(blank=True, null=True, verbose_name="Notiz")
+    note = models.TextField(blank=True, verbose_name="Notiz")
 
     class Meta:
         verbose_name = "Zahlung"
