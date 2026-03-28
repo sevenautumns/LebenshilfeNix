@@ -258,12 +258,11 @@ class Applicant(Person):
 
 
 class Absence(models.Model):
-    REASON_CHOICES = [
-        ("illness", "Krankheit"),
-        ("child_sick", "Kind krank"),
-        ("appointment", "Termin"),
-        ("other", "Sonstiges"),
-    ]
+    class Reason(models.TextChoices):
+        ILLNESS = "illness", "Krankheit"
+        CHILD_SICK = "child_sick", "Kind krank"
+        APPOINTMENT = "appointment", "Termin"
+        OTHER = "other", "Sonstiges"
     employee = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,
@@ -273,7 +272,7 @@ class Absence(models.Model):
     start_date = models.DateField(blank=True, null=True, verbose_name="Beginn")
     end_date = models.DateField(blank=True, null=True, verbose_name="Ende")
     reason = models.CharField(
-        max_length=50, choices=REASON_CHOICES, verbose_name="Grund"
+        max_length=50, choices=Reason.choices, verbose_name="Grund"
     )
     certificate = models.BooleanField(
         default=False,
