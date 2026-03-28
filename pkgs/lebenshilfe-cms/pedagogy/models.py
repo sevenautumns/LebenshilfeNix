@@ -5,15 +5,15 @@ from base.fields import HourMinuteDurationField
 
 
 class School(models.Model):
-    school_name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
 
     class Meta:
         verbose_name = "Schule"
         verbose_name_plural = "Schulen"
-        ordering = ["school_name"]
+        ordering = ["name"]
 
     def __str__(self):
-        return self.school_name
+        return self.name
 
 
 class Student(Person):

@@ -48,4 +48,4 @@ class RequestAdmin(BaseModelAdmin):
 
 @admin.register(School)
 class SchoolAdmin(BaseModelAdmin):
-    search_fields = ("school_name",)
+    search_fields = ("name",)
