@@ -55,7 +55,7 @@ class Supervision(models.Model):
         verbose_name="Betreuer:in",
     )
     class_name = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="Klasse"
+        max_length=100, blank=True, verbose_name="Klasse"
     )
     school = models.ForeignKey(
         School,
@@ -121,7 +121,7 @@ class Request(models.Model):
     state = models.CharField(
         max_length=50, choices=State.choices, default=State.DRAFT, verbose_name="Zustand"
     )
-    notes = models.TextField(blank=True, null=True, verbose_name="Notizen")
+    notes = models.TextField(blank=True, verbose_name="Notizen")
 
     class Meta:
         verbose_name = "Antrag"
