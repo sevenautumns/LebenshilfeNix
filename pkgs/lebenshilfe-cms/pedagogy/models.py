@@ -90,12 +90,11 @@ class Supervision(models.Model):
 
 
 class Request(models.Model):
-    STATE_CHOICES = [
-        ("draft", "Entwurf"),
-        ("in_coordination", "In Abstimmung"),
-        ("rejected", "Abgelehnt"),
-        ("approved", "Genehmigt"),
-    ]
+    class State(models.TextChoices):
+        DRAFT = "draft", "Entwurf"
+        IN_COORDINATION = "in_coordination", "In Abstimmung"
+        REJECTED = "rejected", "Abgelehnt"
+        APPROVED = "approved", "Genehmigt"
     student = models.ForeignKey(
         Student,
         on_delete=models.PROTECT,
@@ -120,7 +119,7 @@ class Request(models.Model):
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
     )
     state = models.CharField(
-        max_length=50, choices=STATE_CHOICES, default="draft", verbose_name="Zustand"
+        max_length=50, choices=State.choices, default=State.DRAFT, verbose_name="Zustand"
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Notizen")
 
