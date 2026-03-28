@@ -8,6 +8,7 @@ from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, 
 @admin.register(SalaryAgreement)
 class SalaryAgreementAdmin(BaseModelAdmin):
     list_display = ("valid_from", "valid_to", "salary_standard")
+    search_fields = ("valid_from", "valid_to")
     list_filter_submit = True
     list_filter = (("valid_from", RangeDateFilter), ("valid_to", RangeDateFilter))
 
@@ -30,6 +31,8 @@ class FeeAgreementAdmin(BaseModelAdmin):
     filter_horizontal = ("additional_payers",)
     search_fields = ("responsible_payer__identifier",)
     autocomplete_fields = ("responsible_payer",)
+    list_filter_submit = True
+    list_filter = (("valid_from", RangeDateFilter), ("valid_to", RangeDateFilter))
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("responsible_payer")
