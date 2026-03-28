@@ -138,7 +138,7 @@ class Employee(Person):
     )
 
     # Dokumentation
-    criminal_record_certificate = models.DateField(
+    criminal_record_certificate_date = models.DateField(
         verbose_name="Erweitertes Führungszeugnis (Datum)",
         help_text="Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)",
     )
@@ -147,7 +147,7 @@ class Employee(Person):
     )
 
     # Allgemeine interne Daten
-    lh_start = models.DateField(
+    lebenshilfe_start_date = models.DateField(
         blank=True,
         null=True,
         verbose_name="Beschäftigt bei LH seit",
