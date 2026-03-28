@@ -36,7 +36,7 @@ class Address(models.Model):
 
 
 class Phone(models.Model):
-    telephone_number = PhoneNumberField(region="DE", verbose_name="Telefonnummer")
+    number = PhoneNumberField(region="DE", verbose_name="Telefonnummer")
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
     content_type = models.ForeignKey(
@@ -51,7 +51,7 @@ class Phone(models.Model):
         ordering = ["-primary"]
 
     def __str__(self):
-        return self.telephone_number
+        return self.number
 
 
 class Email(models.Model):
