@@ -1,4 +1,4 @@
-from unfold.contrib.filters.admin import BooleanRadioFilter, ChoicesDropdownFilter
+from unfold.contrib.filters.admin import BooleanRadioFilter, ChoicesDropdownFilter, RangeDateFilter
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -54,7 +54,8 @@ class EmploymentAdmin(BaseModelAdmin):
         "employee__personnel_number",
     )
     autocomplete_fields = ("employee",)
-    list_filter = ("start_date", "end_date")
+    list_filter_submit = True
+    list_filter = (("start_date", RangeDateFilter), ("end_date", RangeDateFilter))
 
 
 @admin.register(Absence)

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.contrib.filters.admin import RangeDateFilter
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
 from .models import School, Student, Supervision, Request
 
@@ -21,7 +22,8 @@ class SupervisionAdmin(BaseModelAdmin):
         "end",
         "weekly_hours",
     )
-    list_filter = ("school", "start")
+    list_filter_submit = True
+    list_filter = ("school", ("start", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
 

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from unfold.admin import TabularInline
+from unfold.contrib.filters.admin import RangeDateFilter
 from base.admin import BaseModelAdmin
 from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, PoolAgreement, Payment
 
@@ -7,7 +8,8 @@ from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, 
 @admin.register(SalaryAgreement)
 class SalaryAgreementAdmin(BaseModelAdmin):
     list_display = ("valid_from", "valid_to", "salary_standard")
-    list_filter = ("valid_from", "valid_to")
+    list_filter_submit = True
+    list_filter = (("valid_from", RangeDateFilter), ("valid_to", RangeDateFilter))
 
 
 class CostPayerContactInline(TabularInline):
@@ -48,7 +50,8 @@ class PoolAgreementAdmin(BaseModelAdmin):
 @admin.register(Payment)
 class PaymentAdmin(BaseModelAdmin):
     list_display = ("payer", "amount", "payment_date", "supervision")
-    list_filter = ("payment_date", "payer")
+    list_filter_submit = True
+    list_filter = (("payment_date", RangeDateFilter), "payer")
     autocomplete_fields = ("payer", "supervision")
     search_fields = ("payer__identifier", "note")
 
