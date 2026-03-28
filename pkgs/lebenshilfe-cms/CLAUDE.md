@@ -22,6 +22,7 @@ This repository contains the `lebenshilfe-cms` Django application. Assume all te
 - **DO** use Jujutsu (`jj`) commands (`jj status`, `jj diff`, `jj new`, `jj describe`).
 - **Mandatory Auto-Commits**: You must actively and automatically create `jj` commits for your changes with **meaningful granularity**. Do not bundle unrelated changes. 
   - *Example:* Create one commit for a model change + migration, and a separate commit for the corresponding UI/Admin changes.
+  - `jj new` afterwards to get a new working-base
 - **Commit Messages**: Use Conventional Commits formatting via `jj describe -m "<type>(<scope>): <summary>"`.
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`.
 
