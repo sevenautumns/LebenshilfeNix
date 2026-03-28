@@ -1,6 +1,7 @@
 from django.contrib import admin
+from unfold.admin import TabularInline
 from base.admin import BaseModelAdmin
-from .models import SalaryAgreement, CostPayer, FeeAgreement, PoolAgreement, Payment
+from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, PoolAgreement, Payment
 
 
 @admin.register(SalaryAgreement)
@@ -9,10 +10,16 @@ class SalaryAgreementAdmin(BaseModelAdmin):
     list_filter = ("valid_from", "valid_to")
 
 
+class CostPayerContactInline(TabularInline):
+    model = CostPayerContact
+    extra = 0
+
+
 @admin.register(CostPayer)
 class CostPayerAdmin(BaseModelAdmin):
     list_display = ("identifier",)
     search_fields = ("identifier",)
+    inlines = [CostPayerContactInline]
 
 
 @admin.register(FeeAgreement)
