@@ -25,6 +25,9 @@ msgstr "Die Suche blieb ohne Ergebnis. Erstellen Sie einen neuen Eintrag oder se
 msgid "Reset filters"
 msgstr "Filter zurücksetzen"
 
+msgid "Apply Filters"
+msgstr "Filter anwenden"
+
 msgid "Filters"
 msgstr "Filter"
 
@@ -39,3 +42,9 @@ msgstr "Hell"
 
 msgid "Dark"
 msgstr "Dunkel"
+
+msgid "From"
+msgstr "Von"
+
+msgid "To"
+msgstr "Bis"
