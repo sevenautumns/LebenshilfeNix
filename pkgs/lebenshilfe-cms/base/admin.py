@@ -5,6 +5,7 @@ from .models import (
     Phone,
     Email,
     BankAccount,
+    Member,
 )
 from .mixins import EditModeMixin, AdminDisplayMixin
 from allauth.socialaccount.models import (
@@ -57,4 +58,10 @@ class BankAccountInline(BaseGenericTabularInline):
     model = BankAccount
     extra = 0
 
+
+@admin.register(Member)
+class MemberAdmin(BaseModelAdmin):
+    list_display = ("full_name", "entrance_date", "membership_fee")
+    search_fields = ("first_name", "last_name")
+    inlines = [AddressInline, PhoneInline, EmailInline, BankAccountInline]
 
