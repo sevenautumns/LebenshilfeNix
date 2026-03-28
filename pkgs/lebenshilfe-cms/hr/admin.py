@@ -60,7 +60,7 @@ class EmploymentAdmin(BaseModelAdmin):
 
 @admin.register(Absence)
 class AbsenceAdmin(BaseModelAdmin):
-    list_display = ("employee", "reason", "start", "end", "certificate")
+    list_display = ("employee", "reason", "start_date", "end_date", "certificate")
     list_filter = ("reason", "certificate")
     search_fields = ("employee__first_name", "employee__last_name")
     autocomplete_fields = ("employee",)

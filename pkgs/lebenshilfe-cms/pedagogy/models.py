@@ -63,8 +63,8 @@ class Supervision(models.Model):
         related_name="supervisions",
         verbose_name="Schule",
     )
-    start = models.DateField(verbose_name="Beginn")
-    end = models.DateField(verbose_name="Ende")
+    start_date = models.DateField(verbose_name="Beginn")
+    end_date = models.DateField(verbose_name="Ende")
     weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
     school_days = models.PositiveIntegerField(
         verbose_name="Schultage",
@@ -74,10 +74,10 @@ class Supervision(models.Model):
     class Meta:
         verbose_name = "Betreuung"
         verbose_name_plural = "Betreuungen"
-        ordering = ["-start"]
+        ordering = ["-start_date"]
         constraints = [
             CheckConstraint(
-                condition=Q(end__gte=F("start")),
+                condition=Q(end_date__gte=F("start_date")),
                 name="supervision_end_after_start",
             )
         ]
@@ -105,8 +105,8 @@ class Request(models.Model):
         related_name="requests",
         verbose_name="Schule",
     )
-    start = models.DateField(verbose_name="Beginn")
-    valid_to = models.DateField(
+    start_date = models.DateField(verbose_name="Beginn")
+    end_date = models.DateField(
         blank=True,
         null=True,
         verbose_name="Gültig bis",
@@ -124,11 +124,11 @@ class Request(models.Model):
     class Meta:
         verbose_name = "Antrag"
         verbose_name_plural = "Anträge"
-        ordering = ["-start"]
+        ordering = ["-start_date"]
         constraints = [
             CheckConstraint(
-                condition=Q(valid_to__isnull=True) | Q(valid_to__gte=F("start")),
-                name="request_valid_to_after_start",
+                condition=Q(end_date__isnull=True) | Q(end_date__gte=F("start_date")),
+                name="request_end_date_after_start_date",
             )
         ]
 

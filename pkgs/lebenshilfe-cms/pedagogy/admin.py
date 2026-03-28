@@ -18,12 +18,12 @@ class SupervisionAdmin(BaseModelAdmin):
         "student",
         "caretaker",
         "school",
-        "start",
-        "end",
+        "start_date",
+        "end_date",
         "weekly_hours",
     )
     list_filter_submit = True
-    list_filter = ("school", ("start", RangeDateFilter))
+    list_filter = ("school", ("start_date", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
 
@@ -37,7 +37,7 @@ class SupervisionAdmin(BaseModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(BaseModelAdmin):
-    list_display = ("student", "state", "start", "demand")
+    list_display = ("student", "state", "start_date", "demand")
     list_filter = ("state",)
     search_fields = ("student__first_name", "student__last_name", "notes")
     autocomplete_fields = ("student", "school")

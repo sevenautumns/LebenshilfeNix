@@ -269,8 +269,8 @@ class Absence(models.Model):
         related_name="absences",
         verbose_name="Mitarbeiter:in",
     )
-    start = models.DateField(blank=True, null=True, verbose_name="Beginn")
-    end = models.DateField(blank=True, null=True, verbose_name="Ende")
+    start_date = models.DateField(blank=True, null=True, verbose_name="Beginn")
+    end_date = models.DateField(blank=True, null=True, verbose_name="Ende")
     reason = models.CharField(
         max_length=50, choices=REASON_CHOICES, verbose_name="Grund"
     )
@@ -283,12 +283,12 @@ class Absence(models.Model):
     class Meta:
         verbose_name = "Abwesenheit"
         verbose_name_plural = "Abwesenheiten"
-        ordering = ["-start"]
+        ordering = ["-start_date"]
         constraints = [
             CheckConstraint(
-                condition=Q(start__isnull=True)
-                | Q(end__isnull=True)
-                | Q(end__gte=F("start")),
+                condition=Q(start_date__isnull=True)
+                | Q(end_date__isnull=True)
+                | Q(end_date__gte=F("start_date")),
                 name="absence_end_after_start",
             )
         ]
