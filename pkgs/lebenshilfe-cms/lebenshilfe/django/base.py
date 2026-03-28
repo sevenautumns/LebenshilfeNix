@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     "hr",
     "pedagogy",
     "finance",
-    "members",
 ]
 
 MIDDLEWARE = [
