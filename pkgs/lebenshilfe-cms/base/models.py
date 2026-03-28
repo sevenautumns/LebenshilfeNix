@@ -11,7 +11,7 @@ class Address(models.Model):
     primary = models.BooleanField(default=False, verbose_name="Primär")
     street = models.CharField(max_length=255, verbose_name="Straße")
     house_number = models.CharField(max_length=50, verbose_name="Hausnummer")
-    postcode = models.PositiveIntegerField(verbose_name="Postleitzahl")
+    postcode = models.CharField(max_length=10, verbose_name="Postleitzahl")
     city = models.CharField(max_length=255, verbose_name="Stadt")
     district = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Ortsteil"
