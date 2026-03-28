@@ -62,7 +62,7 @@ class Employee(Person):
 
     # Grunddaten (Namen sind in Person ausgelagert)
     maiden_name = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Geburtsname"
+        max_length=255, blank=True, verbose_name="Geburtsname"
     )
     birthday = models.DateField(verbose_name="Geburtstag")
     birthplace = models.CharField(max_length=255, verbose_name="Geburtsort")
@@ -78,7 +78,6 @@ class Employee(Person):
     personnel_number = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
         verbose_name="Personal-Nr. Lohnprogramm",
         help_text="Personalnummer im Lohnprogramm (optional)",
     )
@@ -95,7 +94,6 @@ class Employee(Person):
     social_security_number = models.CharField(
         max_length=50,
         blank=True,
-        null=True,
         verbose_name="Sozialversicherungs-Nr.",
         help_text="12-stellige Sozialversicherungsnummer",
     )
@@ -108,7 +106,6 @@ class Employee(Person):
         max_length=10,
         choices=TaxClass.choices,
         blank=True,
-        null=True,
         verbose_name="Steuerklasse",
     )
 
@@ -141,7 +138,7 @@ class Employee(Person):
         help_text="Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)",
     )
     risk_assessment = models.TextField(
-        blank=True, null=True, verbose_name="Erläut. Gefährdungsbeurteilung"
+        blank=True, verbose_name="Erläut. Gefährdungsbeurteilung"
     )
 
     # Allgemeine interne Daten
@@ -209,7 +206,7 @@ class OtherEmployment(models.Model):
         verbose_name="Mitarbeiter:in",
     )
     employer = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Arbeitgeber (Sonstige)"
+        max_length=255, blank=True, verbose_name="Arbeitgeber (Sonstige)"
     )
     working_hours = models.DecimalField(
         max_digits=5, decimal_places=2, verbose_name="Stundenumfang"
@@ -242,10 +239,10 @@ class Applicant(Person):
         verbose_name="Schulwunsch",
     )
     notice_period = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Kündigungsfristen"
+        max_length=255, blank=True, verbose_name="Kündigungsfristen"
     )
     suitability_rating = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Einstufung nach Eignung"
+        max_length=255, blank=True, verbose_name="Einstufung nach Eignung"
     )
 
     class Meta:
