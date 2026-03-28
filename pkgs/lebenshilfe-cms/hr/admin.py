@@ -96,9 +96,9 @@ class TrainingValidityFilter(admin.SimpleListFilter):
 
 @admin.register(TrainingRecord)
 class TrainingRecordAdmin(BaseModelAdmin):
-    list_display = ("staff", "training_type", "valid_from", "valid_to", "valid")
-    autocomplete_fields = ("staff", "training_type")
-    list_filter = (TrainingValidityFilter, "staff", "training_type__name")
+    list_display = ("employee", "training_type", "valid_from", "valid_to", "valid")
+    autocomplete_fields = ("employee", "training_type")
+    list_filter = (TrainingValidityFilter, "employee", "training_type__name")
 
     @admin.display(description="Gültig", boolean=True, ordering="valid_to")
     def valid(self, obj):

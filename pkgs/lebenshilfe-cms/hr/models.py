@@ -298,11 +298,11 @@ class Absence(models.Model):
 
 
 class TrainingRecord(models.Model):
-    staff = models.ForeignKey(
+    employee = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,
         related_name="training_records",
-        verbose_name="Personalfall",
+        verbose_name="Mitarbeiter:in",
     )
     training_type = models.ForeignKey(
         TrainingType,
@@ -337,4 +337,4 @@ class TrainingRecord(models.Model):
         return starts_ok and ends_ok
 
     def __str__(self):
-        return f"Fortbildung {self.training_type} für {self.staff.full_name}"
+        return f"Fortbildung {self.training_type} für {self.employee.full_name}"
