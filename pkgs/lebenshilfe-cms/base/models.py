@@ -14,7 +14,7 @@ class Address(models.Model):
     postcode = models.CharField(max_length=10, verbose_name="Postleitzahl")
     city = models.CharField(max_length=255, verbose_name="Stadt")
     district = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Ortsteil"
+        max_length=255, blank=True, verbose_name="Ortsteil"
     )
 
     content_type = models.ForeignKey(
