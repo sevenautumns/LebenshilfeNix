@@ -63,7 +63,7 @@ class Supervision(models.Model):
         related_name="supervisions",
         verbose_name="Schule",
     )
-    start_date = models.DateField(verbose_name="Beginn")
+    start_date = models.DateField(db_index=True, verbose_name="Beginn")
     end_date = models.DateField(verbose_name="Ende")
     weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
     school_days = models.PositiveIntegerField(
@@ -105,7 +105,7 @@ class Request(models.Model):
         related_name="requests",
         verbose_name="Schule",
     )
-    start_date = models.DateField(verbose_name="Beginn")
+    start_date = models.DateField(db_index=True, verbose_name="Beginn")
     end_date = models.DateField(
         blank=True,
         null=True,
@@ -117,7 +117,7 @@ class Request(models.Model):
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
     )
     state = models.CharField(
-        max_length=50, choices=STATE_CHOICES, default="draft", verbose_name="Zustand"
+        max_length=50, choices=STATE_CHOICES, default="draft", db_index=True, verbose_name="Zustand"
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Notizen")
 

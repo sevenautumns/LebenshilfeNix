@@ -81,6 +81,7 @@ class Employee(Person):
         max_length=50,
         blank=True,
         null=True,
+        db_index=True,
         verbose_name="Personal-Nr. Lohnprogramm",
         help_text="Personalnummer im Lohnprogramm (optional)",
     )
@@ -269,7 +270,7 @@ class Absence(models.Model):
         related_name="absences",
         verbose_name="Mitarbeiter:in",
     )
-    start_date = models.DateField(blank=True, null=True, verbose_name="Beginn")
+    start_date = models.DateField(blank=True, null=True, db_index=True, verbose_name="Beginn")
     end_date = models.DateField(blank=True, null=True, verbose_name="Ende")
     reason = models.CharField(
         max_length=50, choices=REASON_CHOICES, verbose_name="Grund"
@@ -310,7 +311,7 @@ class TrainingRecord(models.Model):
         related_name="training_records",
         verbose_name="Fortbildungstyp",
     )
-    valid_from = models.DateField(verbose_name="Gültig von")
+    valid_from = models.DateField(db_index=True, verbose_name="Gültig von")
     valid_to = models.DateField(
         blank=True,
         null=True,

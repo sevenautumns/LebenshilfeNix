@@ -17,7 +17,7 @@ class SalaryAgreement(models.Model):
     salary_management = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Geschäftsführung"
     )
-    valid_from = models.DateField(verbose_name="Gültig von")
+    valid_from = models.DateField(db_index=True, verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
 
     class Meta:
@@ -158,7 +158,7 @@ class Payment(models.Model):
         verbose_name="Kostenträger",
     )
     amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
-    payment_date = models.DateField(verbose_name="Zahlungsdatum")
+    payment_date = models.DateField(db_index=True, verbose_name="Zahlungsdatum")
     note = models.TextField(blank=True, null=True, verbose_name="Notiz")
 
     class Meta:
