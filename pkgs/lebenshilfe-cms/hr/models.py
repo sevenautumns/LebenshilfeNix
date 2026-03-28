@@ -45,22 +45,20 @@ class VocationalTraining(models.Model):
 
 
 class Employee(Person):
-    MARITAL_STATUS_CHOICES = [
-        ("single", "ledig"),
-        ("married", "verheiratet"),
-        ("divorced", "geschieden"),
-        ("widowed", "verwitwet"),
-        ("other", "sonstiges"),
-    ]
+    class MaritalStatus(models.TextChoices):
+        SINGLE = "single", "ledig"
+        MARRIED = "married", "verheiratet"
+        DIVORCED = "divorced", "geschieden"
+        WIDOWED = "widowed", "verwitwet"
+        OTHER = "other", "sonstiges"
 
-    TAX_CLASS_CHOICES = [
-        ("1", "Klasse 1"),
-        ("2", "Klasse 2"),
-        ("3", "Klasse 3"),
-        ("4", "Klasse 4"),
-        ("5", "Klasse 5"),
-        ("6", "Klasse 6"),
-    ]
+    class TaxClass(models.TextChoices):
+        CLASS_1 = "1", "Klasse 1"
+        CLASS_2 = "2", "Klasse 2"
+        CLASS_3 = "3", "Klasse 3"
+        CLASS_4 = "4", "Klasse 4"
+        CLASS_5 = "5", "Klasse 5"
+        CLASS_6 = "6", "Klasse 6"
 
     # Grunddaten (Namen sind in Person ausgelagert)
     maiden_name = models.CharField(
@@ -87,7 +85,7 @@ class Employee(Person):
 
     # Familiärer Status
     marital_status = models.CharField(
-        max_length=50, choices=MARITAL_STATUS_CHOICES, verbose_name="Familienstand"
+        max_length=50, choices=MaritalStatus.choices, verbose_name="Familienstand"
     )
     number_of_children = models.PositiveIntegerField(
         default=0, verbose_name="Kinderzahl"
@@ -108,7 +106,7 @@ class Employee(Person):
     )
     tax_class = models.CharField(
         max_length=10,
-        choices=TAX_CLASS_CHOICES,
+        choices=TaxClass.choices,
         blank=True,
         null=True,
         verbose_name="Steuerklasse",
