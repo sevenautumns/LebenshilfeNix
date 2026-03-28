@@ -11,6 +11,7 @@ from base.admin import (
     BankAccountInline,
 )
 from .models import (
+    Denomination,
     Employee,
     Absence,
     TrainingType,
@@ -127,6 +128,11 @@ class ApplicantAdmin(BaseModelAdmin):
         EmailInline,
         BankAccountInline,
     ]
+
+
+@admin.register(Denomination)
+class DenominationAdmin(BaseModelAdmin):
+    search_fields = ("name",)
 
 
 @admin.register(SalaryAgreement)

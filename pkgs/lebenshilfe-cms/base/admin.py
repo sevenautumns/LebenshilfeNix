@@ -5,7 +5,6 @@ from .models import (
     Phone,
     Email,
     BankAccount,
-    Denomination,
 )
 from .mixins import EditModeMixin, AdminDisplayMixin
 from allauth.socialaccount.models import (
@@ -59,6 +58,3 @@ class BankAccountInline(BaseGenericTabularInline):
     extra = 0
 
 
-@admin.register(Denomination)
-class DenominationAdmin(BaseModelAdmin):
-    search_fields = ("name",)

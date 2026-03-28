@@ -6,6 +6,19 @@ from base.utils import COUNTRY_CHOICES, NATIONALITY_CHOICES
 from base.fields import EuroDecimalField
 
 
+class Denomination(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Name")
+
+    class Meta:
+        verbose_name = "Konfession"
+        verbose_name_plural = "Konfessionen"
+        ordering = ["name"]
+        db_table = "base_denomination"
+
+    def __str__(self):
+        return self.name
+
+
 class TrainingType(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="Name")
 
@@ -134,7 +147,7 @@ class Employee(Person):
 
     # Konfession (Neue Verknüpfung)
     church_membership = models.ForeignKey(
-        "base.Denomination",
+        "Denomination",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,

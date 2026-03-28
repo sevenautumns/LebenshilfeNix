@@ -6,18 +6,6 @@ from django.db.models.functions import Concat
 from phonenumber_field.modelfields import PhoneNumberField
 
 
-class Denomination(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Name")
-
-    class Meta:
-        verbose_name = "Konfession"
-        verbose_name_plural = "Konfessionen"
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
 class Address(models.Model):
     primary = models.BooleanField(default=False, verbose_name="Primär")
     street = models.CharField(max_length=255, verbose_name="Straße")
