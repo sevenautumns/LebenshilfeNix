@@ -16,7 +16,6 @@ from .models import (
     Absence,
     TrainingType,
     VocationalTraining,
-    SalaryAgreement,
     TrainingRecord,
     Employment,
     OtherEmployment,
@@ -133,9 +132,3 @@ class ApplicantAdmin(BaseModelAdmin):
 @admin.register(Denomination)
 class DenominationAdmin(BaseModelAdmin):
     search_fields = ("name",)
-
-
-@admin.register(SalaryAgreement)
-class SalaryAgreementAdmin(BaseModelAdmin):
-    list_display = ("valid_from", "valid_to", "salary_standard")
-    list_filter = ("valid_from", "valid_to")

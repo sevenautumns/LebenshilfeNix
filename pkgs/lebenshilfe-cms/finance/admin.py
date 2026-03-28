@@ -1,6 +1,12 @@
 from django.contrib import admin
 from base.admin import BaseModelAdmin
-from .models import CostPayer, FeeAgreement, PoolAgreement, Payment
+from .models import SalaryAgreement, CostPayer, FeeAgreement, PoolAgreement, Payment
+
+
+@admin.register(SalaryAgreement)
+class SalaryAgreementAdmin(BaseModelAdmin):
+    list_display = ("valid_from", "valid_to", "salary_standard")
+    list_filter = ("valid_from", "valid_to")
 
 
 @admin.register(CostPayer)

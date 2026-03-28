@@ -3,6 +3,38 @@ from django.db.models import Q, F, CheckConstraint
 from base.fields import EuroDecimalField
 
 
+class SalaryAgreement(models.Model):
+    salary_standard = EuroDecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)"
+    )
+    salary_tandem = EuroDecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Tandem"
+    )
+    salary_coordination = EuroDecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Koordination"
+    )
+    salary_management = EuroDecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Geschäftsführung"
+    )
+    valid_from = models.DateField(verbose_name="Gültig von")
+    valid_to = models.DateField(verbose_name="Gültig bis")
+
+    class Meta:
+        verbose_name = "Gehaltsvereinbarung"
+        verbose_name_plural = "Gehaltsvereinbarungen"
+        ordering = ["-valid_from"]
+        db_table = "hr_salaryagreement"
+        constraints = [
+            CheckConstraint(
+                condition=Q(valid_to__gte=F("valid_from")),
+                name="salaryagreement_valid_to_after_valid_from",
+            )
+        ]
+
+    def __str__(self):
+        return f"Gehaltsvereinbarung ({self.valid_from} - {self.valid_to})"
+
+
 class CostPayer(models.Model):
     identifier = models.CharField(max_length=255, unique=True, verbose_name="Name")
 
