@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
-from base.utils import COUNTRY_CHOICES, NATIONALITY_CHOICES
+from base.choices import CountryChoices, NationalityChoices
 from base.fields import EuroDecimalField
 
 
@@ -67,12 +67,12 @@ class Employee(Person):
     birthday = models.DateField(verbose_name="Geburtstag")
     birthplace = models.CharField(max_length=255, verbose_name="Geburtsort")
     country_of_birth = models.CharField(
-        max_length=2, choices=COUNTRY_CHOICES, default="DE", verbose_name="Geburtsland"
+        max_length=2, choices=CountryChoices.choices, default=CountryChoices.DE, verbose_name="Geburtsland"
     )
     citizenship = models.CharField(
         max_length=3,
-        choices=NATIONALITY_CHOICES,
-        default="000",
+        choices=NationalityChoices.choices,
+        default=NationalityChoices.DEUTSCHLAND,
         verbose_name="Staatsangehörigkeit",
     )
     personnel_number = models.CharField(
