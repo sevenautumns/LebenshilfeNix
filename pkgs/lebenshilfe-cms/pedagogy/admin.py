@@ -11,6 +11,9 @@ class StudentAdmin(BaseModelAdmin):
     inlines = [AddressInline, PhoneInline, EmailInline]
     autocomplete_fields = ("payer",)
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("payer")
+
 
 @admin.register(Supervision)
 class SupervisionAdmin(BaseModelAdmin):

@@ -60,6 +60,9 @@ class EmploymentAdmin(BaseModelAdmin):
     list_filter_submit = True
     list_filter = (("start_date", RangeDateFilter), ("end_date", RangeDateFilter))
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("employee")
+
 
 @admin.register(Absence)
 class AbsenceAdmin(BaseModelAdmin):
@@ -102,6 +105,9 @@ class TrainingRecordAdmin(BaseModelAdmin):
     list_display = ("employee", "training_type", "valid_from", "valid_to", "valid")
     autocomplete_fields = ("employee", "training_type")
     list_filter = (TrainingValidityFilter, "employee", "training_type__name")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("employee", "training_type")
 
     @admin.display(description="Gültig", boolean=True, ordering="valid_to")
     def valid(self, obj):
