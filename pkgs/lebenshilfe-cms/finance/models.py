@@ -83,6 +83,20 @@ class FeeAgreement(models.Model):
     price_coordination = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Koordination"
     )
+    price_honorary_standard = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Schulbegleitung (Ehrenamt)",
+    )
+    price_honorary_tandem = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Tandem (Ehrenamt)",
+    )
     responsible_payer = models.ForeignKey(
         CostPayer,
         on_delete=models.PROTECT,
