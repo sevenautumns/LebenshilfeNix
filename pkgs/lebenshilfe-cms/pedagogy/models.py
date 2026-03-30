@@ -114,6 +114,11 @@ class Request(models.Model):
         verbose_name="Gültig bis",
         help_text="Ende der Bewilligungsperiode. Leer lassen, wenn unbefristet.",
     )
+    review_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Überprüfung geplant bis",
+    )
     demand = HourMinuteDurationField(
         verbose_name="Betreuungsbedarf pro Woche",
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
