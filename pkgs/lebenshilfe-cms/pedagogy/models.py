@@ -48,6 +48,10 @@ class Supervision(models.Model):
         blank=True,
         verbose_name="Tandem",
     )
+    is_tandem_prophylactic = models.BooleanField(
+        default=False,
+        verbose_name="Tandem prophylaktisch",
+    )
     caretaker = models.ForeignKey(
         "hr.Employee",
         on_delete=models.PROTECT,
@@ -69,6 +73,10 @@ class Supervision(models.Model):
     school_days = models.PositiveIntegerField(
         verbose_name="Schultage",
         help_text="Anzahl der Schultage im Betreuungszeitraum",
+    )
+    is_prophylactic = models.BooleanField(
+        default=False,
+        verbose_name="Prophylaktisch",
     )
 
     class Meta:

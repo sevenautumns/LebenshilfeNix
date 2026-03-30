@@ -24,6 +24,8 @@ class SupervisionAdmin(BaseModelAdmin):
         "start_date",
         "end_date",
         "weekly_hours",
+        "is_prophylactic",
+        "is_tandem_prophylactic",
     )
     list_filter_submit = True
     list_filter = ("school", ("start_date", RangeDateFilter))
