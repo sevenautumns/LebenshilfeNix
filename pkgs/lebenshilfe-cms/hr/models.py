@@ -276,17 +276,6 @@ class Applicant(Person):
             return f"bis {mx:g} Std."
         return "–"
 
-    @property
-    def availability_summary(self) -> str:
-        today = timezone.now().date()
-        if self.earliest_start_date and self.earliest_start_date <= today:
-            return "Sofort verfügbar"
-        if self.earliest_start_date:
-            return f"Ab {self.earliest_start_date.strftime('%d.%m.%Y')}"
-        if self.notice_period_months is not None:
-            return f"Kündigungsfrist: {self.notice_period_months} Monat(e)"
-        return "–"
-
 
 class Absence(models.Model):
     class Reason(models.TextChoices):

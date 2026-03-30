@@ -142,7 +142,7 @@ class DesiredHoursRangeFilter(RangeNumericListFilter):
 
 @admin.register(Applicant)
 class ApplicantAdmin(BaseModelAdmin):
-    list_display = ("full_name", "application_date", "notice_period_months", "earliest_start_date", "availability_summary", "desired_hours_display", "desired_school")
+    list_display = ("full_name", "application_date", "notice_period_months", "earliest_start_date", "desired_hours_display", "desired_school")
     search_fields = ("first_name", "last_name")
     autocomplete_fields = ("desired_school",)
     list_filter = (
@@ -157,10 +157,6 @@ class ApplicantAdmin(BaseModelAdmin):
         EmailInline,
         BankAccountInline,
     ]
-
-    @admin.display(description="Verfügbarkeit")
-    def availability_summary(self, obj):
-        return obj.availability_summary
 
     @admin.display(description="Stundenwunsch")
     def desired_hours_display(self, obj):
