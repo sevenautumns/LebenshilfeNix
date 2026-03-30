@@ -63,8 +63,8 @@ class Employee(Person):
     maiden_name = models.CharField(
         max_length=255, blank=True, verbose_name="Geburtsname"
     )
-    birthday = models.DateField(verbose_name="Geburtstag")
-    birthplace = models.CharField(max_length=255, verbose_name="Geburtsort")
+    birthday = models.DateField(blank=True, null=True, verbose_name="Geburtstag")
+    birthplace = models.CharField(max_length=255, blank=True, verbose_name="Geburtsort")
     country_of_birth = models.CharField(
         max_length=2, choices=CountryChoices.choices, default=CountryChoices.DE, verbose_name="Geburtsland"
     )
@@ -83,7 +83,7 @@ class Employee(Person):
 
     # Familiärer Status
     marital_status = models.CharField(
-        max_length=50, choices=MaritalStatus.choices, verbose_name="Familienstand"
+        max_length=50, choices=MaritalStatus.choices, blank=True, verbose_name="Familienstand"
     )
     number_of_children = models.PositiveIntegerField(
         default=0, verbose_name="Kinderzahl"
@@ -98,6 +98,7 @@ class Employee(Person):
     )
     tax_id = models.CharField(
         max_length=50,
+        blank=True,
         verbose_name="Steuer-ID",
         help_text="11-stellige Steueridentifikationsnummer",
     )
@@ -119,7 +120,7 @@ class Employee(Person):
     )
 
     # Gesundheit und Sicherheit
-    health_insurance = models.CharField(max_length=255, verbose_name="Krankenkasse")
+    health_insurance = models.CharField(max_length=255, blank=True, verbose_name="Krankenkasse")
     # GdB: Wenn NULL, liegt keine festgestellte Schwerbehinderung vor
     severe_disability_percentage = models.PositiveIntegerField(
         blank=True,
@@ -133,6 +134,8 @@ class Employee(Person):
 
     # Dokumentation
     criminal_record_certificate_date = models.DateField(
+        blank=True,
+        null=True,
         verbose_name="Erweitertes Führungszeugnis (Datum)",
         help_text="Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)",
     )
