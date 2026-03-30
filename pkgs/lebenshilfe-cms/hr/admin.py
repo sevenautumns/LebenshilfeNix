@@ -128,7 +128,7 @@ class VocationalTrainingAdmin(BaseModelAdmin):
 
 @admin.register(Applicant)
 class ApplicantAdmin(BaseModelAdmin):
-    list_display = ("full_name", "application_date", "earliest_start_date", "availability_summary")
+    list_display = ("full_name", "application_date", "notice_period_months", "earliest_start_date", "availability_summary")
     search_fields = ("first_name", "last_name")
     autocomplete_fields = ("desired_school",)
     list_filter = (("earliest_start_date", RangeDateFilter),)
