@@ -3,6 +3,7 @@ from django.templatetags.static import static
 UNFOLD = {
     "SITE_TITLE": "Lebenshilfe Verwaltung",
     "SITE_HEADER": "Lebenshilfe",
+    "SITE_ICON": lambda request: static("icon.svg"),
     "SITE_LOGO": {
         "light": lambda request: static("logo-light.svg"),
         "dark": lambda request: static("logo-dark.svg"),
