@@ -118,6 +118,12 @@ class PoolAgreement(models.Model):
         related_name="pool_agreements",
         verbose_name="Kostenträger",
     )
+    school = models.ForeignKey(
+        "pedagogy.School",
+        on_delete=models.PROTECT,
+        related_name="pool_agreements",
+        verbose_name="Schule",
+    )
     flat_rate = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
@@ -143,7 +149,7 @@ class PoolAgreement(models.Model):
         ]
 
     def __str__(self):
-        return f"Poolvereinbarung {self.payer} ({self.valid_from})"
+        return f"Poolvereinbarung {self.payer} – {self.school} ({self.valid_from})"
 
 
 class Payment(models.Model):

@@ -40,14 +40,14 @@ class FeeAgreementAdmin(BaseModelAdmin):
 
 @admin.register(PoolAgreement)
 class PoolAgreementAdmin(BaseModelAdmin):
-    list_display = ("payer", "flat_rate", "max_supervisions", "valid_from", "valid_to")
-    list_filter = ("payer",)
-    search_fields = ("payer__identifier",)
-    autocomplete_fields = ("payer",)
+    list_display = ("payer", "school", "flat_rate", "max_supervisions", "valid_from", "valid_to")
+    list_filter = ("payer", "school")
+    search_fields = ("payer__identifier", "school__name")
+    autocomplete_fields = ("payer", "school")
     date_hierarchy = "valid_from"
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("payer")
+        return super().get_queryset(request).select_related("payer", "school")
 
 
 @admin.register(Payment)
