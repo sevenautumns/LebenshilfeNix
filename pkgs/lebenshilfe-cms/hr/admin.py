@@ -30,7 +30,7 @@ class OtherEmploymentInline(TabularInline):
 
 @admin.register(Employee)
 class EmployeeAdmin(BaseModelAdmin):
-    list_display = ("personnel_number", "full_name", "birthday", "citizenship")
+    list_display = ("full_name", "personnel_number", "birthday", "citizenship")
     search_fields = ("first_name", "last_name")
     filter_horizontal = ("vocational_trainings",)
     autocomplete_fields = ("church_membership",)
