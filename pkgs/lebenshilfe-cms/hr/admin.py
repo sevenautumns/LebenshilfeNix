@@ -50,7 +50,7 @@ class EmployeeAdmin(BaseModelAdmin):
 
 @admin.register(Employment)
 class EmploymentAdmin(BaseModelAdmin):
-    list_display = ("employee", "start_date", "end_date", "working_hours")
+    list_display = ("employee", "contract_type", "start_date", "end_date", "working_hours")
     search_fields = (
         "employee__first_name",
         "employee__last_name",

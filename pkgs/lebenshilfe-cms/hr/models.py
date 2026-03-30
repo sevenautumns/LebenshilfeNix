@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 from base.choices import CountryChoices, NationalityChoices
+from base.fields import EuroDecimalField
 
 
 class Denomination(models.Model):
@@ -163,6 +164,14 @@ class Employee(Person):
 
 
 class Employment(models.Model):
+    class ContractType(models.TextChoices):
+        SCHOOL_ACCOMPANIMENT = "school_accompaniment", "Schulbegleitung"
+        TANDEM = "tandem", "Tandem"
+        SCHOOL_ACCOMPANIMENT_HONORARY = "school_accompaniment_honorary", "Schulbegleitung (Ehrenamt)"
+        TANDEM_HONORARY = "tandem_honorary", "Tandem (Ehrenamt)"
+        COORDINATION = "coordination", "Koordination"
+        MANAGEMENT = "management", "Geschäftsleitung"
+
     employee = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,
@@ -178,6 +187,20 @@ class Employment(models.Model):
         decimal_places=2,
         verbose_name="Stundenumfang",
         help_text="Wöchentlicher Stundenumfang laut Arbeitsvertrag",
+    )
+    contract_type = models.CharField(
+        max_length=50,
+        choices=ContractType.choices,
+        blank=True,
+        verbose_name="Art des Vertrags",
+    )
+    gross_salary_override = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Brutto laut Vertrag (Überschreibung)",
+        help_text="Überschreibt das Brutto laut Vertrag pro Monat für dieses Arbeitsverhältnis",
     )
 
     class Meta:
