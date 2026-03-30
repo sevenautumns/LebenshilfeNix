@@ -221,12 +221,19 @@ class OtherEmployment(models.Model):
 
 class Applicant(Person):
     application_date = models.DateField(verbose_name="Datum der Bewerbung")
-    desired_hours = models.DecimalField(
+    desired_hours_min = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         blank=True,
         null=True,
-        verbose_name="Stundenwunsch",
+        verbose_name="Stundenwunsch (von)",
+    )
+    desired_hours_max = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Stundenwunsch (bis)",
     )
     desired_school = models.ForeignKey(
         "pedagogy.School",
@@ -238,9 +245,6 @@ class Applicant(Person):
     )
     notice_period = models.CharField(
         max_length=255, blank=True, verbose_name="Kündigungsfristen"
-    )
-    suitability_rating = models.CharField(
-        max_length=255, blank=True, verbose_name="Einstufung nach Eignung"
     )
 
     class Meta:
