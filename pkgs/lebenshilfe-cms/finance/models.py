@@ -24,7 +24,6 @@ class SalaryAgreement(models.Model):
         verbose_name = "Gehaltsvereinbarung"
         verbose_name_plural = "Gehaltsvereinbarungen"
         ordering = ["-valid_from"]
-        db_table = "hr_salaryagreement"
         indexes = [
             models.Index(fields=["valid_from"], name="salaryagreement_valid_from_idx"),
         ]

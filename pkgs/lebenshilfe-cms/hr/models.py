@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 from base.choices import CountryChoices, NationalityChoices
-from base.fields import EuroDecimalField
 
 
 class Denomination(models.Model):
@@ -13,7 +12,6 @@ class Denomination(models.Model):
         verbose_name = "Konfession"
         verbose_name_plural = "Konfessionen"
         ordering = ["name"]
-        db_table = "base_denomination"
 
     def __str__(self):
         return self.name

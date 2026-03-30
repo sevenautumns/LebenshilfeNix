@@ -154,7 +154,6 @@ class Member(Person):
         verbose_name = "Mitglied"
         verbose_name_plural = "Mitglieder"
         ordering = ["last_name", "first_name"]
-        db_table = "members_member"
         constraints = [
             CheckConstraint(
                 condition=Q(leaving_date__isnull=True)
