@@ -66,12 +66,13 @@ class Employee(Person):
     birthday = models.DateField(blank=True, null=True, verbose_name="Geburtstag")
     birthplace = models.CharField(max_length=255, blank=True, verbose_name="Geburtsort")
     country_of_birth = models.CharField(
-        max_length=2, choices=CountryChoices.choices, default=CountryChoices.DE, verbose_name="Geburtsland"
+        max_length=2, choices=CountryChoices.choices, blank=True, null=True, verbose_name="Geburtsland"
     )
     citizenship = models.CharField(
         max_length=3,
         choices=NationalityChoices.choices,
-        default=NationalityChoices.DEUTSCHLAND,
+        blank=True,
+        null=True,
         verbose_name="Staatsangehörigkeit",
     )
     personnel_number = models.CharField(
@@ -86,7 +87,7 @@ class Employee(Person):
         max_length=50, choices=MaritalStatus.choices, blank=True, verbose_name="Familienstand"
     )
     number_of_children = models.PositiveIntegerField(
-        default=0, verbose_name="Kinderzahl"
+        null=True, blank=True, verbose_name="Kinderzahl"
     )
 
     # Steuer- und Sozialversicherungsdaten
