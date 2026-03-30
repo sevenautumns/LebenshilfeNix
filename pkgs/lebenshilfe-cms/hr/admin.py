@@ -1,4 +1,4 @@
-from unfold.contrib.filters.admin import BooleanRadioFilter, ChoicesDropdownFilter, RangeDateFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, BooleanRadioFilter, ChoicesDropdownFilter, RangeDateFilter, RangeNumericFilter
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -131,7 +131,12 @@ class ApplicantAdmin(BaseModelAdmin):
     list_display = ("full_name", "application_date", "notice_period_months", "earliest_start_date", "availability_summary")
     search_fields = ("first_name", "last_name")
     autocomplete_fields = ("desired_school",)
-    list_filter = (("earliest_start_date", RangeDateFilter),)
+    list_filter = (
+        ("earliest_start_date", RangeDateFilter),
+        ("desired_hours_min", RangeNumericFilter),
+        ("desired_hours_max", RangeNumericFilter),
+        ["desired_school", AutocompleteSelectFilter],
+    )
     list_filter_submit = True
     inlines = [
         AddressInline,
