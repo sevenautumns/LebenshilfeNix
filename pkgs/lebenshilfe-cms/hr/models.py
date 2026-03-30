@@ -266,6 +266,17 @@ class Applicant(Person):
         return super().__str__()
 
     @property
+    def desired_hours_summary(self) -> str:
+        mn, mx = self.desired_hours_min, self.desired_hours_max
+        if mn is not None and mx is not None:
+            return f"{mn:g}–{mx:g} Std."
+        if mn is not None:
+            return f"ab {mn:g} Std."
+        if mx is not None:
+            return f"bis {mx:g} Std."
+        return "–"
+
+    @property
     def availability_summary(self) -> str:
         today = timezone.now().date()
         if self.earliest_start_date and self.earliest_start_date <= today:
