@@ -130,9 +130,13 @@ class PoolAgreement(models.Model):
         verbose_name="Pauschalentgelt pro Fall",
         help_text="Pauschalentgelt in Euro pro betreutem Fall",
     )
-    max_supervisions = models.PositiveIntegerField(
-        verbose_name="Max. Betreuungen",
-        help_text="Anzahl der aktuell erlaubten Betreuungen laut Vereinbarung",
+    approved_supervisions = models.PositiveIntegerField(
+        verbose_name="Genehmigte Betreuungen",
+        help_text="Anzahl der genehmigten Betreuungen laut Vereinbarung",
+    )
+    prophylactic_supervisions = models.PositiveIntegerField(
+        verbose_name="Prophylaktische Betreuungen",
+        help_text="Anzahl der prophylaktischen Betreuungen laut Vereinbarung",
     )
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")

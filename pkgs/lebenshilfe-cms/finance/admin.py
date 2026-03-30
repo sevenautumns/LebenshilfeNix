@@ -40,7 +40,7 @@ class FeeAgreementAdmin(BaseModelAdmin):
 
 @admin.register(PoolAgreement)
 class PoolAgreementAdmin(BaseModelAdmin):
-    list_display = ("school", "payer", "flat_rate", "max_supervisions", "valid_from", "valid_to")
+    list_display = ("school", "payer", "flat_rate", "approved_supervisions", "prophylactic_supervisions", "valid_from", "valid_to")
     list_filter = ("school", "payer")
     search_fields = ("payer__identifier", "school__name")
     autocomplete_fields = ("payer", "school")
