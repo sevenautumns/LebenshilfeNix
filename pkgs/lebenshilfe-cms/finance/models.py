@@ -149,7 +149,7 @@ class PoolAgreement(models.Model):
         ]
 
     def __str__(self):
-        return f"Poolvereinbarung {self.payer} – {self.school} ({self.valid_from})"
+        return f"Poolvereinbarung {self.school} – {self.payer} ({self.valid_from})"
 
 
 class Payment(models.Model):
