@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
-from base.fields import EuroDecimalField
+from base.fields import EuroDecimalField, MonthField
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -202,3 +202,33 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Zahlung: {self.amount}€ von {self.payer}"
+
+
+class MonthlyContractCost(models.Model):
+    employment = models.ForeignKey(
+        "hr.Employment",
+        on_delete=models.PROTECT,
+        related_name="monthly_contract_costs",
+        verbose_name="Arbeitsverhältnis",
+    )
+    gross_personnel_costs = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Brutto-Personalkosten",
+        help_text="Tatsächliche Kosten",
+    )
+    month = MonthField(verbose_name="Monat")
+
+    class Meta:
+        verbose_name = "Monatliche Vertragskosten"
+        verbose_name_plural = "Monatliche Vertragskosten"
+        ordering = ["-month"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["employment", "month"],
+                name="monthlycontractcost_unique_employment_month",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.employment} – {self.month.strftime('%m/%Y')}"

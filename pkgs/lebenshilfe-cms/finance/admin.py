@@ -2,7 +2,7 @@ from django.contrib import admin
 from unfold.admin import TabularInline
 from unfold.contrib.filters.admin import RangeDateFilter
 from base.admin import BaseModelAdmin
-from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, PoolAgreement, Payment
+from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, PoolAgreement, Payment, MonthlyContractCost
 
 
 @admin.register(SalaryAgreement)
@@ -63,4 +63,23 @@ class PaymentAdmin(BaseModelAdmin):
             super()
             .get_queryset(request)
             .select_related("payer", "supervision__student")
+        )
+
+
+@admin.register(MonthlyContractCost)
+class MonthlyContractCostAdmin(BaseModelAdmin):
+    list_display = ("employment", "month", "gross_personnel_costs")
+    list_filter_submit = True
+    list_filter = (("month", RangeDateFilter),)
+    autocomplete_fields = ("employment",)
+    search_fields = (
+        "employment__employee__first_name",
+        "employment__employee__last_name",
+    )
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("employment__employee")
         )

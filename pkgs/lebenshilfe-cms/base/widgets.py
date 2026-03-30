@@ -1,7 +1,7 @@
-from django.forms import MultiWidget, NumberInput
+from django.forms import MultiWidget, NumberInput, Select
 from unfold.widgets import UnfoldPrefixSuffixMixin, INPUT_CLASSES
 from django.utils.dateparse import parse_duration
-from datetime import timedelta
+from datetime import timedelta, date
 
 
 class HourMinuteDurationWidget(MultiWidget):
@@ -43,6 +43,50 @@ class HourMinuteDurationWidget(MultiWidget):
             hours = int(parts[0] or 0)
             minutes = int(parts[1] or 0)
             return timedelta(hours=hours, minutes=minutes)
+        return None
+
+
+class MonthWidget(MultiWidget):
+    template_name = "unfold/widgets/range.html"
+
+    def __init__(self, attrs=None):
+        widgets = (
+            Select(
+                attrs={"class": " ".join(INPUT_CLASSES)},
+                choices=[
+                    (1, "Januar"), (2, "Februar"), (3, "März"), (4, "April"),
+                    (5, "Mai"), (6, "Juni"), (7, "Juli"), (8, "August"),
+                    (9, "September"), (10, "Oktober"), (11, "November"), (12, "Dezember"),
+                ],
+            ),
+            NumberInput(
+                attrs={
+                    "placeholder": "Jahr",
+                    "class": " ".join(INPUT_CLASSES),
+                    "min": "1900",
+                    "max": "2100",
+                }
+            ),
+        )
+        super().__init__(widgets, attrs)
+
+    def decompress(self, value):
+        if isinstance(value, date):
+            return [value.month, value.year]
+        if isinstance(value, str) and value:
+            parts = value.split("-")
+            if len(parts) >= 2:
+                return [int(parts[1]), int(parts[0])]
+        return [None, None]
+
+    def value_from_datadict(self, data, files, name):
+        parts = super().value_from_datadict(data, files, name)
+        month, year = parts[0], parts[1]
+        if month and year:
+            try:
+                return date(int(year), int(month), 1)
+            except (ValueError, TypeError):
+                return None
         return None
 
 
