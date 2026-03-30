@@ -52,9 +52,9 @@ class PoolAgreementAdmin(BaseModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(BaseModelAdmin):
-    list_display = ("payer", "amount", "payment_date", "supervision")
+    list_display = ("payer", "amount", "billing_period", "supervision")
     list_filter_submit = True
-    list_filter = (("payment_date", RangeDateFilter), "payer")
+    list_filter = (("billing_period", RangeDateFilter), "payer")
     autocomplete_fields = ("payer", "supervision")
     search_fields = ("payer__identifier", "note", "booking_number")
 
@@ -68,9 +68,9 @@ class PaymentAdmin(BaseModelAdmin):
 
 @admin.register(MonthlyContractCost)
 class MonthlyContractCostAdmin(BaseModelAdmin):
-    list_display = ("employment", "month", "gross_personnel_costs")
+    list_display = ("employment", "billing_period", "gross_personnel_costs")
     list_filter_submit = True
-    list_filter = (("month", RangeDateFilter),)
+    list_filter = (("billing_period", RangeDateFilter),)
     autocomplete_fields = ("employment",)
     search_fields = (
         "employment__employee__first_name",

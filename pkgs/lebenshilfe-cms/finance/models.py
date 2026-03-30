@@ -184,7 +184,7 @@ class Payment(models.Model):
         verbose_name="Kostenträger",
     )
     amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
-    payment_date = models.DateField(blank=True, null=True, verbose_name="Zahlungsdatum")
+    billing_period = MonthField(blank=True, null=True, verbose_name="Abrechnungsdatum")
     booking_number = models.CharField(
         max_length=100,
         blank=True,
@@ -195,13 +195,13 @@ class Payment(models.Model):
     class Meta:
         verbose_name = "Zahlung"
         verbose_name_plural = "Zahlungen"
-        ordering = ["-payment_date"]
+        ordering = ["-billing_period"]
         indexes = [
-            models.Index(fields=["payment_date"], name="payment_payment_date_idx"),
+            models.Index(fields=["billing_period"], name="payment_billing_period_idx"),
         ]
 
     def __str__(self):
-        return f"Zahlung: {self.amount}€ von {self.payer}"
+        return f"Zahlung: {self.amount}€ von {self.payer} ({self.billing_period})"
 
 
 class MonthlyContractCost(models.Model):
@@ -214,21 +214,21 @@ class MonthlyContractCost(models.Model):
     gross_personnel_costs = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Brutto-Personalkosten",
-        help_text="Tatsächliche Kosten",
+        verbose_name="Tatsächliche Brutto-Personalkosten",
+        help_text="Tatsächliche monatliche Kosten inkl. Arbeitgeberanteil",
     )
-    month = MonthField(verbose_name="Monat")
+    billing_period = MonthField(verbose_name="Abrechnungsdatum")
 
     class Meta:
         verbose_name = "Monatliche Vertragskosten"
         verbose_name_plural = "Monatliche Vertragskosten"
-        ordering = ["-month"]
+        ordering = ["-billing_period"]
         constraints = [
             models.UniqueConstraint(
-                fields=["employment", "month"],
-                name="monthlycontractcost_unique_employment_month",
+                fields=["employment", "billing_period"],
+                name="monthlycontractcost_unique_employment_billing_period",
             )
         ]
 
     def __str__(self):
-        return f"{self.employment} – {self.month.strftime('%m/%Y')}"
+        return f"{self.employment} – {self.billing_period.strftime('%m/%Y')}"
