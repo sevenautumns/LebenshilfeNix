@@ -13,6 +13,7 @@
       "dev.lebenshilfe-uslar.de"
       "212.132.111.87"
       "lebenshilfe-uslar.de"
+      "m.lebenshilfe-uslar.de"
     ];
     environmentFile = config.age.secrets.lebenshilfe-cms-secret.path; 
   };

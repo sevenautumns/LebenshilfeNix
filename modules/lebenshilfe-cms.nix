@@ -76,7 +76,7 @@ in {
       
       preStart = ''
         ${cfg.package}/bin/lebenshilfe-manage migrate --noinput
-        ${cfg.package}/bin/lebenshilfe-manage collectstatic --noinput
+        ${cfg.package}/bin/lebenshilfe-manage collectstatic --clear --noinput
       '';
 
       serviceConfig = {
