@@ -170,7 +170,12 @@ class Payment(models.Model):
         verbose_name="Kostenträger",
     )
     amount = EuroDecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
-    payment_date = models.DateField(verbose_name="Zahlungsdatum")
+    payment_date = models.DateField(blank=True, null=True, verbose_name="Zahlungsdatum")
+    booking_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Buchungsnummer",
+    )
     note = models.TextField(blank=True, verbose_name="Notiz")
 
     class Meta:

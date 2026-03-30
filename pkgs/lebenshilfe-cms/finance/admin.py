@@ -56,7 +56,7 @@ class PaymentAdmin(BaseModelAdmin):
     list_filter_submit = True
     list_filter = (("payment_date", RangeDateFilter), "payer")
     autocomplete_fields = ("payer", "supervision")
-    search_fields = ("payer__identifier", "note")
+    search_fields = ("payer__identifier", "note", "booking_number")
 
     def get_queryset(self, request):
         return (
