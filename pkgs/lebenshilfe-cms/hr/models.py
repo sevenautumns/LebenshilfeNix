@@ -243,8 +243,18 @@ class Applicant(Person):
         related_name="applicants",
         verbose_name="Schulwunsch",
     )
-    notice_period = models.CharField(
-        max_length=255, blank=True, verbose_name="Kündigungsfristen"
+    notice_period_months = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Kündigungsfrist (Monate)",
+        help_text="Kündigungsfrist in Monaten, z. B. 1.0 = 1 Monat, 3.0 = 3 Monate.",
+    )
+    earliest_start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Frühestmöglicher Eintrittstermin",
     )
 
     class Meta:
@@ -254,6 +264,17 @@ class Applicant(Person):
 
     def __str__(self):
         return super().__str__()
+
+    @property
+    def availability_summary(self) -> str:
+        today = timezone.now().date()
+        if self.earliest_start_date and self.earliest_start_date <= today:
+            return "Sofort verfügbar"
+        if self.earliest_start_date:
+            return f"Ab {self.earliest_start_date.strftime('%d.%m.%Y')}"
+        if self.notice_period_months is not None:
+            return f"Kündigungsfrist: {self.notice_period_months} Monat(e)"
+        return "–"
 
 
 class Absence(models.Model):

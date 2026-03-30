@@ -128,15 +128,21 @@ class VocationalTrainingAdmin(BaseModelAdmin):
 
 @admin.register(Applicant)
 class ApplicantAdmin(BaseModelAdmin):
-    list_display = ("full_name", "application_date")
+    list_display = ("full_name", "application_date", "earliest_start_date", "availability_summary")
     search_fields = ("first_name", "last_name")
     autocomplete_fields = ("desired_school",)
+    list_filter = (("earliest_start_date", RangeDateFilter),)
+    list_filter_submit = True
     inlines = [
         AddressInline,
         PhoneInline,
         EmailInline,
         BankAccountInline,
     ]
+
+    @admin.display(description="Verfügbarkeit")
+    def availability_summary(self, obj):
+        return obj.availability_summary
 
 
 @admin.register(Denomination)
