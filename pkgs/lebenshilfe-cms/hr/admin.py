@@ -1,4 +1,4 @@
-from unfold.contrib.filters.admin import AutocompleteSelectFilter, BooleanRadioFilter, ChoicesDropdownFilter, RangeDateFilter, RangeNumericFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, BooleanRadioFilter, ChoicesDropdownFilter, RangeDateFilter, RangeNumericListFilter
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -126,6 +126,20 @@ class VocationalTrainingAdmin(BaseModelAdmin):
     search_fields = ("name",)
 
 
+class DesiredHoursRangeFilter(RangeNumericListFilter):
+    parameter_name = "desired_hours"
+    title = "Stundenwunsch"
+
+    def queryset(self, request, queryset):
+        min_val = self.used_parameters.get(f"{self.parameter_name}_from")
+        max_val = self.used_parameters.get(f"{self.parameter_name}_to")
+        if min_val:
+            queryset = queryset.filter(desired_hours_max__gte=min_val)
+        if max_val:
+            queryset = queryset.filter(desired_hours_min__lte=max_val)
+        return queryset
+
+
 @admin.register(Applicant)
 class ApplicantAdmin(BaseModelAdmin):
     list_display = ("full_name", "application_date", "notice_period_months", "earliest_start_date", "availability_summary")
@@ -133,8 +147,7 @@ class ApplicantAdmin(BaseModelAdmin):
     autocomplete_fields = ("desired_school",)
     list_filter = (
         ("earliest_start_date", RangeDateFilter),
-        ("desired_hours_min", RangeNumericFilter),
-        ("desired_hours_max", RangeNumericFilter),
+        DesiredHoursRangeFilter,
         ["desired_school", AutocompleteSelectFilter],
     )
     list_filter_submit = True
