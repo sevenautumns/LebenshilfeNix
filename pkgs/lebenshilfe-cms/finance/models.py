@@ -17,6 +17,20 @@ class SalaryAgreement(models.Model):
     salary_management = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Geschäftsführung"
     )
+    salary_honorary_standard = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Schulbegleitung (Ehrenamt)",
+    )
+    salary_honorary_tandem = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Tandem (Ehrenamt)",
+    )
     valid_from = models.DateField(verbose_name="Gültig von")
     valid_to = models.DateField(verbose_name="Gültig bis")
 
@@ -82,20 +96,6 @@ class FeeAgreement(models.Model):
     )
     price_coordination = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Koordination"
-    )
-    price_honorary_standard = EuroDecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Schulbegleitung (Ehrenamt)",
-    )
-    price_honorary_tandem = EuroDecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Tandem (Ehrenamt)",
     )
     responsible_payer = models.ForeignKey(
         CostPayer,
