@@ -1,8 +1,27 @@
 from django.contrib import admin
 from unfold.admin import TabularInline
+from django.utils.translation import gettext_lazy as _
 from unfold.contrib.filters.admin import RangeDateFilter
 from base.admin import BaseModelAdmin
 from .models import SalaryAgreement, CostPayer, CostPayerContact, FeeAgreement, PoolAgreement, Payment, MonthlyContractCost
+
+
+class GrossPersonnelCostsFilter(admin.SimpleListFilter):
+    title = "Brutto eingetragen"
+    parameter_name = "brutto_eingetragen"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("ja", "Ja"),
+            ("nein", "Nein"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "ja":
+            return queryset.filter(gross_personnel_costs__isnull=False)
+        if self.value() == "nein":
+            return queryset.filter(gross_personnel_costs__isnull=True)
+        return queryset
 
 
 @admin.register(SalaryAgreement)
@@ -70,7 +89,7 @@ class PaymentAdmin(BaseModelAdmin):
 class MonthlyContractCostAdmin(BaseModelAdmin):
     list_display = ("employment", "billing_period", "gross_personnel_costs")
     list_filter_submit = True
-    list_filter = (("billing_period", RangeDateFilter),)
+    list_filter = (("billing_period", RangeDateFilter), GrossPersonnelCostsFilter)
     autocomplete_fields = ("employment",)
     search_fields = (
         "employment__employee__first_name",

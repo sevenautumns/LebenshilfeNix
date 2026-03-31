@@ -214,6 +214,8 @@ class MonthlyContractCost(models.Model):
     gross_personnel_costs = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
+        blank=True,
+        null=True,
         verbose_name="Tatsächliche Brutto-Personalkosten",
         help_text="Tatsächliche monatliche Kosten inkl. Arbeitgeberanteil",
     )
