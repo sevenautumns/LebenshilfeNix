@@ -40,6 +40,10 @@ class Supervision(models.Model):
         on_delete=models.PROTECT,
         verbose_name="Schüler:in",
     )
+    is_prophylactic = models.BooleanField(
+        default=False,
+        verbose_name="Prophylaktisch",
+    )
     tandem = models.ForeignKey(
         Student,
         related_name="tandem_supervisions",
@@ -75,10 +79,6 @@ class Supervision(models.Model):
         null=True,
         verbose_name="Schultage (Überschreibung)",
         help_text="Überschreibt die Schultage aus den Stammdaten für diese Betreuung",
-    )
-    is_prophylactic = models.BooleanField(
-        default=False,
-        verbose_name="Prophylaktisch",
     )
 
     class Meta:
