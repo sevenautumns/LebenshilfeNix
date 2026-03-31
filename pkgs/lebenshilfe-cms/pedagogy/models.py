@@ -70,9 +70,11 @@ class Supervision(models.Model):
     start_date = models.DateField(verbose_name="Beginn")
     end_date = models.DateField(verbose_name="Ende")
     weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
-    school_days = models.PositiveIntegerField(
-        verbose_name="Schultage",
-        help_text="Anzahl der Schultage im Betreuungszeitraum",
+    school_days_override = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Schultage (Überschreibung)",
+        help_text="Überschreibt die Schultage aus den Stammdaten für diese Betreuung",
     )
     is_prophylactic = models.BooleanField(
         default=False,
