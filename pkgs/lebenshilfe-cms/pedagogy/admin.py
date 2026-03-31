@@ -1,5 +1,6 @@
 from django.contrib import admin
 from unfold.contrib.filters.admin import RangeDateFilter
+from unfold.decorators import display
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
 from base.fields import HourMinuteDurationField, EuroDecimalField
 from .models import School, Student, Supervision, Request
@@ -44,21 +45,21 @@ class SupervisionAdmin(BaseModelAdmin):
         "display_monthly_installment",
     )
 
-    def display_daily_hours(self, obj: Supervision):
+    @display(description="Stunden pro Tag")
+    def display_daily_hours(self, obj: Supervision) -> str:
         return _duration_fmt.get_admin_format(obj.daily_hours)
-    display_daily_hours.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
 
-    def display_total_hours(self, obj: Supervision):
+    @display(description="Gesamtstunden")
+    def display_total_hours(self, obj: Supervision) -> str:
         return _duration_fmt.get_admin_format(obj.total_hours)
-    display_total_hours.short_description = "Gesamtstunden"  # type: ignore[attr-defined]
 
-    def display_total_amount(self, obj: Supervision):
+    @display(description="Gesamtbetrag")
+    def display_total_amount(self, obj: Supervision) -> str:
         return _euro_fmt.get_admin_format(obj.total_amount)
-    display_total_amount.short_description = "Gesamtbetrag"  # type: ignore[attr-defined]
 
-    def display_monthly_installment(self, obj: Supervision):
+    @display(description="Abschlag pro Monat")
+    def display_monthly_installment(self, obj: Supervision) -> str:
         return _euro_fmt.get_admin_format(obj.monthly_installment)
-    display_monthly_installment.short_description = "Abschlag pro Monat"  # type: ignore[attr-defined]
 
     def get_queryset(self, request):
         return (
