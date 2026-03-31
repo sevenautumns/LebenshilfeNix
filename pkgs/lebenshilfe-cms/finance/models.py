@@ -193,8 +193,8 @@ class Payment(models.Model):
     note = models.TextField(blank=True, verbose_name="Notiz")
 
     class Meta:
-        verbose_name = "Zahlung"
-        verbose_name_plural = "Zahlungen"
+        verbose_name = "Zahlungseingang"
+        verbose_name_plural = "Zahlungseingänge"
         ordering = ["-billing_period"]
         indexes = [
             models.Index(fields=["billing_period"], name="payment_billing_period_idx"),
@@ -220,8 +220,8 @@ class MonthlyContractCost(models.Model):
     billing_period = MonthField(verbose_name="Abrechnungsdatum")
 
     class Meta:
-        verbose_name = "Monatliche Vertragskosten"
-        verbose_name_plural = "Monatliche Vertragskosten"
+        verbose_name = "Lohnkosten"
+        verbose_name_plural = "Lohnkosten"
         ordering = ["-billing_period"]
         constraints = [
             models.UniqueConstraint(
