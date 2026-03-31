@@ -1,3 +1,5 @@
+from decimal import Decimal
+from datetime import timedelta
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person, SchoolDays
@@ -100,6 +102,50 @@ class Supervision(models.Model):
         return SchoolDays.total_school_days(self.start_date, self.end_date)
 
     calculated_school_days.fget.short_description = "Schultage (rechnerisch)"  # type: ignore[attr-defined]
+
+    @property
+    def daily_hours(self) -> timedelta:
+        return self.weekly_hours / 5
+
+    daily_hours.fget.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
+
+    @property
+    def total_hours(self) -> timedelta:
+        days = self.school_days_override if self.school_days_override is not None else self.calculated_school_days
+        return self.daily_hours * days
+
+    total_hours.fget.short_description = "Gesamtstunden"  # type: ignore[attr-defined]
+
+    @property
+    def fee_agreement(self):
+        from finance.models import FeeAgreement
+        return FeeAgreement.objects.filter(
+            Q(responsible_payer=self.student.payer) | Q(additional_payers=self.student.payer),
+            valid_from__lte=self.start_date,
+            valid_to__gte=self.start_date,
+        ).first()
+
+    fee_agreement.fget.short_description = "Entgeltvereinbarung"  # type: ignore[attr-defined]
+
+    @property
+    def total_amount(self) -> Decimal | None:
+        fee = self.fee_agreement
+        if fee is None:
+            return None
+        price = fee.price_tandem if self.tandem_id else fee.price_standard
+        return price * Decimal(self.total_hours.total_seconds() / 3600)
+
+    total_amount.fget.short_description = "Gesamtbetrag"  # type: ignore[attr-defined]
+
+    @property
+    def monthly_installment(self) -> Decimal | None:
+        amount = self.total_amount
+        if amount is None:
+            return None
+        months = (self.end_date.year - self.start_date.year) * 12 + self.end_date.month - self.start_date.month + 1
+        return amount / months
+
+    monthly_installment.fget.short_description = "Abschlag pro Monat"  # type: ignore[attr-defined]
 
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
