@@ -99,6 +99,8 @@ class Supervision(models.Model):
     def calculated_school_days(self) -> int:
         return SchoolDays.total_school_days(self.start_date, self.end_date)
 
+    calculated_school_days.fget.short_description = "Schultage (rechnerisch)"  # type: ignore[attr-defined]
+
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
 
