@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
-from base.models import Person
+from base.models import Person, SchoolDays
 from base.fields import HourMinuteDurationField
 
 
@@ -94,6 +94,10 @@ class Supervision(models.Model):
                 name="supervision_end_after_start",
             )
         ]
+
+    @property
+    def calculated_school_days(self) -> int:
+        return SchoolDays.total_school_days(self.start_date, self.end_date)
 
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"

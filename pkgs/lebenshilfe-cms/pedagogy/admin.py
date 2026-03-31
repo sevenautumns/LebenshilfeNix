@@ -31,6 +31,7 @@ class SupervisionAdmin(BaseModelAdmin):
     list_filter = ("school", ("start_date", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
+    readonly_fields = ("calculated_school_days",)
 
     def get_queryset(self, request):
         return (
