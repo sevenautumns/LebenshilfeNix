@@ -6,6 +6,7 @@ from .models import (
     Email,
     BankAccount,
     Member,
+    SchoolDays,
 )
 from .mixins import EditModeMixin, AdminDisplayMixin
 from allauth.socialaccount.models import (
@@ -57,6 +58,12 @@ class EmailInline(BaseGenericTabularInline):
 class BankAccountInline(BaseGenericTabularInline):
     model = BankAccount
     extra = 0
+
+
+@admin.register(SchoolDays)
+class SchoolDaysAdmin(BaseModelAdmin):
+    list_display = ("month", "school_days", "public_holidays", "vacation_days")
+    search_fields = ("month",)
 
 
 @admin.register(Member)

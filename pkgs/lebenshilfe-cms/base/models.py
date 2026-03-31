@@ -4,7 +4,22 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, F, Q, CheckConstraint
 from django.db.models.functions import Concat
 from phonenumber_field.modelfields import PhoneNumberField
-from .fields import EuroDecimalField
+from .fields import EuroDecimalField, MonthField
+
+
+class SchoolDays(models.Model):
+    month = MonthField(unique=True, verbose_name="Monat")
+    school_days = models.PositiveIntegerField(verbose_name="Schultage")
+    public_holidays = models.PositiveIntegerField(verbose_name="Feiertage")
+    vacation_days = models.PositiveIntegerField(verbose_name="Urlaubstage")
+
+    class Meta:
+        verbose_name = "Schultage"
+        verbose_name_plural = "Schultage"
+        ordering = ["-month"]
+
+    def __str__(self) -> str:
+        return self.month.strftime("%m/%Y")
 
 
 class Address(models.Model):
