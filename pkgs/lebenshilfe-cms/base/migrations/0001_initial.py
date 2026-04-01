@@ -3,7 +3,6 @@
 import base.fields
 import django.db.models.deletion
 import django.db.models.functions.text
-import phonenumber_field.modelfields
 from django.db import migrations, models
 
 
@@ -85,7 +84,7 @@ class Migration(migrations.Migration):
             name='Phone',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('telephone_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region='DE', verbose_name='Telefonnummer')),
+                ('telephone_number', models.CharField(max_length=128, verbose_name='Telefonnummer')),
                 ('primary', models.BooleanField(default=False, verbose_name='Primär')),
                 ('object_id', models.PositiveIntegerField()),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype')),

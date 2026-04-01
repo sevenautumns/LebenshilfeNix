@@ -10,7 +10,6 @@ dependencies = [
     "psycopg",
     "dj-database-url",
     "django-unfold",
-    "django-phonenumber-field",
 ]
 
 [tool.setuptools]

@@ -25,7 +25,6 @@ python3Packages.buildPythonApplication rec {
     dj-database-url
     django-unfold
     django-allauth
-    django-phonenumber-field
     requests
     gunicorn
   ];
