@@ -78,7 +78,7 @@ class Phone(models.Model):
         ordering = ["-primary"]
 
     def __str__(self):
-        return self.number
+        return str(self.number)
 
 
 class Email(models.Model):
