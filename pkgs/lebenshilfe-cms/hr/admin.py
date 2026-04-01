@@ -26,6 +26,7 @@ from .models import (
 class OtherEmploymentInline(TabularInline):
     model = OtherEmployment
     extra = 0
+    hide_title = True
 
 
 @admin.register(Employee)

@@ -35,6 +35,7 @@ class SalaryAgreementAdmin(BaseModelAdmin):
 class CostPayerContactInline(TabularInline):
     model = CostPayerContact
     extra = 0
+    hide_title = True
 
 
 @admin.register(CostPayer)

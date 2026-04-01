@@ -43,21 +43,25 @@ class BaseGenericTabularInline(GenericTabularInline):
 class AddressInline(BaseGenericTabularInline):
     model = Address
     extra = 0
+    hide_title = True
 
 
 class PhoneInline(BaseGenericTabularInline):
     model = Phone
     extra = 0
+    hide_title = True
 
 
 class EmailInline(BaseGenericTabularInline):
     model = Email
     extra = 0
+    hide_title = True
 
 
 class BankAccountInline(BaseGenericTabularInline):
     model = BankAccount
     extra = 0
+    hide_title = True
 
 
 @admin.register(SchoolDays)
