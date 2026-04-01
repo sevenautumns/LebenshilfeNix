@@ -1,7 +1,7 @@
 from django.db import models
 from .widgets import EuroDecimalWidget, HourMinuteDurationWidget, MonthWidget
 from django.utils import formats
-from datetime import date
+from datetime import date, timedelta
 
 
 class EuroDecimalField(models.DecimalField):
@@ -39,10 +39,18 @@ class HourMinuteDurationField(models.DurationField):
         kwargs["widget"] = HourMinuteDurationWidget
         return super().formfield(**kwargs)
 
+    @staticmethod
+    def to_hours_minutes(value: timedelta) -> tuple[int, int]:
+        total_seconds = int(value.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        return hours, remainder // 60
+
+    @staticmethod
+    def format_std(value: timedelta) -> str:
+        hours, minutes = HourMinuteDurationField.to_hours_minutes(value)
+        return f"{hours}:{minutes:02d} Std."
+
     def get_admin_format(self, value):
         if not value:
             return "-"
-        total_seconds = int(value.total_seconds())
-        hours, remainder = divmod(total_seconds, 3600)
-        minutes = remainder // 60
-        return f"{hours}:{minutes:02d} Std."
+        return HourMinuteDurationField.format_std(value)
