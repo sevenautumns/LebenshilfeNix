@@ -239,7 +239,8 @@ class OtherEmployment(models.Model):
         ordering = ["employee__last_name", "employee__first_name", "employer"]
 
     def __str__(self):
-        return f"{self.employer or 'Unbekannter Arbeitgeber'} ({self.working_hours}h) - {self.employee.full_name}"
+        hours_str = OtherEmployment.working_hours.field.get_admin_format(self.working_hours)
+        return f"{self.employer or 'Unbekannter Arbeitgeber'} ({hours_str}) - {self.employee.full_name}"
 
 
 class Applicant(Person):
