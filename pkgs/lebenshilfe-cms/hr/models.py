@@ -287,13 +287,17 @@ class Applicant(Person):
 
     @property
     def desired_hours_summary(self) -> str:
+        def fmt(td) -> str:
+            h, m = HourMinuteDurationField.to_hours_minutes(td)
+            return f"{h}:{m:02d}"
+
         mn, mx = self.desired_hours_min, self.desired_hours_max
         if mn is not None and mx is not None:
-            return f"{mn:g}–{mx:g} Std."
+            return f"{fmt(mn)}–{fmt(mx)} Std."
         if mn is not None:
-            return f"ab {mn:g} Std."
+            return f"ab {fmt(mn)} Std."
         if mx is not None:
-            return f"bis {mx:g} Std."
+            return f"bis {fmt(mx)} Std."
         return "–"
 
 
