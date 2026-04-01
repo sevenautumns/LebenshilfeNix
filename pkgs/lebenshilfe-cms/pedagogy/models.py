@@ -55,7 +55,9 @@ class Supervision(models.Model):
         verbose_name="Tandem",
     )
     is_tandem_prophylactic = models.BooleanField(
-        default=False,
+        null=True,
+        blank=True,
+        default=None,
         verbose_name="Tandem prophylaktisch",
     )
     caretaker = models.ForeignKey(
@@ -146,6 +148,11 @@ class Supervision(models.Model):
         return amount / months
 
     monthly_installment.fget.short_description = "Abschlag pro Monat"  # type: ignore[attr-defined]
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        if not self.tandem_id:
+            self.is_tandem_prophylactic = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
