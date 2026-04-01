@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person
 from base.choices import CountryChoices, NationalityChoices
-from base.fields import EuroDecimalField
+from base.fields import EuroDecimalField, HourMinuteDurationField
 
 
 class Denomination(models.Model):
@@ -186,9 +186,7 @@ class Employment(models.Model):
     end_date = models.DateField(
         blank=True, null=True, verbose_name="Ende Arbeitsverhältnis"
     )
-    working_hours = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
+    working_hours = HourMinuteDurationField(
         verbose_name="Stundenumfang",
         help_text="Wöchentlicher Stundenumfang laut Arbeitsvertrag",
     )
@@ -233,9 +231,7 @@ class OtherEmployment(models.Model):
     employer = models.CharField(
         max_length=255, blank=True, verbose_name="Arbeitgeber (Sonstige)"
     )
-    working_hours = models.DecimalField(
-        max_digits=5, decimal_places=2, verbose_name="Stundenumfang"
-    )
+    working_hours = HourMinuteDurationField(verbose_name="Stundenumfang")
 
     class Meta:
         verbose_name = "Weiteres Arbeitsverhältnis"
@@ -248,16 +244,12 @@ class OtherEmployment(models.Model):
 
 class Applicant(Person):
     application_date = models.DateField(verbose_name="Datum der Bewerbung")
-    desired_hours_min = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
+    desired_hours_min = HourMinuteDurationField(
         blank=True,
         null=True,
         verbose_name="Stundenwunsch (von)",
     )
-    desired_hours_max = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
+    desired_hours_max = HourMinuteDurationField(
         blank=True,
         null=True,
         verbose_name="Stundenwunsch (bis)",
