@@ -5,7 +5,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, When, Value, F, Q, CheckConstraint
 from django.db.models.functions import Concat
-from phonenumber_field.modelfields import PhoneNumberField
 from .fields import EuroDecimalField, MonthField
 
 
@@ -63,7 +62,7 @@ class Address(models.Model):
 
 
 class Phone(models.Model):
-    number = PhoneNumberField(region="DE", verbose_name="Telefonnummer")
+    number = models.CharField(max_length=20, verbose_name="Telefonnummer")
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
     content_type = models.ForeignKey(
@@ -78,7 +77,7 @@ class Phone(models.Model):
         ordering = ["-primary"]
 
     def __str__(self):
-        return str(self.number)
+        return self.number
 
 
 class Email(models.Model):

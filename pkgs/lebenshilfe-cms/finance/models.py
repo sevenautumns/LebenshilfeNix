@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.fields import EuroDecimalField, MonthField
-from phonenumber_field.modelfields import PhoneNumberField
 
 
 class SalaryAgreement(models.Model):
@@ -72,7 +71,7 @@ class CostPayerContact(models.Model):
         verbose_name="Kostenträger",
     )
     name = models.CharField(max_length=255, verbose_name="Name")
-    phone = PhoneNumberField(region="DE", blank=True, verbose_name="Telefonnummer")
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Telefonnummer")
     email = models.EmailField(blank=True, verbose_name="E-Mail")
     notes = models.CharField(max_length=100, blank=True, verbose_name="Notizen")
 
