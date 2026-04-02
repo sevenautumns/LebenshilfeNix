@@ -45,6 +45,11 @@ class SupervisionAdmin(BaseModelAdmin):
         "display_monthly_installment",
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return super().get_readonly_fields(request, obj)
+
     @display(description="Stunden pro Tag")
     def display_daily_hours(self, obj: Supervision) -> str:
         return _duration_fmt.get_admin_format(obj.daily_hours)
