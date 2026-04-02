@@ -33,6 +33,15 @@ python3Packages.buildPythonApplication rec {
     pytest-xdist
   ];
 
+  nativeCheckInputs = with python3Packages; [
+    pytestCheckHook
+  ];
+
+  preCheck = ''
+    export SECRET_KEY="temporary-secret-key-for-nix-build"
+    export DATABASE_URL="sqlite:///:memory:"
+  '';
+
   preBuild = "${python3Packages.python.interpreter} -m django compilemessages";
 
   postInstall = ''
@@ -53,6 +62,4 @@ python3Packages.buildPythonApplication rec {
     mkdir -p $out/share/doc/${pname}
     cp ${../../NOTICE} $out/share/doc/${pname}/NOTICE
   '';
-
-  doCheck = false;
 }
