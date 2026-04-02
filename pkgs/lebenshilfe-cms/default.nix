@@ -28,6 +28,9 @@ python3Packages.buildPythonApplication rec {
     requests
     gunicorn
     model-bakery
+    pytest
+    pytest-django
+    pytest-xdist
   ];
 
   preBuild = "${python3Packages.python.interpreter} -m django compilemessages";
