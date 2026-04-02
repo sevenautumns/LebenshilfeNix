@@ -59,6 +59,7 @@ class AdminDisplayMixin:
         def display_fn(self_instance, obj):
             value = getattr(obj, field.name)
             return field.get_admin_format(value)
+
         return display_fn
 
     def get_fields(self, request, obj=None):

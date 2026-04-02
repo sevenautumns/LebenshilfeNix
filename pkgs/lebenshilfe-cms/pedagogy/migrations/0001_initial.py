@@ -6,79 +6,231 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('base', '0001_initial'),
-        ('finance', '0001_initial'),
-        ('hr', '0001_initial'),
+        ("base", "0001_initial"),
+        ("finance", "0001_initial"),
+        ("hr", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='School',
+            name="School",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('school_name', models.CharField(max_length=255, unique=True, verbose_name='Name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "school_name",
+                    models.CharField(max_length=255, unique=True, verbose_name="Name"),
+                ),
             ],
             options={
-                'verbose_name': 'Schule',
-                'verbose_name_plural': 'Schulen',
-                'ordering': ['school_name'],
+                "verbose_name": "Schule",
+                "verbose_name_plural": "Schulen",
+                "ordering": ["school_name"],
             },
         ),
         migrations.CreateModel(
-            name='Student',
+            name="Student",
             fields=[
-                ('person_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='base.person')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='students', to='finance.costpayer', verbose_name='Kostenträger')),
+                (
+                    "person_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="base.person",
+                    ),
+                ),
+                (
+                    "payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="students",
+                        to="finance.costpayer",
+                        verbose_name="Kostenträger",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Schüler:in',
-                'verbose_name_plural': 'Schüler:innen',
-                'ordering': ['last_name', 'first_name'],
+                "verbose_name": "Schüler:in",
+                "verbose_name_plural": "Schüler:innen",
+                "ordering": ["last_name", "first_name"],
             },
-            bases=('base.person',),
+            bases=("base.person",),
         ),
         migrations.CreateModel(
-            name='Request',
+            name="Request",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateField(verbose_name='Beginn')),
-                ('valid_to', models.DateField(blank=True, help_text='Ende der Bewilligungsperiode. Leer lassen, wenn unbefristet.', null=True, verbose_name='Gültig bis')),
-                ('demand', base.fields.HourMinuteDurationField(help_text='Genehmigter wöchentlicher Betreuungsumfang', verbose_name='Betreuungsbedarf pro Woche')),
-                ('state', models.CharField(choices=[('draft', 'Entwurf'), ('in_coordination', 'In Abstimmung'), ('rejected', 'Abgelehnt'), ('approved', 'Genehmigt')], default='draft', max_length=50, verbose_name='Zustand')),
-                ('notes', models.TextField(blank=True, null=True, verbose_name='Notizen')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requests', to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requests', to='pedagogy.student', verbose_name='Schüler:in')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("start", models.DateField(verbose_name="Beginn")),
+                (
+                    "valid_to",
+                    models.DateField(
+                        blank=True,
+                        help_text="Ende der Bewilligungsperiode. Leer lassen, wenn unbefristet.",
+                        null=True,
+                        verbose_name="Gültig bis",
+                    ),
+                ),
+                (
+                    "demand",
+                    base.fields.HourMinuteDurationField(
+                        help_text="Genehmigter wöchentlicher Betreuungsumfang",
+                        verbose_name="Betreuungsbedarf pro Woche",
+                    ),
+                ),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Entwurf"),
+                            ("in_coordination", "In Abstimmung"),
+                            ("rejected", "Abgelehnt"),
+                            ("approved", "Genehmigt"),
+                        ],
+                        default="draft",
+                        max_length=50,
+                        verbose_name="Zustand",
+                    ),
+                ),
+                (
+                    "notes",
+                    models.TextField(blank=True, null=True, verbose_name="Notizen"),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="requests",
+                        to="pedagogy.school",
+                        verbose_name="Schule",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="requests",
+                        to="pedagogy.student",
+                        verbose_name="Schüler:in",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Antrag',
-                'verbose_name_plural': 'Anträge',
-                'ordering': ['-start'],
-                'constraints': [models.CheckConstraint(condition=models.Q(('valid_to__isnull', True), ('valid_to__gte', models.F('start')), _connector='OR'), name='request_valid_to_after_start')],
+                "verbose_name": "Antrag",
+                "verbose_name_plural": "Anträge",
+                "ordering": ["-start"],
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(
+                            ("valid_to__isnull", True),
+                            ("valid_to__gte", models.F("start")),
+                            _connector="OR",
+                        ),
+                        name="request_valid_to_after_start",
+                    )
+                ],
             },
         ),
         migrations.CreateModel(
-            name='Supervision',
+            name="Supervision",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('class_name', models.CharField(blank=True, max_length=100, null=True, verbose_name='Klasse')),
-                ('start', models.DateField(verbose_name='Beginn')),
-                ('end', models.DateField(verbose_name='Ende')),
-                ('weekly_hours', base.fields.HourMinuteDurationField(verbose_name='Wochenstunden')),
-                ('school_days', models.PositiveIntegerField(help_text='Anzahl der Schultage im Betreuungszeitraum', verbose_name='Schultage')),
-                ('caretaker', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='hr.employee', verbose_name='Betreuer:in')),
-                ('school', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='pedagogy.school', verbose_name='Schule')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='supervisions', to='pedagogy.student', verbose_name='Schüler:in')),
-                ('tandem', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tandem_supervisions', to='pedagogy.student', verbose_name='Tandem')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "class_name",
+                    models.CharField(
+                        blank=True, max_length=100, null=True, verbose_name="Klasse"
+                    ),
+                ),
+                ("start", models.DateField(verbose_name="Beginn")),
+                ("end", models.DateField(verbose_name="Ende")),
+                (
+                    "weekly_hours",
+                    base.fields.HourMinuteDurationField(verbose_name="Wochenstunden"),
+                ),
+                (
+                    "school_days",
+                    models.PositiveIntegerField(
+                        help_text="Anzahl der Schultage im Betreuungszeitraum",
+                        verbose_name="Schultage",
+                    ),
+                ),
+                (
+                    "caretaker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="supervisions",
+                        to="hr.employee",
+                        verbose_name="Betreuer:in",
+                    ),
+                ),
+                (
+                    "school",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="supervisions",
+                        to="pedagogy.school",
+                        verbose_name="Schule",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="supervisions",
+                        to="pedagogy.student",
+                        verbose_name="Schüler:in",
+                    ),
+                ),
+                (
+                    "tandem",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="tandem_supervisions",
+                        to="pedagogy.student",
+                        verbose_name="Tandem",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Betreuung',
-                'verbose_name_plural': 'Betreuungen',
-                'ordering': ['-start'],
-                'constraints': [models.CheckConstraint(condition=models.Q(('end__gte', models.F('start'))), name='supervision_end_after_start')],
+                "verbose_name": "Betreuung",
+                "verbose_name_plural": "Betreuungen",
+                "ordering": ["-start"],
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(("end__gte", models.F("start"))),
+                        name="supervision_end_after_start",
+                    )
+                ],
             },
         ),
     ]

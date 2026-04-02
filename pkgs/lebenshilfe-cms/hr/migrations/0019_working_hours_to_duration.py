@@ -29,10 +29,14 @@ def migrate_hours_to_duration(apps, schema_editor):
     for obj in Applicant.objects.all():
         changed = []
         if obj.desired_hours_min_decimal is not None:
-            obj.desired_hours_min_duration = decimal_to_timedelta(obj.desired_hours_min_decimal)
+            obj.desired_hours_min_duration = decimal_to_timedelta(
+                obj.desired_hours_min_decimal
+            )
             changed.append("desired_hours_min_duration")
         if obj.desired_hours_max_decimal is not None:
-            obj.desired_hours_max_duration = decimal_to_timedelta(obj.desired_hours_max_decimal)
+            obj.desired_hours_max_duration = decimal_to_timedelta(
+                obj.desired_hours_max_decimal
+            )
             changed.append("desired_hours_max_duration")
         if changed:
             obj.save(update_fields=changed)
@@ -46,28 +50,35 @@ def migrate_hours_to_decimal(apps, schema_editor):
 
     for obj in Employment.objects.all():
         if obj.working_hours_duration is not None:
-            obj.working_hours_decimal = round(obj.working_hours_duration.total_seconds() / 3600, 2)
+            obj.working_hours_decimal = round(
+                obj.working_hours_duration.total_seconds() / 3600, 2
+            )
             obj.save(update_fields=["working_hours_decimal"])
 
     for obj in OtherEmployment.objects.all():
         if obj.working_hours_duration is not None:
-            obj.working_hours_decimal = round(obj.working_hours_duration.total_seconds() / 3600, 2)
+            obj.working_hours_decimal = round(
+                obj.working_hours_duration.total_seconds() / 3600, 2
+            )
             obj.save(update_fields=["working_hours_decimal"])
 
     for obj in Applicant.objects.all():
         changed = []
         if obj.desired_hours_min_duration is not None:
-            obj.desired_hours_min_decimal = round(obj.desired_hours_min_duration.total_seconds() / 3600, 2)
+            obj.desired_hours_min_decimal = round(
+                obj.desired_hours_min_duration.total_seconds() / 3600, 2
+            )
             changed.append("desired_hours_min_decimal")
         if obj.desired_hours_max_duration is not None:
-            obj.desired_hours_max_decimal = round(obj.desired_hours_max_duration.total_seconds() / 3600, 2)
+            obj.desired_hours_max_decimal = round(
+                obj.desired_hours_max_duration.total_seconds() / 3600, 2
+            )
             changed.append("desired_hours_max_decimal")
         if changed:
             obj.save(update_fields=changed)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("hr", "0018_alter_employee_citizenship_and_more"),
     ]
@@ -133,12 +144,20 @@ class Migration(migrations.Migration):
             new_name="desired_hours_max_decimal",
         ),
         # --- Step 3: Migrate data decimal → timedelta ---
-        migrations.RunPython(migrate_hours_to_duration, reverse_code=migrate_hours_to_decimal),
+        migrations.RunPython(
+            migrate_hours_to_duration, reverse_code=migrate_hours_to_decimal
+        ),
         # --- Step 4: Remove old decimal columns ---
         migrations.RemoveField(model_name="employment", name="working_hours_decimal"),
-        migrations.RemoveField(model_name="otheremployment", name="working_hours_decimal"),
-        migrations.RemoveField(model_name="applicant", name="desired_hours_min_decimal"),
-        migrations.RemoveField(model_name="applicant", name="desired_hours_max_decimal"),
+        migrations.RemoveField(
+            model_name="otheremployment", name="working_hours_decimal"
+        ),
+        migrations.RemoveField(
+            model_name="applicant", name="desired_hours_min_decimal"
+        ),
+        migrations.RemoveField(
+            model_name="applicant", name="desired_hours_max_decimal"
+        ),
         # --- Step 5: Rename duration columns to final names ---
         migrations.RenameField(
             model_name="employment",

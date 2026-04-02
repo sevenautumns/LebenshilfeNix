@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0007_payment_note_not_null'),
+        ("finance", "0007_payment_note_not_null"),
     ]
 
     operations = [
         migrations.AlterModelTable(
-            name='salaryagreement',
+            name="salaryagreement",
             table=None,
         ),
     ]

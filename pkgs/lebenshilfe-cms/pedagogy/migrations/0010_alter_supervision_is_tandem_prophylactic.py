@@ -9,16 +9,20 @@ def fix_existing_tandem_prophylactic(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0009_remove_supervision_school_days_and_more'),
+        ("pedagogy", "0009_remove_supervision_school_days_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='supervision',
-            name='is_tandem_prophylactic',
-            field=models.BooleanField(blank=True, default=None, null=True, verbose_name='Tandem prophylaktisch'),
+            model_name="supervision",
+            name="is_tandem_prophylactic",
+            field=models.BooleanField(
+                blank=True,
+                default=None,
+                null=True,
+                verbose_name="Tandem prophylaktisch",
+            ),
         ),
         migrations.RunPython(
             fix_existing_tandem_prophylactic,

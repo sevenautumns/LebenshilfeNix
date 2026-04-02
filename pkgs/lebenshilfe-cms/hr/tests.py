@@ -7,6 +7,7 @@ from hr.models import Applicant, Employee, TrainingRecord, TrainingType
 
 # --- TrainingRecord.is_valid Tests ---
 
+
 class TrainingRecordTests(TestCase):
     def setUp(self):
         self.employee = Employee.objects.create(first_name="Max", last_name="Muster")
@@ -71,6 +72,7 @@ class TrainingRecordTests(TestCase):
 
 
 # --- Applicant.desired_hours_summary Tests ---
+
 
 class ApplicantDesiredHoursTests(TestCase):
     def _make_applicant(self, min_hours=None, max_hours=None):

@@ -5,26 +5,51 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0002_initial'),
+        ("finance", "0002_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CostPayerContact',
+            name="CostPayerContact",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, verbose_name='Name')),
-                ('phone', models.CharField(blank=True, max_length=128, verbose_name='Telefonnummer')),
-                ('email', models.EmailField(blank=True, max_length=254, verbose_name='E-Mail')),
-                ('notes', models.TextField(blank=True, verbose_name='Notizen')),
-                ('cost_payer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contacts', to='finance.costpayer', verbose_name='Kostenträger')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255, verbose_name="Name")),
+                (
+                    "phone",
+                    models.CharField(
+                        blank=True, max_length=128, verbose_name="Telefonnummer"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        blank=True, max_length=254, verbose_name="E-Mail"
+                    ),
+                ),
+                ("notes", models.TextField(blank=True, verbose_name="Notizen")),
+                (
+                    "cost_payer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contacts",
+                        to="finance.costpayer",
+                        verbose_name="Kostenträger",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Zuständige',
-                'verbose_name_plural': 'Zuständige',
-                'ordering': ['name'],
+                "verbose_name": "Zuständige",
+                "verbose_name_plural": "Zuständige",
+                "ordering": ["name"],
             },
         ),
     ]

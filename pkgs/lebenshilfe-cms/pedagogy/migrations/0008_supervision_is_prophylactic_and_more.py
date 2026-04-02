@@ -4,20 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0007_request_review_date'),
+        ("pedagogy", "0007_request_review_date"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='supervision',
-            name='is_prophylactic',
-            field=models.BooleanField(default=False, verbose_name='Prophylaktisch'),
+            model_name="supervision",
+            name="is_prophylactic",
+            field=models.BooleanField(default=False, verbose_name="Prophylaktisch"),
         ),
         migrations.AddField(
-            model_name='supervision',
-            name='is_tandem_prophylactic',
-            field=models.BooleanField(default=False, verbose_name='Tandem prophylaktisch'),
+            model_name="supervision",
+            name="is_tandem_prophylactic",
+            field=models.BooleanField(
+                default=False, verbose_name="Tandem prophylaktisch"
+            ),
         ),
     ]

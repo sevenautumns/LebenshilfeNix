@@ -10,7 +10,6 @@ def forwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("pedagogy", "0005_db_index_to_meta_indexes"),
     ]

@@ -4,40 +4,64 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0016_employment_contract_type_and_more'),
+        ("hr", "0016_employment_contract_type_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='employee',
-            name='birthday',
-            field=models.DateField(blank=True, null=True, verbose_name='Geburtstag'),
+            model_name="employee",
+            name="birthday",
+            field=models.DateField(blank=True, null=True, verbose_name="Geburtstag"),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='birthplace',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Geburtsort'),
+            model_name="employee",
+            name="birthplace",
+            field=models.CharField(
+                blank=True, max_length=255, verbose_name="Geburtsort"
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='criminal_record_certificate_date',
-            field=models.DateField(blank=True, help_text='Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)', null=True, verbose_name='Erweitertes Führungszeugnis (Datum)'),
+            model_name="employee",
+            name="criminal_record_certificate_date",
+            field=models.DateField(
+                blank=True,
+                help_text="Ausstellungsdatum des erweiterten Führungszeugnisses (§ 30a BZRG)",
+                null=True,
+                verbose_name="Erweitertes Führungszeugnis (Datum)",
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='health_insurance',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Krankenkasse'),
+            model_name="employee",
+            name="health_insurance",
+            field=models.CharField(
+                blank=True, max_length=255, verbose_name="Krankenkasse"
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='marital_status',
-            field=models.CharField(blank=True, choices=[('single', 'ledig'), ('married', 'verheiratet'), ('divorced', 'geschieden'), ('widowed', 'verwitwet'), ('other', 'sonstiges')], max_length=50, verbose_name='Familienstand'),
+            model_name="employee",
+            name="marital_status",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("single", "ledig"),
+                    ("married", "verheiratet"),
+                    ("divorced", "geschieden"),
+                    ("widowed", "verwitwet"),
+                    ("other", "sonstiges"),
+                ],
+                max_length=50,
+                verbose_name="Familienstand",
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='tax_id',
-            field=models.CharField(blank=True, help_text='11-stellige Steueridentifikationsnummer', max_length=50, verbose_name='Steuer-ID'),
+            model_name="employee",
+            name="tax_id",
+            field=models.CharField(
+                blank=True,
+                help_text="11-stellige Steueridentifikationsnummer",
+                max_length=50,
+                verbose_name="Steuer-ID",
+            ),
         ),
     ]

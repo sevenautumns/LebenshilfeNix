@@ -4,15 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0008_remove_null_from_string_fields'),
+        ("hr", "0008_remove_null_from_string_fields"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='employee',
-            name='tax_class',
-            field=models.CharField(blank=True, choices=[('1', 'Klasse 1'), ('2', 'Klasse 2'), ('3', 'Klasse 3'), ('4', 'Klasse 4'), ('5', 'Klasse 5'), ('6', 'Klasse 6')], max_length=10, verbose_name='Steuerklasse'),
+            model_name="employee",
+            name="tax_class",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("1", "Klasse 1"),
+                    ("2", "Klasse 2"),
+                    ("3", "Klasse 3"),
+                    ("4", "Klasse 4"),
+                    ("5", "Klasse 5"),
+                    ("6", "Klasse 6"),
+                ],
+                max_length=10,
+                verbose_name="Steuerklasse",
+            ),
         ),
     ]

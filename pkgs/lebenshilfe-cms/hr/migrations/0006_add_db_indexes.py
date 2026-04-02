@@ -5,34 +5,51 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0005_rename_trainingrecord_staff_to_employee'),
+        ("hr", "0005_rename_trainingrecord_staff_to_employee"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='absence',
-            options={'ordering': ['-start_date'], 'verbose_name': 'Abwesenheit', 'verbose_name_plural': 'Abwesenheiten'},
+            name="absence",
+            options={
+                "ordering": ["-start_date"],
+                "verbose_name": "Abwesenheit",
+                "verbose_name_plural": "Abwesenheiten",
+            },
         ),
         migrations.AlterField(
-            model_name='absence',
-            name='start_date',
-            field=models.DateField(blank=True, db_index=True, null=True, verbose_name='Beginn'),
+            model_name="absence",
+            name="start_date",
+            field=models.DateField(
+                blank=True, db_index=True, null=True, verbose_name="Beginn"
+            ),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='personnel_number',
-            field=models.CharField(blank=True, db_index=True, help_text='Personalnummer im Lohnprogramm (optional)', max_length=50, null=True, verbose_name='Personal-Nr. Lohnprogramm'),
+            model_name="employee",
+            name="personnel_number",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="Personalnummer im Lohnprogramm (optional)",
+                max_length=50,
+                null=True,
+                verbose_name="Personal-Nr. Lohnprogramm",
+            ),
         ),
         migrations.AlterField(
-            model_name='trainingrecord',
-            name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='training_records', to='hr.employee', verbose_name='Mitarbeiter:in'),
+            model_name="trainingrecord",
+            name="employee",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="training_records",
+                to="hr.employee",
+                verbose_name="Mitarbeiter:in",
+            ),
         ),
         migrations.AlterField(
-            model_name='trainingrecord',
-            name='valid_from',
-            field=models.DateField(db_index=True, verbose_name='Gültig von'),
+            model_name="trainingrecord",
+            name="valid_from",
+            field=models.DateField(db_index=True, verbose_name="Gültig von"),
         ),
     ]

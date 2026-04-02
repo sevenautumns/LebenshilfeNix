@@ -6,26 +6,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0012_feeagreement_price_honorary_standard_and_more'),
-        ('hr', '0018_alter_employee_citizenship_and_more'),
+        ("finance", "0012_feeagreement_price_honorary_standard_and_more"),
+        ("hr", "0018_alter_employee_citizenship_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MonthlyContractCost',
+            name="MonthlyContractCost",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gross_personnel_costs', base.fields.EuroDecimalField(decimal_places=2, help_text='Tatsächliche Kosten', max_digits=10, verbose_name='Brutto-Personalkosten')),
-                ('month', base.fields.MonthField(verbose_name='Monat')),
-                ('employment', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='monthly_contract_costs', to='hr.employment', verbose_name='Arbeitsverhältnis')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "gross_personnel_costs",
+                    base.fields.EuroDecimalField(
+                        decimal_places=2,
+                        help_text="Tatsächliche Kosten",
+                        max_digits=10,
+                        verbose_name="Brutto-Personalkosten",
+                    ),
+                ),
+                ("month", base.fields.MonthField(verbose_name="Monat")),
+                (
+                    "employment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="monthly_contract_costs",
+                        to="hr.employment",
+                        verbose_name="Arbeitsverhältnis",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Monatliche Vertragskosten',
-                'verbose_name_plural': 'Monatliche Vertragskosten',
-                'ordering': ['-month'],
-                'constraints': [models.UniqueConstraint(fields=('employment', 'month'), name='monthlycontractcost_unique_employment_month')],
+                "verbose_name": "Monatliche Vertragskosten",
+                "verbose_name_plural": "Monatliche Vertragskosten",
+                "ordering": ["-month"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("employment", "month"),
+                        name="monthlycontractcost_unique_employment_month",
+                    )
+                ],
             },
         ),
     ]

@@ -4,24 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0014_remove_applicant_desired_hours_and_more'),
+        ("hr", "0014_remove_applicant_desired_hours_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='applicant',
-            name='notice_period',
+            model_name="applicant",
+            name="notice_period",
         ),
         migrations.AddField(
-            model_name='applicant',
-            name='earliest_start_date',
-            field=models.DateField(blank=True, null=True, verbose_name='Frühestmöglicher Eintrittstermin'),
+            model_name="applicant",
+            name="earliest_start_date",
+            field=models.DateField(
+                blank=True, null=True, verbose_name="Frühestmöglicher Eintrittstermin"
+            ),
         ),
         migrations.AddField(
-            model_name='applicant',
-            name='notice_period_months',
-            field=models.DecimalField(blank=True, decimal_places=1, help_text='Kündigungsfrist in Monaten, z. B. 1.0 = 1 Monat, 3.0 = 3 Monate.', max_digits=4, null=True, verbose_name='Kündigungsfrist (Monate)'),
+            model_name="applicant",
+            name="notice_period_months",
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=1,
+                help_text="Kündigungsfrist in Monaten, z. B. 1.0 = 1 Monat, 3.0 = 3 Monate.",
+                max_digits=4,
+                null=True,
+                verbose_name="Kündigungsfrist (Monate)",
+            ),
         ),
     ]

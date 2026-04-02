@@ -75,4 +75,3 @@ class MemberAdmin(BaseModelAdmin):
     list_display = ("full_name", "entrance_date", "membership_fee")
     search_fields = ("first_name", "last_name")
     inlines = [AddressInline, PhoneInline, EmailInline, BankAccountInline]
-

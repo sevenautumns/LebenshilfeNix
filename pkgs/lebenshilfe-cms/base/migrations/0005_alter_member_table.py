@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0004_address_district_not_null'),
+        ("base", "0004_address_district_not_null"),
     ]
 
     operations = [
         migrations.AlterModelTable(
-            name='member',
+            name="member",
             table=None,
         ),
     ]

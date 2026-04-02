@@ -4,29 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0005_add_db_indexes'),
-        ('pedagogy', '0004_add_db_indexes'),
+        ("finance", "0005_add_db_indexes"),
+        ("pedagogy", "0004_add_db_indexes"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='payment',
-            name='payment_date',
-            field=models.DateField(verbose_name='Zahlungsdatum'),
+            model_name="payment",
+            name="payment_date",
+            field=models.DateField(verbose_name="Zahlungsdatum"),
         ),
         migrations.AlterField(
-            model_name='salaryagreement',
-            name='valid_from',
-            field=models.DateField(verbose_name='Gültig von'),
+            model_name="salaryagreement",
+            name="valid_from",
+            field=models.DateField(verbose_name="Gültig von"),
         ),
         migrations.AddIndex(
-            model_name='payment',
-            index=models.Index(fields=['payment_date'], name='payment_payment_date_idx'),
+            model_name="payment",
+            index=models.Index(
+                fields=["payment_date"], name="payment_payment_date_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='salaryagreement',
-            index=models.Index(fields=['valid_from'], name='salaryagreement_valid_from_idx'),
+            model_name="salaryagreement",
+            index=models.Index(
+                fields=["valid_from"], name="salaryagreement_valid_from_idx"
+            ),
         ),
     ]

@@ -4,19 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0008_supervision_is_prophylactic_and_more'),
+        ("pedagogy", "0008_supervision_is_prophylactic_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='supervision',
-            name='school_days',
+            model_name="supervision",
+            name="school_days",
         ),
         migrations.AddField(
-            model_name='supervision',
-            name='school_days_override',
-            field=models.PositiveIntegerField(blank=True, help_text='Überschreibt die Schultage aus den Stammdaten für diese Betreuung', null=True, verbose_name='Schultage (Überschreibung)'),
+            model_name="supervision",
+            name="school_days_override",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Überschreibt die Schultage aus den Stammdaten für diese Betreuung",
+                null=True,
+                verbose_name="Schultage (Überschreibung)",
+            ),
         ),
     ]

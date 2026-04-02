@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0001_initial'),
+        ("base", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='address',
-            name='postcode',
-            field=models.CharField(max_length=10, verbose_name='Postleitzahl'),
+            model_name="address",
+            name="postcode",
+            field=models.CharField(max_length=10, verbose_name="Postleitzahl"),
         ),
     ]

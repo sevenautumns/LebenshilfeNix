@@ -5,20 +5,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0015_remove_applicant_notice_period_and_more'),
+        ("hr", "0015_remove_applicant_notice_period_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='employment',
-            name='contract_type',
-            field=models.CharField(blank=True, choices=[('school_accompaniment', 'Schulbegleitung'), ('tandem', 'Tandem'), ('school_accompaniment_honorary', 'Schulbegleitung (Ehrenamt)'), ('tandem_honorary', 'Tandem (Ehrenamt)'), ('coordination', 'Koordination'), ('management', 'Geschäftsleitung')], max_length=50, verbose_name='Art des Vertrags'),
+            model_name="employment",
+            name="contract_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("school_accompaniment", "Schulbegleitung"),
+                    ("tandem", "Tandem"),
+                    ("school_accompaniment_honorary", "Schulbegleitung (Ehrenamt)"),
+                    ("tandem_honorary", "Tandem (Ehrenamt)"),
+                    ("coordination", "Koordination"),
+                    ("management", "Geschäftsleitung"),
+                ],
+                max_length=50,
+                verbose_name="Art des Vertrags",
+            ),
         ),
         migrations.AddField(
-            model_name='employment',
-            name='gross_salary_override',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, help_text='Überschreibt das Brutto laut Vertrag pro Monat für dieses Arbeitsverhältnis', max_digits=10, null=True, verbose_name='Brutto laut Vertrag (Überschreibung)'),
+            model_name="employment",
+            name="gross_salary_override",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                help_text="Überschreibt das Brutto laut Vertrag pro Monat für dieses Arbeitsverhältnis",
+                max_digits=10,
+                null=True,
+                verbose_name="Brutto laut Vertrag (Überschreibung)",
+            ),
         ),
     ]

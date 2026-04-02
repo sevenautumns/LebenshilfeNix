@@ -5,65 +5,127 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('hr', '0001_initial'),
-        ('pedagogy', '0001_initial'),
+        ("hr", "0001_initial"),
+        ("pedagogy", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicant',
-            name='desired_school',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='applicants', to='pedagogy.school', verbose_name='Schulwunsch'),
+            model_name="applicant",
+            name="desired_school",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="applicants",
+                to="pedagogy.school",
+                verbose_name="Schulwunsch",
+            ),
         ),
         migrations.AddField(
-            model_name='employee',
-            name='church_membership',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='employees', to='hr.denomination', verbose_name='Kirchenmitgliedschaft'),
+            model_name="employee",
+            name="church_membership",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="employees",
+                to="hr.denomination",
+                verbose_name="Kirchenmitgliedschaft",
+            ),
         ),
         migrations.AddField(
-            model_name='absence',
-            name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='absences', to='hr.employee', verbose_name='Mitarbeiter:in'),
+            model_name="absence",
+            name="employee",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="absences",
+                to="hr.employee",
+                verbose_name="Mitarbeiter:in",
+            ),
         ),
         migrations.AddField(
-            model_name='employment',
-            name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='employments', to='hr.employee', verbose_name='Mitarbeiter:in'),
+            model_name="employment",
+            name="employee",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="employments",
+                to="hr.employee",
+                verbose_name="Mitarbeiter:in",
+            ),
         ),
         migrations.AddField(
-            model_name='otheremployment',
-            name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='other_employments', to='hr.employee', verbose_name='Mitarbeiter:in'),
+            model_name="otheremployment",
+            name="employee",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="other_employments",
+                to="hr.employee",
+                verbose_name="Mitarbeiter:in",
+            ),
         ),
         migrations.AddField(
-            model_name='trainingrecord',
-            name='staff',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='training_records', to='hr.employee', verbose_name='Personalfall'),
+            model_name="trainingrecord",
+            name="staff",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="training_records",
+                to="hr.employee",
+                verbose_name="Personalfall",
+            ),
         ),
         migrations.AddField(
-            model_name='trainingrecord',
-            name='training_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='training_records', to='hr.trainingtype', verbose_name='Fortbildungstyp'),
+            model_name="trainingrecord",
+            name="training_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="training_records",
+                to="hr.trainingtype",
+                verbose_name="Fortbildungstyp",
+            ),
         ),
         migrations.AddField(
-            model_name='employee',
-            name='vocational_trainings',
-            field=models.ManyToManyField(blank=True, to='hr.vocationaltraining', verbose_name='Berufsbildungen'),
+            model_name="employee",
+            name="vocational_trainings",
+            field=models.ManyToManyField(
+                blank=True, to="hr.vocationaltraining", verbose_name="Berufsbildungen"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='absence',
-            constraint=models.CheckConstraint(condition=models.Q(('start__isnull', True), ('end__isnull', True), ('end__gte', models.F('start')), _connector='OR'), name='absence_end_after_start'),
+            model_name="absence",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("start__isnull", True),
+                    ("end__isnull", True),
+                    ("end__gte", models.F("start")),
+                    _connector="OR",
+                ),
+                name="absence_end_after_start",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='employment',
-            constraint=models.CheckConstraint(condition=models.Q(('end_date__isnull', True), ('end_date__gte', models.F('start_date')), _connector='OR'), name='employment_end_date_after_start_date'),
+            model_name="employment",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("end_date__isnull", True),
+                    ("end_date__gte", models.F("start_date")),
+                    _connector="OR",
+                ),
+                name="employment_end_date_after_start_date",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='trainingrecord',
-            constraint=models.CheckConstraint(condition=models.Q(('valid_to__isnull', True), ('valid_to__gte', models.F('valid_from')), _connector='OR'), name='trainingrecord_valid_to_after_valid_from'),
+            model_name="trainingrecord",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("valid_to__isnull", True),
+                    ("valid_to__gte", models.F("valid_from")),
+                    _connector="OR",
+                ),
+                name="trainingrecord_valid_to_after_valid_from",
+            ),
         ),
     ]

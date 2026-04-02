@@ -4,38 +4,47 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0003_rename_telephone_number_to_number'),
-        ('hr', '0006_add_db_indexes'),
+        ("base", "0003_rename_telephone_number_to_number"),
+        ("hr", "0006_add_db_indexes"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='absence',
-            name='start_date',
-            field=models.DateField(blank=True, null=True, verbose_name='Beginn'),
+            model_name="absence",
+            name="start_date",
+            field=models.DateField(blank=True, null=True, verbose_name="Beginn"),
         ),
         migrations.AlterField(
-            model_name='employee',
-            name='personnel_number',
-            field=models.CharField(blank=True, help_text='Personalnummer im Lohnprogramm (optional)', max_length=50, null=True, verbose_name='Personal-Nr. Lohnprogramm'),
+            model_name="employee",
+            name="personnel_number",
+            field=models.CharField(
+                blank=True,
+                help_text="Personalnummer im Lohnprogramm (optional)",
+                max_length=50,
+                null=True,
+                verbose_name="Personal-Nr. Lohnprogramm",
+            ),
         ),
         migrations.AlterField(
-            model_name='trainingrecord',
-            name='valid_from',
-            field=models.DateField(verbose_name='Gültig von'),
+            model_name="trainingrecord",
+            name="valid_from",
+            field=models.DateField(verbose_name="Gültig von"),
         ),
         migrations.AddIndex(
-            model_name='absence',
-            index=models.Index(fields=['start_date'], name='absence_start_date_idx'),
+            model_name="absence",
+            index=models.Index(fields=["start_date"], name="absence_start_date_idx"),
         ),
         migrations.AddIndex(
-            model_name='employee',
-            index=models.Index(fields=['personnel_number'], name='employee_personnel_number_idx'),
+            model_name="employee",
+            index=models.Index(
+                fields=["personnel_number"], name="employee_personnel_number_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='trainingrecord',
-            index=models.Index(fields=['valid_from'], name='trainingrecord_valid_from_idx'),
+            model_name="trainingrecord",
+            index=models.Index(
+                fields=["valid_from"], name="trainingrecord_valid_from_idx"
+            ),
         ),
     ]

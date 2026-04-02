@@ -4,18 +4,25 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0015_remove_feeagreement_price_honorary_standard_and_more'),
+        ("finance", "0015_remove_feeagreement_price_honorary_standard_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='monthlycontractcost',
-            options={'ordering': ['-billing_period'], 'verbose_name': 'Lohnkosten', 'verbose_name_plural': 'Lohnkosten'},
+            name="monthlycontractcost",
+            options={
+                "ordering": ["-billing_period"],
+                "verbose_name": "Lohnkosten",
+                "verbose_name_plural": "Lohnkosten",
+            },
         ),
         migrations.AlterModelOptions(
-            name='payment',
-            options={'ordering': ['-billing_period'], 'verbose_name': 'Zahlungseingang', 'verbose_name_plural': 'Zahlungseingänge'},
+            name="payment",
+            options={
+                "ordering": ["-billing_period"],
+                "verbose_name": "Zahlungseingang",
+                "verbose_name_plural": "Zahlungseingänge",
+            },
         ),
     ]

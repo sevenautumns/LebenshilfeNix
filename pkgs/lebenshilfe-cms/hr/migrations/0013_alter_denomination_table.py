@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0012_alter_employee_citizenship_and_more'),
+        ("hr", "0012_alter_employee_citizenship_and_more"),
     ]
 
     operations = [
         migrations.AlterModelTable(
-            name='denomination',
+            name="denomination",
             table=None,
         ),
     ]

@@ -5,20 +5,31 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0011_payment_booking_number_alter_payment_payment_date'),
+        ("finance", "0011_payment_booking_number_alter_payment_payment_date"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feeagreement',
-            name='price_honorary_standard',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Schulbegleitung (Ehrenamt)'),
+            model_name="feeagreement",
+            name="price_honorary_standard",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Schulbegleitung (Ehrenamt)",
+            ),
         ),
         migrations.AddField(
-            model_name='feeagreement',
-            name='price_honorary_tandem',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Tandem (Ehrenamt)'),
+            model_name="feeagreement",
+            name="price_honorary_tandem",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Tandem (Ehrenamt)",
+            ),
         ),
     ]

@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0006_remove_null_from_string_fields'),
+        ("pedagogy", "0006_remove_null_from_string_fields"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='request',
-            name='review_date',
-            field=models.DateField(blank=True, null=True, verbose_name='Überprüfung geplant bis'),
+            model_name="request",
+            name="review_date",
+            field=models.DateField(
+                blank=True, null=True, verbose_name="Überprüfung geplant bis"
+            ),
         ),
     ]

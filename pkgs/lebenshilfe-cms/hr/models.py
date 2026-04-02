@@ -66,7 +66,11 @@ class Employee(Person):
     birthday = models.DateField(blank=True, null=True, verbose_name="Geburtstag")
     birthplace = models.CharField(max_length=255, blank=True, verbose_name="Geburtsort")
     country_of_birth = models.CharField(
-        max_length=2, choices=CountryChoices.choices, blank=True, null=True, verbose_name="Geburtsland"
+        max_length=2,
+        choices=CountryChoices.choices,
+        blank=True,
+        null=True,
+        verbose_name="Geburtsland",
     )
     citizenship = models.CharField(
         max_length=3,
@@ -84,7 +88,10 @@ class Employee(Person):
 
     # Familiärer Status
     marital_status = models.CharField(
-        max_length=50, choices=MaritalStatus.choices, blank=True, verbose_name="Familienstand"
+        max_length=50,
+        choices=MaritalStatus.choices,
+        blank=True,
+        verbose_name="Familienstand",
     )
     number_of_children = models.PositiveIntegerField(
         null=True, blank=True, verbose_name="Kinderzahl"
@@ -121,7 +128,9 @@ class Employee(Person):
     )
 
     # Gesundheit und Sicherheit
-    health_insurance = models.CharField(max_length=255, blank=True, verbose_name="Krankenkasse")
+    health_insurance = models.CharField(
+        max_length=255, blank=True, verbose_name="Krankenkasse"
+    )
     # GdB: Wenn NULL, liegt keine festgestellte Schwerbehinderung vor
     severe_disability_percentage = models.PositiveIntegerField(
         blank=True,
@@ -160,7 +169,9 @@ class Employee(Person):
         verbose_name_plural = "Angestellte"
         ordering = ["last_name", "first_name"]
         indexes = [
-            models.Index(fields=["personnel_number"], name="employee_personnel_number_idx"),
+            models.Index(
+                fields=["personnel_number"], name="employee_personnel_number_idx"
+            ),
         ]
 
     def __str__(self):
@@ -171,7 +182,10 @@ class Employment(models.Model):
     class ContractType(models.TextChoices):
         SCHOOL_ACCOMPANIMENT = "school_accompaniment", "Schulbegleitung"
         TANDEM = "tandem", "Tandem"
-        SCHOOL_ACCOMPANIMENT_HONORARY = "school_accompaniment_honorary", "Schulbegleitung (Ehrenamt)"
+        SCHOOL_ACCOMPANIMENT_HONORARY = (
+            "school_accompaniment_honorary",
+            "Schulbegleitung (Ehrenamt)",
+        )
         TANDEM_HONORARY = "tandem_honorary", "Tandem (Ehrenamt)"
         COORDINATION = "coordination", "Koordination"
         MANAGEMENT = "management", "Geschäftsleitung"
@@ -239,7 +253,9 @@ class OtherEmployment(models.Model):
         ordering = ["employee__last_name", "employee__first_name", "employer"]
 
     def __str__(self):
-        hours_str = OtherEmployment.working_hours.field.get_admin_format(self.working_hours)
+        hours_str = OtherEmployment.working_hours.field.get_admin_format(
+            self.working_hours
+        )
         return f"{self.employer or 'Unbekannter Arbeitgeber'} ({hours_str}) - {self.employee.full_name}"
 
 
@@ -307,6 +323,7 @@ class Absence(models.Model):
         CHILD_SICK = "child_sick", "Kind krank"
         APPOINTMENT = "appointment", "Termin"
         OTHER = "other", "Sonstiges"
+
     employee = models.ForeignKey(
         Employee,
         on_delete=models.PROTECT,

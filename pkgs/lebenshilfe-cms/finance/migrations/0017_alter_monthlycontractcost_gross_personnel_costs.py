@@ -5,15 +5,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0016_alter_monthlycontractcost_options_and_more'),
+        ("finance", "0016_alter_monthlycontractcost_options_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='monthlycontractcost',
-            name='gross_personnel_costs',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, help_text='Tatsächliche monatliche Kosten inkl. Arbeitgeberanteil', max_digits=10, null=True, verbose_name='Tatsächliche Brutto-Personalkosten'),
+            model_name="monthlycontractcost",
+            name="gross_personnel_costs",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                help_text="Tatsächliche monatliche Kosten inkl. Arbeitgeberanteil",
+                max_digits=10,
+                null=True,
+                verbose_name="Tatsächliche Brutto-Personalkosten",
+            ),
         ),
     ]

@@ -3,7 +3,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("finance", "0008_alter_salaryagreement_table"),
         ("pedagogy", "__first__"),

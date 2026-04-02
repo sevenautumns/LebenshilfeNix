@@ -22,7 +22,6 @@ def forwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("hr", "0007_db_index_to_meta_indexes"),
     ]
@@ -32,7 +31,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="employee",
             name="maiden_name",
-            field=models.CharField(blank=True, max_length=255, verbose_name="Geburtsname"),
+            field=models.CharField(
+                blank=True, max_length=255, verbose_name="Geburtsname"
+            ),
         ),
         migrations.AlterField(
             model_name="employee",
@@ -66,7 +67,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="employee",
             name="risk_assessment",
-            field=models.TextField(blank=True, verbose_name="Erläut. Gefährdungsbeurteilung"),
+            field=models.TextField(
+                blank=True, verbose_name="Erläut. Gefährdungsbeurteilung"
+            ),
         ),
         migrations.AlterField(
             model_name="otheremployment",
@@ -78,7 +81,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="applicant",
             name="notice_period",
-            field=models.CharField(blank=True, max_length=255, verbose_name="Kündigungsfristen"),
+            field=models.CharField(
+                blank=True, max_length=255, verbose_name="Kündigungsfristen"
+            ),
         ),
         migrations.AlterField(
             model_name="applicant",

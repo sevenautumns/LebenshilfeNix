@@ -66,9 +66,7 @@ class Supervision(models.Model):
         related_name="supervisions",
         verbose_name="Betreuer:in",
     )
-    class_name = models.CharField(
-        max_length=100, blank=True, verbose_name="Klasse"
-    )
+    class_name = models.CharField(max_length=100, blank=True, verbose_name="Klasse")
     school = models.ForeignKey(
         School,
         on_delete=models.PROTECT,
@@ -117,7 +115,11 @@ class Supervision(models.Model):
     def total_hours(self) -> timedelta | None:
         if self.daily_hours is None:
             return None
-        days = self.school_days_override if self.school_days_override is not None else self.calculated_school_days
+        days = (
+            self.school_days_override
+            if self.school_days_override is not None
+            else self.calculated_school_days
+        )
         return self.daily_hours * days
 
     total_hours.fget.short_description = "Gesamtstunden"  # type: ignore[attr-defined]
@@ -125,8 +127,10 @@ class Supervision(models.Model):
     @property
     def fee_agreement(self):
         from finance.models import FeeAgreement
+
         return FeeAgreement.objects.filter(
-            Q(responsible_payer=self.student.payer) | Q(additional_payers=self.student.payer),
+            Q(responsible_payer=self.student.payer)
+            | Q(additional_payers=self.student.payer),
             valid_from__lte=self.start_date,
             valid_to__gte=self.start_date,
         ).first()
@@ -148,7 +152,12 @@ class Supervision(models.Model):
         amount = self.total_amount
         if amount is None:
             return None
-        months = (self.end_date.year - self.start_date.year) * 12 + self.end_date.month - self.start_date.month + 1
+        months = (
+            (self.end_date.year - self.start_date.year) * 12
+            + self.end_date.month
+            - self.start_date.month
+            + 1
+        )
         return amount / months
 
     monthly_installment.fget.short_description = "Abschlag pro Monat"  # type: ignore[attr-defined]
@@ -168,6 +177,7 @@ class Request(models.Model):
         IN_COORDINATION = "in_coordination", "In Abstimmung"
         REJECTED = "rejected", "Abgelehnt"
         APPROVED = "approved", "Genehmigt"
+
     student = models.ForeignKey(
         Student,
         on_delete=models.PROTECT,
@@ -197,7 +207,10 @@ class Request(models.Model):
         help_text="Genehmigter wöchentlicher Betreuungsumfang",
     )
     state = models.CharField(
-        max_length=50, choices=State.choices, default=State.DRAFT, verbose_name="Zustand"
+        max_length=50,
+        choices=State.choices,
+        default=State.DRAFT,
+        verbose_name="Zustand",
     )
     notes = models.TextField(blank=True, verbose_name="Notizen")
 

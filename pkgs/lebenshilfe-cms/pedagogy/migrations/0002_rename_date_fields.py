@@ -3,7 +3,6 @@ import django.db.models.expressions
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("pedagogy", "0001_initial"),
     ]

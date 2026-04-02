@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0006_schooldays'),
+        ("base", "0006_schooldays"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='phone',
-            name='number',
-            field=models.CharField(max_length=20, verbose_name='Telefonnummer'),
+            model_name="phone",
+            name="number",
+            field=models.CharField(max_length=20, verbose_name="Telefonnummer"),
         ),
     ]

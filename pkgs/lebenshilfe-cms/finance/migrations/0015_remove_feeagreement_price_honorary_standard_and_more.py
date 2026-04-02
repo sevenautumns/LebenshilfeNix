@@ -5,28 +5,39 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0014_rename_billing_period_fields'),
+        ("finance", "0014_rename_billing_period_fields"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='feeagreement',
-            name='price_honorary_standard',
+            model_name="feeagreement",
+            name="price_honorary_standard",
         ),
         migrations.RemoveField(
-            model_name='feeagreement',
-            name='price_honorary_tandem',
+            model_name="feeagreement",
+            name="price_honorary_tandem",
         ),
         migrations.AddField(
-            model_name='salaryagreement',
-            name='salary_honorary_standard',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Schulbegleitung (Ehrenamt)'),
+            model_name="salaryagreement",
+            name="salary_honorary_standard",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Schulbegleitung (Ehrenamt)",
+            ),
         ),
         migrations.AddField(
-            model_name='salaryagreement',
-            name='salary_honorary_tandem',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Tandem (Ehrenamt)'),
+            model_name="salaryagreement",
+            name="salary_honorary_tandem",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Tandem (Ehrenamt)",
+            ),
         ),
     ]

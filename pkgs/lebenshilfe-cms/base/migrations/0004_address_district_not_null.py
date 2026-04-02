@@ -8,7 +8,6 @@ def forwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("base", "0003_rename_telephone_number_to_number"),
     ]

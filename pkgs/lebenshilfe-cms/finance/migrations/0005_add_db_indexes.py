@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0004_alter_costpayercontact_notes'),
+        ("finance", "0004_alter_costpayercontact_notes"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='payment',
-            name='payment_date',
-            field=models.DateField(db_index=True, verbose_name='Zahlungsdatum'),
+            model_name="payment",
+            name="payment_date",
+            field=models.DateField(db_index=True, verbose_name="Zahlungsdatum"),
         ),
         migrations.AlterField(
-            model_name='salaryagreement',
-            name='valid_from',
-            field=models.DateField(db_index=True, verbose_name='Gültig von'),
+            model_name="salaryagreement",
+            name="valid_from",
+            field=models.DateField(db_index=True, verbose_name="Gültig von"),
         ),
     ]

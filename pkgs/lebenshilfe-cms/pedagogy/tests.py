@@ -15,7 +15,9 @@ class SupervisionTests(TestCase):
     def setUp(self):
         self.payer = CostPayer.objects.create(identifier="Bezirk Testland")
         self.school = School.objects.create(name="Testschule")
-        self.caretaker = Employee.objects.create(first_name="Klaus", last_name="Betreuer")
+        self.caretaker = Employee.objects.create(
+            first_name="Klaus", last_name="Betreuer"
+        )
         self.student = Student.objects.create(
             first_name="Anna", last_name="Schüler", payer=self.payer
         )
@@ -93,7 +95,9 @@ class SupervisionTests(TestCase):
 
     def test_fee_agreement_not_found_outside_dates(self):
         """Keine Entgeltvereinbarung wenn start_date außerhalb der Gültigkeit liegt."""
-        sup = self._make_supervision(start_date=date(2025, 1, 1), end_date=date(2025, 6, 30))
+        sup = self._make_supervision(
+            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
+        )
         self.assertIsNone(sup.fee_agreement)
 
     def test_fee_agreement_not_found_for_other_payer(self):
@@ -124,7 +128,9 @@ class SupervisionTests(TestCase):
 
     def test_total_amount_none_when_no_fee_agreement(self):
         """Kein Betrag wenn keine Entgeltvereinbarung gefunden wird."""
-        sup = self._make_supervision(start_date=date(2025, 1, 1), end_date=date(2025, 6, 30))
+        sup = self._make_supervision(
+            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
+        )
         self.assertIsNone(sup.total_amount)
 
     # --- monthly_installment ---
@@ -159,7 +165,9 @@ class SupervisionTests(TestCase):
 
     def test_monthly_installment_none_when_no_fee_agreement(self):
         """Kein Abschlag wenn kein Gesamtbetrag berechnet werden kann."""
-        sup = self._make_supervision(start_date=date(2025, 1, 1), end_date=date(2025, 6, 30))
+        sup = self._make_supervision(
+            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
+        )
         self.assertIsNone(sup.monthly_installment)
 
     # --- save() ---

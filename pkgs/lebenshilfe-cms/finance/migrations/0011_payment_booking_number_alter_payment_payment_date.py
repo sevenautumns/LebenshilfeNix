@@ -4,20 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0010_replace_max_supervisions'),
+        ("finance", "0010_replace_max_supervisions"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='booking_number',
-            field=models.CharField(blank=True, max_length=100, verbose_name='Buchungsnummer'),
+            model_name="payment",
+            name="booking_number",
+            field=models.CharField(
+                blank=True, max_length=100, verbose_name="Buchungsnummer"
+            ),
         ),
         migrations.AlterField(
-            model_name='payment',
-            name='payment_date',
-            field=models.DateField(blank=True, null=True, verbose_name='Zahlungsdatum'),
+            model_name="payment",
+            name="payment_date",
+            field=models.DateField(blank=True, null=True, verbose_name="Zahlungsdatum"),
         ),
     ]

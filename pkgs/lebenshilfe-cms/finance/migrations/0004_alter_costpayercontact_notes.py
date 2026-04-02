@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0003_add_costpayercontact'),
+        ("finance", "0003_add_costpayercontact"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='costpayercontact',
-            name='notes',
-            field=models.CharField(blank=True, max_length=100, verbose_name='Notizen'),
+            model_name="costpayercontact",
+            name="notes",
+            field=models.CharField(blank=True, max_length=100, verbose_name="Notizen"),
         ),
     ]

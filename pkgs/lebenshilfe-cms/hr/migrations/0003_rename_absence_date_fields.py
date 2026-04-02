@@ -4,7 +4,6 @@ import django.db.models.expressions
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("hr", "0002_initial"),
     ]
