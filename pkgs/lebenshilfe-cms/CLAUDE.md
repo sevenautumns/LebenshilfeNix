@@ -22,7 +22,8 @@ This repository contains the `lebenshilfe-cms` Django application. Assume all te
 - **DO** use Jujutsu (`jj`) commands (`jj status`, `jj diff`, `jj new`, `jj describe`).
 - **Mandatory Auto-Commits**: You must actively and automatically create `jj` commits for your changes with **meaningful granularity**. Do not bundle unrelated changes. 
   - *Example:* Create one commit for a model change + migration, and a separate commit for the corresponding UI/Admin changes.
-  - `jj new` afterwards to get a new working-base
+  - **Commit Strategy**: Split into sensible commits at will. Do not rely fully on `jj split`. Rather, make commits continuously as you make changes.
+  - Run `jj new` afterwards to get a new working-base.
 - **Commit Messages**: Use Conventional Commits formatting via `jj describe -m "<type>(<scope>): <summary>"`.
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`.
 
@@ -51,3 +52,4 @@ This repository contains the `lebenshilfe-cms` Django application. Assume all te
 ### 5. Code Modification Rules
 - Do not remove or overwrite existing unrelated code, comments, or imports when making edits.
 - Provide targeted diffs or clear, fully functioning file replacements when making larger changes.
+- **Formatting (Ruff)**: Use `ruff format`. Run it before starting to make changes (to catch any leftovers in the codebase) and run it again before every commit.
