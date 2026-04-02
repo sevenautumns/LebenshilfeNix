@@ -27,6 +27,7 @@ python3Packages.buildPythonApplication rec {
     django-allauth
     requests
     gunicorn
+    model-bakery
   ];
 
   preBuild = "${python3Packages.python.interpreter} -m django compilemessages";
