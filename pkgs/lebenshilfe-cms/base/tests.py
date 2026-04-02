@@ -1,5 +1,5 @@
 from decimal import Decimal
-from datetime import timedelta
+from datetime import timedelta, date
 from unittest.mock import patch, MagicMock
 
 from django.test import TestCase, RequestFactory
@@ -8,9 +8,9 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.utils import translation
 
-from .models import Person
-from .widgets import EuroDecimalWidget, HourMinuteDurationWidget
-from .fields import EuroDecimalField, HourMinuteDurationField
+from .models import Person, SchoolDays
+from .widgets import EuroDecimalWidget, HourMinuteDurationWidget, MonthWidget
+from .fields import EuroDecimalField, HourMinuteDurationField, MonthField
 from .mixins import EditModeMixin, AdminDisplayMixin
 from .admin import BaseModelAdmin
 
@@ -230,7 +230,7 @@ class AdminDisplayMixinTests(TestCase):
         """
         request = self.factory.get("/")
         list_display = self.admin.get_list_display(request)
-        
+
         # 'id' hat kein get_admin_format, bleibt also gleich
         self.assertIn("id", list_display)
         # Die Custom Fields sollten durch die display_ Methoden ersetzt sein
@@ -238,3 +238,156 @@ class AdminDisplayMixinTests(TestCase):
         self.assertIn("display_time_spent", list_display)
         self.assertNotIn("amount", list_display)
         self.assertNotIn("time_spent", list_display)
+
+
+# --- MonthWidget Tests ---
+
+class MonthWidgetTests(TestCase):
+    def test_decompress_date(self):
+        """Prüft die Aufteilung eines date-Objekts in Monat und Jahr."""
+        widget = MonthWidget()
+        self.assertEqual(widget.decompress(date(2024, 3, 15)), [3, 2024])
+        self.assertEqual(widget.decompress(date(2024, 12, 1)), [12, 2024])
+
+    def test_decompress_string(self):
+        """Prüft das Parsen eines ISO-Datumsstrings in Monat und Jahr."""
+        widget = MonthWidget()
+        self.assertEqual(widget.decompress("2024-03-01"), [3, 2024])
+        self.assertEqual(widget.decompress("2024-12-01"), [12, 2024])
+
+    def test_decompress_empty(self):
+        """Prüft das Verhalten bei leeren Werten."""
+        widget = MonthWidget()
+        self.assertEqual(widget.decompress(None), [None, None])
+        self.assertEqual(widget.decompress(""), [None, None])
+
+    def test_value_from_datadict(self):
+        """Prüft die Rekombination von Monat und Jahr zu einem date-Objekt."""
+        widget = MonthWidget()
+        data = {"period_0": "3", "period_1": "2024"}
+        self.assertEqual(widget.value_from_datadict(data, {}, "period"), date(2024, 3, 1))
+
+    def test_value_from_datadict_incomplete(self):
+        """Prüft das Verhalten, wenn nur Monat oder nur Jahr angegeben ist."""
+        widget = MonthWidget()
+        only_month = {"period_0": "3", "period_1": ""}
+        only_year = {"period_0": "", "period_1": "2024"}
+        self.assertIsNone(widget.value_from_datadict(only_month, {}, "period"))
+        self.assertIsNone(widget.value_from_datadict(only_year, {}, "period"))
+
+    def test_value_from_datadict_invalid(self):
+        """Prüft das Verhalten bei ungültigen Werten (z.B. Monat 13)."""
+        widget = MonthWidget()
+        data = {"period_0": "13", "period_1": "2024"}
+        self.assertIsNone(widget.value_from_datadict(data, {}, "period"))
+
+
+# --- MonthField Tests ---
+
+class MonthFieldTests(TestCase):
+    def test_formfield_uses_month_widget(self):
+        """Prüft, ob dem Field das MonthWidget zugewiesen wird."""
+        field = MonthField()
+        form_field = field.formfield()
+        self.assertIsInstance(form_field.widget, MonthWidget)
+
+    def test_to_python_normalizes_date_to_first(self):
+        """Prüft, ob ein date-Objekt auf den ersten des Monats normalisiert wird."""
+        field = MonthField()
+        self.assertEqual(field.to_python(date(2024, 3, 15)), date(2024, 3, 1))
+        self.assertEqual(field.to_python(date(2024, 12, 31)), date(2024, 12, 1))
+
+    def test_to_python_already_normalized(self):
+        """Ein bereits normalisiertes Datum bleibt unverändert."""
+        field = MonthField()
+        self.assertEqual(field.to_python(date(2024, 3, 1)), date(2024, 3, 1))
+
+    def test_get_admin_format(self):
+        """Prüft die Ausgabe im MM/YYYY Format."""
+        field = MonthField()
+        self.assertEqual(field.get_admin_format(date(2024, 3, 1)), "03/2024")
+        self.assertEqual(field.get_admin_format(date(2024, 12, 1)), "12/2024")
+
+    def test_get_admin_format_none(self):
+        """Prüft, dass None als '-' dargestellt wird."""
+        field = MonthField()
+        self.assertEqual(field.get_admin_format(None), "-")
+
+
+# --- HourMinuteDurationField Static Method Tests (Ergänzung) ---
+
+class HourMinuteDurationFieldStaticTests(TestCase):
+    def test_to_hours_minutes(self):
+        """Prüft die Umrechnung eines timedelta in (Stunden, Minuten)."""
+        self.assertEqual(HourMinuteDurationField.to_hours_minutes(timedelta(hours=2, minutes=30)), (2, 30))
+        self.assertEqual(HourMinuteDurationField.to_hours_minutes(timedelta(hours=40)), (40, 0))
+
+    def test_to_hours_minutes_only_minutes(self):
+        """Prüft die Umrechnung, wenn nur Minuten vorhanden sind."""
+        self.assertEqual(HourMinuteDurationField.to_hours_minutes(timedelta(minutes=45)), (0, 45))
+
+    def test_to_hours_minutes_with_seconds_truncated(self):
+        """Sekunden werden bei der Umrechnung abgeschnitten."""
+        self.assertEqual(HourMinuteDurationField.to_hours_minutes(timedelta(hours=1, minutes=5, seconds=59)), (1, 5))
+
+    def test_format_std(self):
+        """Prüft die Formatierung als 'H:MM Std.' String."""
+        self.assertEqual(HourMinuteDurationField.format_std(timedelta(hours=1, minutes=5)), "1:05 Std.")
+        self.assertEqual(HourMinuteDurationField.format_std(timedelta(hours=40, minutes=30)), "40:30 Std.")
+
+    def test_format_std_zero_minutes(self):
+        """Prüft, dass ganze Stunden korrekt als 'H:00 Std.' formatiert werden."""
+        self.assertEqual(HourMinuteDurationField.format_std(timedelta(hours=3)), "3:00 Std.")
+
+
+# --- SchoolDays Tests ---
+
+class SchoolDaysTests(TestCase):
+    def test_total_school_days_no_data(self):
+        """Gibt 0 zurück, wenn keine Schultage-Einträge vorhanden sind."""
+        result = SchoolDays.total_school_days(date(2024, 1, 1), date(2024, 3, 31))
+        self.assertEqual(result, 0)
+
+    def test_total_school_days_single_month(self):
+        """Summiert Schultage korrekt für einen einzelnen Monat."""
+        SchoolDays.objects.create(month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0)
+        result = SchoolDays.total_school_days(date(2024, 9, 1), date(2024, 9, 30))
+        self.assertEqual(result, 20)
+
+    def test_total_school_days_multi_month(self):
+        """Summiert Schultage korrekt über mehrere Monate."""
+        SchoolDays.objects.create(month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0)
+        SchoolDays.objects.create(month=date(2024, 10, 1), school_days=18, public_holidays=2, vacation_days=0)
+        SchoolDays.objects.create(month=date(2024, 11, 1), school_days=15, public_holidays=0, vacation_days=5)
+        result = SchoolDays.total_school_days(date(2024, 9, 1), date(2024, 11, 30))
+        self.assertEqual(result, 53)
+
+    def test_total_school_days_filters_outside_range(self):
+        """Monate außerhalb des Datumsbereichs werden nicht gezählt."""
+        SchoolDays.objects.create(month=date(2024, 8, 1), school_days=10, public_holidays=0, vacation_days=0)
+        SchoolDays.objects.create(month=date(2024, 9, 1), school_days=20, public_holidays=0, vacation_days=0)
+        SchoolDays.objects.create(month=date(2024, 10, 1), school_days=5, public_holidays=0, vacation_days=0)
+        result = SchoolDays.total_school_days(date(2024, 9, 1), date(2024, 9, 30))
+        self.assertEqual(result, 20)
+
+
+# --- Person.full_name Tests ---
+
+class PersonModelTests(TestCase):
+    def test_full_name_without_middle_name(self):
+        """Prüft, dass full_name aus Vor- und Nachname zusammengesetzt wird."""
+        person = Person.objects.create(first_name="Max", last_name="Mustermann")
+        person.refresh_from_db()
+        self.assertEqual(person.full_name, "Max Mustermann")
+
+    def test_full_name_with_middle_name(self):
+        """Prüft, dass der mittlere Name korrekt eingeschlossen wird."""
+        person = Person.objects.create(first_name="Anna", middle_name="Maria", last_name="Müller")
+        person.refresh_from_db()
+        self.assertEqual(person.full_name, "Anna Maria Müller")
+
+    def test_full_name_empty_middle_name(self):
+        """Prüft, dass ein leerer mittlerer Name wie kein mittlerer Name behandelt wird."""
+        person = Person.objects.create(first_name="Hans", middle_name="", last_name="Schmidt")
+        person.refresh_from_db()
+        self.assertEqual(person.full_name, "Hans Schmidt")
