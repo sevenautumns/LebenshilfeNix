@@ -15,6 +15,14 @@ dependencies = [
 [tool.setuptools]
 packages = { find = {} }
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-django",
+    "model-bakery",
+]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "lebenshilfe.django.base"
 python_files = ["tests.py", "test_*.py", "*_test.py", "tests_*.py"]
+addopts = "-v"

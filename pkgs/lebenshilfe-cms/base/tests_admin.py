@@ -9,11 +9,14 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-# Helper to lazily load models during test collection
+# Helper to lazily load models during test collection.
+# django.setup() is called explicitly because pytest collects parametrize
+# arguments before pytest-django initializes Django — the registry would be
+# empty otherwise.
 def get_admin_models():
     import django
 
-    django.setup()  # Ensures registry is ready during collection
+    django.setup()
     return list(admin.site._registry.items())
 
 
@@ -34,7 +37,7 @@ def setup_baker_generators():
 
 
 @pytest.fixture
-def admin_client(client, db):
+def superuser_client(client, db):
     User.objects.create_superuser(username="smoketest", password="smoketest")
     client.login(username="smoketest", password="smoketest")
     return client
@@ -43,31 +46,29 @@ def admin_client(client, db):
 @pytest.mark.django_db
 class TestAdminSmoke:
     @pytest.mark.parametrize("model, admin_class", get_admin_models())
-    def test_changelist_views(self, admin_client, model, admin_class):
+    def test_changelist_views(self, superuser_client, model, admin_class):
         app = model._meta.app_label
         name = model._meta.model_name
         url = reverse(f"admin:{app}_{name}_changelist")
 
-        response = admin_client.get(url)
+        response = superuser_client.get(url)
         assert response.status_code == 200
 
     @pytest.mark.parametrize("model, admin_class", get_admin_models())
-    def test_add_views(self, admin_client, model, admin_class):
+    def test_add_views(self, superuser_client, model, admin_class):
         app = model._meta.app_label
         name = model._meta.model_name
         url = reverse(f"admin:{app}_{name}_add")
 
-        response = admin_client.get(url)
+        response = superuser_client.get(url)
         assert response.status_code == 200
 
     @pytest.mark.parametrize("model, admin_class", get_edit_models())
-    def test_readonly_views(self, admin_client, model, admin_class):
+    def test_readonly_views(self, superuser_client, model, admin_class):
         app = model._meta.app_label
         name = model._meta.model_name
 
         obj = model.objects.first() or baker.make(model)
-        object_id = obj.pk if obj else 1
-
-        url = reverse(f"admin:{app}_{name}_change", args=[object_id])
-        response = admin_client.get(url)
+        url = reverse(f"admin:{app}_{name}_change", args=[obj.pk])
+        response = superuser_client.get(url)
         assert response.status_code == 200
