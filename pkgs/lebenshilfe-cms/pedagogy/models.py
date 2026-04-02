@@ -106,13 +106,17 @@ class Supervision(models.Model):
     calculated_school_days.fget.short_description = "Schultage (rechnerisch)"  # type: ignore[attr-defined]
 
     @property
-    def daily_hours(self) -> timedelta:
+    def daily_hours(self) -> timedelta | None:
+        if self.weekly_hours is None:
+            return None
         return self.weekly_hours / 5
 
     daily_hours.fget.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
 
     @property
-    def total_hours(self) -> timedelta:
+    def total_hours(self) -> timedelta | None:
+        if self.daily_hours is None:
+            return None
         days = self.school_days_override if self.school_days_override is not None else self.calculated_school_days
         return self.daily_hours * days
 
