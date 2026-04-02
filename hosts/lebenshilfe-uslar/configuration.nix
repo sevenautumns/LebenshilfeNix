@@ -42,6 +42,7 @@
   users.users.root.openssh.authorizedKeys.keys = [
     ''ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM7SXkreRFT8Eb3+1WS+5Fz/5W2LuExLfsa7qFUS9k6Y autumnal@Mac-mini.local''
     ''ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKYgRtPDT4v38pRxvOsCgI3l8f8Te14lFMdbWuM98KG autumnal@roxy''
+    ''sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAID6cRpwV5pivNp8GWF3uAw4yOEJIYGkfMchIUeL+3f3hAAAACXNzaDp5azUuMQ== ssh:yk5.1''
   ];
 
   services.journald.extraConfig = "SystemMaxUse=250M";
