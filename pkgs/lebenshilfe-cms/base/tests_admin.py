@@ -29,11 +29,15 @@ def get_edit_models():
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_baker_generators():
+    from django.db.models.fields.generated import GeneratedField
+
     baker.generators.add("base.fields.MonthField", lambda: date.today().replace(day=1))
     baker.generators.add("base.fields.EuroDecimalField", lambda: Decimal("10.00"))
     baker.generators.add(
         "base.fields.HourMinuteDurationField", lambda: timedelta(hours=1)
     )
+    # GeneratedField values are computed by the DB; return None so baker skips assignment
+    baker.generators.add(GeneratedField, lambda: None)
 
 
 @pytest.fixture
@@ -64,11 +68,19 @@ class TestAdminSmoke:
         assert response.status_code == 200
 
     @pytest.mark.parametrize("model, admin_class", get_edit_models())
-    def test_readonly_views(self, superuser_client, model, admin_class):
+    @pytest.mark.parametrize(
+        "fill_optional, edit",
+        [(False, False), (False, True), (True, False), (True, True)],
+        ids=["min-view", "min-edit", "max-view", "max-edit"],
+    )
+    def test_change_views(
+        self, superuser_client, model, admin_class, fill_optional, edit
+    ):
         app = model._meta.app_label
         name = model._meta.model_name
-
-        obj = model.objects.first() or baker.make(model)
+        obj = baker.make(model, _fill_optional=fill_optional)
         url = reverse(f"admin:{app}_{name}_change", args=[obj.pk])
+        if edit:
+            url += "?edit=1"
         response = superuser_client.get(url)
         assert response.status_code == 200
