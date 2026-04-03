@@ -328,7 +328,7 @@ class Employment(models.Model):
         if rate is None:
             return None
         return (rate * self.monthly_hours).quantize(
-            Decimal("10"), rounding=ROUND_HALF_UP
+            Decimal("1E+1"), rounding=ROUND_HALF_UP
         )
 
     @property
