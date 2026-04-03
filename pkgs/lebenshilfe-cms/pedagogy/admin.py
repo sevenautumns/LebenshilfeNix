@@ -44,6 +44,82 @@ class SupervisionAdmin(BaseModelAdmin):
         "display_total_amount",
         "display_monthly_installment",
     )
+    conditional_fields = {"is_tandem_prophylactic": "!!tandem"}
+
+    ADD_FIELDSETS = [
+        ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
+        ("Tandem", {"fields": ["tandem", "is_tandem_prophylactic"]}),
+        ("Betreuung", {"fields": ["caretaker", ("school", "class_name")]}),
+        (
+            "Zeitraum & Stunden",
+            {
+                "fields": [
+                    ("start_date", "end_date"),
+                    "weekly_hours",
+                    "school_days_override",
+                ]
+            },
+        ),
+    ]
+
+    EDIT_FIELDSETS = [
+        ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
+        ("Tandem", {"fields": ["tandem", "is_tandem_prophylactic"]}),
+        ("Betreuung", {"fields": ["caretaker", ("school", "class_name")]}),
+        (
+            "Zeitraum & Stunden",
+            {
+                "fields": [
+                    ("start_date", "end_date"),
+                    ("weekly_hours", "display_daily_hours"),
+                    ("calculated_school_days", "school_days_override"),
+                    "display_total_hours",
+                ]
+            },
+        ),
+        (
+            "Abrechnung",
+            {
+                "fields": [
+                    "fee_agreement",
+                    ("display_total_amount", "display_monthly_installment"),
+                ]
+            },
+        ),
+    ]
+
+    VIEW_FIELDSETS = [
+        ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
+        ("Tandem", {"fields": ["tandem", "is_tandem_prophylactic"]}),
+        ("Betreuung", {"fields": ["caretaker", ("school", "class_name")]}),
+        (
+            "Zeitraum & Stunden",
+            {
+                "fields": [
+                    ("start_date", "end_date"),
+                    ("display_weekly_hours", "display_daily_hours"),
+                    ("calculated_school_days", "school_days_override"),
+                    "display_total_hours",
+                ]
+            },
+        ),
+        (
+            "Abrechnung",
+            {
+                "fields": [
+                    "fee_agreement",
+                    ("display_total_amount", "display_monthly_installment"),
+                ]
+            },
+        ),
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return self.ADD_FIELDSETS
+        if self.is_edit(request):
+            return self.EDIT_FIELDSETS
+        return self.VIEW_FIELDSETS
 
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
