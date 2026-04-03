@@ -62,6 +62,41 @@ class AdminDisplayMixin:
 
         return display_fn
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+
+        # On add: fields listed in readonly_fields have no widget → strip them
+        strip = set(self.readonly_fields) if obj is None else set()
+
+        # In view mode: swap field_name → display_field_name (same as get_fields does)
+        replacements = {}
+        if obj is not None and not self.has_change_permission(request, obj):
+            replacements = {
+                field.name: f"display_{field.name}"
+                for field in self.opts.fields
+                if hasattr(self, f"display_{field.name}")
+            }
+
+        if not strip and not replacements:
+            return fieldsets
+
+        new_fieldsets = []
+        for section_name, options in fieldsets:
+            new_fields = []
+            for row in options.get("fields", []):
+                if isinstance(row, (list, tuple)):
+                    new_row = [replacements.get(f, f) for f in row if f not in strip]
+                    if len(new_row) == 1:
+                        new_fields.append(new_row[0])
+                    elif len(new_row) > 1:
+                        new_fields.append(tuple(new_row))
+                else:
+                    if row not in strip:
+                        new_fields.append(replacements.get(row, row))
+            if new_fields:
+                new_fieldsets.append((section_name, {**options, "fields": new_fields}))
+        return new_fieldsets
+
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
         if obj is not None and not self.has_change_permission(request, obj):
