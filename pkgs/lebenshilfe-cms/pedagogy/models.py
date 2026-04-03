@@ -162,7 +162,7 @@ class Supervision(models.Model):
 
     def save(self, *args: object, **kwargs: object) -> None:
         if not self.tandem_id:
-            self.is_tandem_prophylactic = self.is_prophylactic
+            self.is_tandem_prophylactic = False
         super().save(*args, **kwargs)
 
     def __str__(self):

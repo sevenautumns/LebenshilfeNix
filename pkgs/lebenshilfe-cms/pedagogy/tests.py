@@ -172,11 +172,9 @@ class SupervisionTests(TestCase):
 
     # --- save() ---
 
-    def test_save_mirrors_prophylactic_when_no_tandem(self):
-        """is_tandem_prophylactic spiegelt is_prophylactic, wenn kein Tandem gesetzt ist."""
-        sup = self._make_supervision(
-            tandem=None, is_prophylactic=False, is_tandem_prophylactic=True
-        )
+    def test_save_resets_tandem_prophylactic_when_no_tandem(self):
+        """is_tandem_prophylactic wird auf False gesetzt, wenn kein Tandem gesetzt ist."""
+        sup = self._make_supervision(tandem=None, is_tandem_prophylactic=True)
         sup.refresh_from_db()
         self.assertFalse(sup.is_tandem_prophylactic)
 
@@ -189,11 +187,10 @@ class SupervisionTests(TestCase):
         sup.refresh_from_db()
         self.assertTrue(sup.is_tandem_prophylactic)
 
-    def test_save_mirrors_prophylactic_on_tandem_removal(self):
-        """is_tandem_prophylactic spiegelt is_prophylactic, wenn das Tandem nachträglich entfernt wird."""
+    def test_save_resets_tandem_prophylactic_on_tandem_removal(self):
+        """is_tandem_prophylactic wird auf False gesetzt, wenn das Tandem entfernt wird."""
         sup = self._make_supervision(
             tandem=self.tandem_student,
-            is_prophylactic=False,
             is_tandem_prophylactic=True,
         )
         sup.tandem = None
