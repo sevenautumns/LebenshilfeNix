@@ -1,3 +1,5 @@
+from datetime import timedelta
+from decimal import Decimal
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     BooleanRadioFilter,
@@ -5,6 +7,7 @@ from unfold.contrib.filters.admin import (
     RangeDateFilter,
     RangeNumericListFilter,
 )
+from unfold.decorators import display
 from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
@@ -16,6 +19,7 @@ from base.admin import (
     EmailInline,
     BankAccountInline,
 )
+from base.fields import HourMinuteDurationField, EuroDecimalField
 from .models import (
     Denomination,
     Employee,
@@ -27,6 +31,9 @@ from .models import (
     OtherEmployment,
     Applicant,
 )
+
+_duration_fmt = HourMinuteDurationField()
+_euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
 
 class OtherEmploymentInline(TabularInline):
@@ -62,7 +69,7 @@ class EmploymentAdmin(BaseModelAdmin):
         "contract_type",
         "start_date",
         "end_date",
-        "working_hours",
+        "weekly_hours",
     )
     search_fields = (
         "employee__first_name",
@@ -72,6 +79,86 @@ class EmploymentAdmin(BaseModelAdmin):
     autocomplete_fields = ("employee",)
     list_filter_submit = True
     list_filter = (("start_date", RangeDateFilter), ("end_date", RangeDateFilter))
+    readonly_fields = (
+        "display_salary_agreement",
+        "display_calculated_work_days",
+        "display_calculated_months",
+        "display_daily_hours",
+        "display_yearly_hours",
+        "display_monthly_hours",
+        "display_calculated_gross_salary",
+        "display_yearly_gross_salary",
+    )
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    "employee",
+                    "contract_type",
+                    ("start_date", "end_date"),
+                    "weekly_hours",
+                ]
+            },
+        ),
+        (
+            "Vergütung",
+            {
+                "fields": [
+                    "display_salary_agreement",
+                    ("display_calculated_work_days", "work_days_override"),
+                    ("display_calculated_months", "month_override"),
+                    (
+                        "display_daily_hours",
+                        "display_yearly_hours",
+                        "display_monthly_hours",
+                    ),
+                    ("display_calculated_gross_salary", "gross_salary_override"),
+                    "display_yearly_gross_salary",
+                ]
+            },
+        ),
+    ]
+
+    @display(description="Gehaltsvereinbarung")
+    def display_salary_agreement(self, obj: Employment) -> str:
+        return str(obj.salary_agreement) if obj.salary_agreement else "—"
+
+    @display(description="Arbeitstage (rechnerisch)")
+    def display_calculated_work_days(self, obj: Employment) -> str:
+        return (
+            str(obj.calculated_work_days)
+            if obj.calculated_work_days is not None
+            else "—"
+        )
+
+    @display(description="Monate (rechnerisch)")
+    def display_calculated_months(self, obj: Employment) -> str:
+        if obj.calculated_months is None:
+            return "—"
+        return str(obj.calculated_months.quantize(Decimal("0.01")))
+
+    @display(description="Stunden pro Tag")
+    def display_daily_hours(self, obj: Employment) -> str:
+        return _duration_fmt.get_admin_format(obj.daily_hours)
+
+    @display(description="Jahresstunden")
+    def display_yearly_hours(self, obj: Employment) -> str:
+        return _duration_fmt.get_admin_format(obj.yearly_hours)
+
+    @display(description="Monatsstunden")
+    def display_monthly_hours(self, obj: Employment) -> str:
+        if obj.monthly_hours is None:
+            return _duration_fmt.get_admin_format(None)
+        return _duration_fmt.get_admin_format(timedelta(hours=float(obj.monthly_hours)))
+
+    @display(description="Brutto laut Vertrag (rechnerisch)")
+    def display_calculated_gross_salary(self, obj: Employment) -> str:
+        return _euro_fmt.get_admin_format(obj.calculated_gross_salary)
+
+    @display(description="Jahresbrutto (rechnerisch)")
+    def display_yearly_gross_salary(self, obj: Employment) -> str:
+        return _euro_fmt.get_admin_format(obj.yearly_gross_salary)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("employee")

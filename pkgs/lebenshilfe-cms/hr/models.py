@@ -1,7 +1,9 @@
+from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
-from base.models import Person
+from base.models import Person, SchoolDays
 from base.choices import CountryChoices, NationalityChoices
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
@@ -200,8 +202,8 @@ class Employment(models.Model):
     end_date = models.DateField(
         blank=True, null=True, verbose_name="Ende Arbeitsverhältnis"
     )
-    working_hours = HourMinuteDurationField(
-        verbose_name="Stundenumfang",
+    weekly_hours = HourMinuteDurationField(
+        verbose_name="Wochenstunden",
         help_text="Wöchentlicher Stundenumfang laut Arbeitsvertrag",
     )
     contract_type = models.CharField(
@@ -217,6 +219,20 @@ class Employment(models.Model):
         null=True,
         verbose_name="Brutto laut Vertrag (Überschreibung)",
         help_text="Überschreibt das Brutto laut Vertrag pro Monat für dieses Arbeitsverhältnis",
+    )
+    work_days_override = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Arbeitstage (Überschreibung)",
+        help_text="Überschreibt die Arbeitstage aus den Stammdaten für dieses Arbeitsverhältnis",
+    )
+    month_override = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Monate (Überschreibung)",
+        help_text="Überschreibt die rechnerischen Vertragsmonate für dieses Arbeitsverhältnis",
     )
 
     class Meta:
@@ -234,6 +250,95 @@ class Employment(models.Model):
         end = self.end_date.strftime("%d.%m.%Y") if self.end_date else "laufend"
         return f"Arbeitsverhältnis {self.employee.full_name} ({self.start_date.strftime('%d.%m.%Y')} - {end})"
 
+    @property
+    def calculated_work_days(self) -> int | None:
+        if self.end_date is None:
+            return None
+        return SchoolDays.total_school_days(self.start_date, self.end_date)
+
+    @property
+    def daily_hours(self) -> timedelta | None:
+        if self.weekly_hours is None:
+            return None
+        return self.weekly_hours / 5
+
+    @property
+    def calculated_months(self) -> Decimal | None:
+        if self.end_date is None:
+            return None
+        return (
+            Decimal((self.end_date.year - self.start_date.year) * 12)
+            + Decimal(self.end_date.month - self.start_date.month)
+            + Decimal(self.end_date.day - self.start_date.day) / Decimal(30)
+        )
+
+    @property
+    def _effective_months(self) -> Decimal | None:
+        return (
+            self.month_override
+            if self.month_override is not None
+            else self.calculated_months
+        )
+
+    @property
+    def yearly_hours(self) -> timedelta | None:
+        work_days = (
+            self.work_days_override
+            if self.work_days_override is not None
+            else self.calculated_work_days
+        )
+        if work_days is None or self.daily_hours is None:
+            return None
+        return self.daily_hours * work_days
+
+    @property
+    def monthly_hours(self) -> Decimal | None:
+        months = self._effective_months
+        if self.yearly_hours is None or not months:
+            return None
+        return Decimal(self.yearly_hours.total_seconds() / 3600) / months
+
+    @property
+    def salary_agreement(self):
+        from finance.models import SalaryAgreement
+
+        return SalaryAgreement.objects.filter(
+            valid_from__lte=self.start_date,
+            valid_to__gte=self.start_date,
+        ).first()
+
+    @property
+    def calculated_gross_salary(self) -> Decimal | None:
+        if self.gross_salary_override is not None:
+            return self.gross_salary_override
+        if self.monthly_hours is None:
+            return None
+        agreement = self.salary_agreement
+        if not agreement or not self.contract_type:
+            return None
+        rate_map = {
+            Employment.ContractType.SCHOOL_ACCOMPANIMENT: agreement.salary_standard,
+            Employment.ContractType.TANDEM: agreement.salary_tandem,
+            Employment.ContractType.SCHOOL_ACCOMPANIMENT_HONORARY: agreement.salary_honorary_standard,
+            Employment.ContractType.TANDEM_HONORARY: agreement.salary_honorary_tandem,
+            Employment.ContractType.COORDINATION: agreement.salary_coordination,
+            Employment.ContractType.MANAGEMENT: agreement.salary_management,
+        }
+        rate = rate_map.get(self.contract_type)
+        if rate is None:
+            return None
+        return (rate * self.monthly_hours).quantize(
+            Decimal("10"), rounding=ROUND_HALF_UP
+        )
+
+    @property
+    def yearly_gross_salary(self) -> Decimal | None:
+        gross = self.calculated_gross_salary
+        months = self._effective_months
+        if gross is None or months is None:
+            return None
+        return gross * months
+
 
 class OtherEmployment(models.Model):
     employee = models.ForeignKey(
@@ -245,7 +350,7 @@ class OtherEmployment(models.Model):
     employer = models.CharField(
         max_length=255, blank=True, verbose_name="Arbeitgeber (Sonstige)"
     )
-    working_hours = HourMinuteDurationField(verbose_name="Stundenumfang")
+    weekly_hours = HourMinuteDurationField(verbose_name="Stundenumfang")
 
     class Meta:
         verbose_name = "Weiteres Arbeitsverhältnis"
@@ -253,8 +358,8 @@ class OtherEmployment(models.Model):
         ordering = ["employee__last_name", "employee__first_name", "employer"]
 
     def __str__(self):
-        hours_str = OtherEmployment.working_hours.field.get_admin_format(
-            self.working_hours
+        hours_str = OtherEmployment.weekly_hours.field.get_admin_format(
+            self.weekly_hours
         )
         return f"{self.employer or 'Unbekannter Arbeitgeber'} ({hours_str}) - {self.employee.full_name}"
 
