@@ -24,6 +24,7 @@ class StudentAdmin(BaseModelAdmin):
 class SupervisionAdmin(BaseModelAdmin):
     list_display = (
         "student",
+        "tandem",
         "caretaker",
         "school",
         "start_date",
