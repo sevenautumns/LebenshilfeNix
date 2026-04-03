@@ -31,7 +31,7 @@ class SupervisionAdmin(BaseModelAdmin):
         "end_date",
         "weekly_hours",
         "is_prophylactic",
-        "is_tandem_prophylactic",
+        "display_tandem_prophylactic",
     )
     list_filter_submit = True
     list_filter = ("school", ("start_date", RangeDateFilter))
@@ -76,6 +76,12 @@ class SupervisionAdmin(BaseModelAdmin):
         if obj is None:
             return ()
         return super().get_readonly_fields(request, obj)
+
+    @display(description="Tandem prophylaktisch", boolean=True)
+    def display_tandem_prophylactic(self, obj: Supervision) -> bool | None:
+        if not obj.tandem_id:
+            return None
+        return obj.is_tandem_prophylactic
 
     @display(description="Stunden pro Tag")
     def display_daily_hours(self, obj: Supervision) -> str:
