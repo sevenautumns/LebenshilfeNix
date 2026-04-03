@@ -207,13 +207,28 @@ class EmploymentTests(TestCase):
         self.assertEqual(emp.calculated_months, Decimal("12"))
 
     def test_calculated_months_with_day_fraction(self):
-        """Sep 1 bis Sep 30: 0 Monate + 29/30 Tage."""
+        """Sep 1 bis Sep 30: 29/30 ≈ 0.967 wird auf 1.0 gerundet."""
         emp = Employment(
             start_date=date(2024, 9, 1),
             end_date=date(2024, 9, 30),
         )
-        expected = Decimal(29) / Decimal(30)
-        self.assertEqual(emp.calculated_months, expected)
+        self.assertEqual(emp.calculated_months, Decimal("1.0"))
+
+    def test_calculated_months_rounds_down_to_nearest_tenth(self):
+        """Apr 1 bis Mai 2: 1 + 1/30 ≈ 1.033 wird auf 1.0 abgerundet."""
+        emp = Employment(
+            start_date=date(2024, 4, 1),
+            end_date=date(2024, 5, 2),
+        )
+        self.assertEqual(emp.calculated_months, Decimal("1.0"))
+
+    def test_calculated_months_rounds_up_to_nearest_tenth(self):
+        """Apr 1 bis Mai 6: 1 + 5/30 ≈ 1.167 wird auf 1.2 aufgerundet."""
+        emp = Employment(
+            start_date=date(2024, 4, 1),
+            end_date=date(2024, 5, 6),
+        )
+        self.assertEqual(emp.calculated_months, Decimal("1.2"))
 
     def test_calculated_months_none_when_no_end_date(self):
         """Wenn end_date nicht gesetzt ist, soll calculated_months None sein."""

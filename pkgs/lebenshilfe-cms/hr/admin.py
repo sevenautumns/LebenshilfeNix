@@ -136,7 +136,7 @@ class EmploymentAdmin(BaseModelAdmin):
     def display_calculated_months(self, obj: Employment) -> str:
         if obj.calculated_months is None:
             return "—"
-        return str(obj.calculated_months.quantize(Decimal("0.01")))
+        return str(obj.calculated_months)
 
     @display(description="Stunden pro Tag")
     def display_daily_hours(self, obj: Employment) -> str:

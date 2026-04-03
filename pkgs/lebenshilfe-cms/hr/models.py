@@ -270,7 +270,7 @@ class Employment(models.Model):
             Decimal((self.end_date.year - self.start_date.year) * 12)
             + Decimal(self.end_date.month - self.start_date.month)
             + Decimal(self.end_date.day - self.start_date.day) / Decimal(30)
-        )
+        ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
     @property
     def _effective_months(self) -> Decimal | None:
