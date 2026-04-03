@@ -55,9 +55,7 @@ class Supervision(models.Model):
         verbose_name="Tandem",
     )
     is_tandem_prophylactic = models.BooleanField(
-        null=True,
-        blank=True,
-        default=None,
+        default=False,
         verbose_name="Tandem prophylaktisch",
     )
     caretaker = models.ForeignKey(
@@ -164,7 +162,7 @@ class Supervision(models.Model):
 
     def save(self, *args: object, **kwargs: object) -> None:
         if not self.tandem_id:
-            self.is_tandem_prophylactic = None
+            self.is_tandem_prophylactic = self.is_prophylactic
         super().save(*args, **kwargs)
 
     def __str__(self):
