@@ -357,14 +357,15 @@ class EmploymentTests(TestCase):
         )
         self.assertEqual(emp.calculated_gross_salary, Decimal("180"))
 
-    def test_gross_salary_override_takes_precedence(self):
-        """gross_salary_override überschreibt die rechnerische Berechnung."""
+    def test_gross_salary_override_does_not_affect_calculated(self):
+        """gross_salary_override hat keinen Einfluss auf calculated_gross_salary."""
         emp = self._make_employment(
             work_days_override=20,
             month_override=Decimal("1"),
             gross_salary_override=Decimal("999.00"),
         )
-        self.assertEqual(emp.calculated_gross_salary, Decimal("999.00"))
+        # Rechnerisch: 20h * 10€/h = 200€ — unabhängig vom Override
+        self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
 
     def test_gross_salary_none_when_no_salary_agreement(self):
         """Kein Brutto wenn keine Gehaltsvereinbarung für das Startdatum vorhanden."""

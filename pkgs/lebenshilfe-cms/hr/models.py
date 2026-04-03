@@ -327,8 +327,6 @@ class Employment(models.Model):
 
     @property
     def calculated_gross_salary(self) -> Decimal | None:
-        if self.gross_salary_override is not None:
-            return self.gross_salary_override
         if self.monthly_hours is None:
             return None
         agreement = self.salary_agreement
