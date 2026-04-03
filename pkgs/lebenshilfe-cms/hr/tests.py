@@ -235,6 +235,22 @@ class EmploymentTests(TestCase):
         emp = Employment(start_date=date(2024, 9, 1), end_date=None)
         self.assertIsNone(emp.calculated_months)
 
+    def test_calculated_months_uses_actual_month_days(self):
+        """Aug 14 → Jan 31: 5 + 17/31(Jan) ≈ 5.548 → 5.5, nicht 5.6 wie mit /30."""
+        emp = Employment(
+            start_date=date(2025, 8, 14),
+            end_date=date(2026, 1, 31),
+        )
+        self.assertEqual(emp.calculated_months, Decimal("5.5"))
+
+    def test_calculated_months_borrows_when_end_day_earlier_than_start_day(self):
+        """Aug 14 → Jan 5: borgt einen Monat, 4 + 22/31(Dez) ≈ 4.710 → 4.7."""
+        emp = Employment(
+            start_date=date(2025, 8, 14),
+            end_date=date(2026, 1, 5),
+        )
+        self.assertEqual(emp.calculated_months, Decimal("4.7"))
+
     # --- yearly_hours ---
 
     def test_yearly_hours(self):

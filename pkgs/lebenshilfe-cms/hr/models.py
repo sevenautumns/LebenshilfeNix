@@ -1,3 +1,4 @@
+import calendar
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
@@ -266,11 +267,28 @@ class Employment(models.Model):
     def calculated_months(self) -> Decimal | None:
         if self.end_date is None:
             return None
-        return (
-            Decimal((self.end_date.year - self.start_date.year) * 12)
-            + Decimal(self.end_date.month - self.start_date.month)
-            + Decimal(self.end_date.day - self.start_date.day) / Decimal(30)
-        ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+        whole_months = (self.end_date.year - self.start_date.year) * 12 + (
+            self.end_date.month - self.start_date.month
+        )
+        day_diff = self.end_date.day - self.start_date.day
+        if day_diff >= 0:
+            days_in_month = calendar.monthrange(
+                self.end_date.year, self.end_date.month
+            )[1]
+            fraction = Decimal(day_diff) / Decimal(days_in_month)
+        else:
+            whole_months -= 1
+            prev_month = self.end_date.month - 1 or 12
+            prev_year = (
+                self.end_date.year
+                if self.end_date.month > 1
+                else self.end_date.year - 1
+            )
+            days_in_month = calendar.monthrange(prev_year, prev_month)[1]
+            fraction = Decimal(days_in_month + day_diff) / Decimal(days_in_month)
+        return (Decimal(whole_months) + fraction).quantize(
+            Decimal("0.1"), rounding=ROUND_HALF_UP
+        )
 
     @property
     def _effective_months(self) -> Decimal | None:
