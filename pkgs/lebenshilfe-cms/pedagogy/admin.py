@@ -39,6 +39,7 @@ class SupervisionAdmin(BaseModelAdmin):
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
     readonly_fields = (
         "calculated_school_days",
+        "calculated_months",
         "display_daily_hours",
         "display_total_hours",
         "fee_agreement",
@@ -66,6 +67,7 @@ class SupervisionAdmin(BaseModelAdmin):
             {
                 "fields": [
                     "fee_agreement",
+                    ("calculated_months", "months_override"),
                     ("display_total_amount", "display_monthly_installment"),
                 ]
             },

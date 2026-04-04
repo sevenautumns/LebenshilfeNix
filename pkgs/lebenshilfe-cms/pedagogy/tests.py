@@ -133,7 +133,27 @@ class SupervisionTests(TestCase):
         )
         self.assertIsNone(sup.total_amount)
 
+    # --- calculated_months ---
+
+    def test_calculated_months(self):
+        """Berechnete Monate hängen von den Kalendermonaten ab."""
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 15),
+            end_date=date(2024, 11, 5),
+        )
+        self.assertEqual(sup.calculated_months, 3)
+
     # --- monthly_installment ---
+
+    def test_monthly_installment_with_override(self):
+        """Monats-Override überschreibt die berechneten Monate für den Abschlag."""
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 11, 30),
+            school_days_override=30,
+            months_override=2,
+        )
+        self.assertEqual(sup.monthly_installment, Decimal("150.00"))
 
     def test_monthly_installment_single_month(self):
         """Gesamtbetrag bei einem einzigen Monat ergibt den vollen Betrag als Abschlag."""

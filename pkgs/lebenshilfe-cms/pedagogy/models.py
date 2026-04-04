@@ -1,6 +1,7 @@
 from decimal import Decimal
 from datetime import timedelta
 from django.db import models
+from django.core.validators import MinValueValidator
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person, SchoolDays
 from base.fields import HourMinuteDurationField
@@ -80,6 +81,13 @@ class Supervision(models.Model):
         verbose_name="Schultage (Überschreibung)",
         help_text="Überschreibt die Schultage aus den Stammdaten für diese Betreuung",
     )
+    months_override = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Monate (überschrieben)",
+        help_text="Manuelle Überschreibung der berechneten Monate.",
+    )
 
     class Meta:
         verbose_name = "Betreuung"
@@ -146,15 +154,25 @@ class Supervision(models.Model):
     total_amount.fget.short_description = "Gesamtbetrag"  # type: ignore[attr-defined]
 
     @property
+    def calculated_months(self) -> int:
+        return (
+            (self.end_date.year - self.start_date.year) * 12
+            + self.end_date.month
+            - self.start_date.month
+            + 1
+        )
+
+    calculated_months.fget.short_description = "Monate (rechnerisch)"  # type: ignore[attr-defined]
+
+    @property
     def monthly_installment(self) -> Decimal | None:
         amount = self.total_amount
         if amount is None:
             return None
         months = (
-            (self.end_date.year - self.start_date.year) * 12
-            + self.end_date.month
-            - self.start_date.month
-            + 1
+            self.months_override
+            if self.months_override is not None
+            else self.calculated_months
         )
         return amount / months
 
