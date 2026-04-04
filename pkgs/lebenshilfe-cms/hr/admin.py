@@ -83,9 +83,6 @@ class EmploymentAdmin(BaseModelAdmin):
         "display_salary_agreement",
         "display_calculated_work_days",
         "display_calculated_months",
-        "display_daily_hours",
-        "display_yearly_hours",
-        "display_monthly_hours",
         "display_calculated_gross_salary",
         "display_yearly_gross_salary",
     )
@@ -108,11 +105,6 @@ class EmploymentAdmin(BaseModelAdmin):
                     "display_salary_agreement",
                     ("display_calculated_work_days", "work_days_override"),
                     ("display_calculated_months", "month_override"),
-                    (
-                        "display_daily_hours",
-                        "display_yearly_hours",
-                        "display_monthly_hours",
-                    ),
                     ("display_calculated_gross_salary", "gross_salary_override"),
                     "display_yearly_gross_salary",
                 ]
@@ -137,20 +129,6 @@ class EmploymentAdmin(BaseModelAdmin):
         if obj.calculated_months is None:
             return "—"
         return str(obj.calculated_months)
-
-    @display(description="Stunden pro Tag")
-    def display_daily_hours(self, obj: Employment) -> str:
-        return _duration_fmt.get_admin_format(obj.daily_hours)
-
-    @display(description="Jahresstunden")
-    def display_yearly_hours(self, obj: Employment) -> str:
-        return _duration_fmt.get_admin_format(obj.yearly_hours)
-
-    @display(description="Monatsstunden")
-    def display_monthly_hours(self, obj: Employment) -> str:
-        if obj.monthly_hours is None:
-            return _duration_fmt.get_admin_format(None)
-        return _duration_fmt.get_admin_format(timedelta(hours=float(obj.monthly_hours)))
 
     @display(description="Brutto laut Vertrag (rechnerisch)")
     def display_calculated_gross_salary(self, obj: Employment) -> str:

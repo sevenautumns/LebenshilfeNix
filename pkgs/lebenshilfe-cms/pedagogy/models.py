@@ -118,7 +118,7 @@ class Supervision(models.Model):
     daily_hours.fget.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
 
     @property
-    def total_hours(self) -> timedelta | None:
+    def yearly_hours(self) -> timedelta | None:
         if self.daily_hours is None:
             return None
         days = (
@@ -128,7 +128,20 @@ class Supervision(models.Model):
         )
         return self.daily_hours * days
 
-    total_hours.fget.short_description = "Gesamtstunden"  # type: ignore[attr-defined]
+    yearly_hours.fget.short_description = "Jahresstunden"  # type: ignore[attr-defined]
+
+    @property
+    def monthly_hours(self) -> Decimal | None:
+        months = (
+            self.months_override
+            if self.months_override is not None
+            else self.calculated_months
+        )
+        if self.yearly_hours is None or not months:
+            return None
+        return Decimal(self.yearly_hours.total_seconds() / 3600) / months
+
+    monthly_hours.fget.short_description = "Monatsstunden"  # type: ignore[attr-defined]
 
     @property
     def fee_agreement(self):
@@ -149,7 +162,7 @@ class Supervision(models.Model):
         if fee is None:
             return None
         price = fee.price_tandem if self.tandem_id else fee.price_standard
-        return price * Decimal(self.total_hours.total_seconds() / 3600)
+        return price * Decimal(self.yearly_hours.total_seconds() / 3600)
 
     total_amount.fget.short_description = "Gesamtbetrag"  # type: ignore[attr-defined]
 

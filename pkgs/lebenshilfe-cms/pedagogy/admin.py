@@ -41,7 +41,8 @@ class SupervisionAdmin(BaseModelAdmin):
         "calculated_school_days",
         "calculated_months",
         "display_daily_hours",
-        "display_total_hours",
+        "display_yearly_hours",
+        "display_monthly_hours",
         "fee_agreement",
         "display_total_amount",
         "display_monthly_installment",
@@ -58,7 +59,7 @@ class SupervisionAdmin(BaseModelAdmin):
                     ("start_date", "end_date"),
                     ("weekly_hours", "display_daily_hours"),
                     ("calculated_school_days", "school_days_override"),
-                    "display_total_hours",
+                    ("display_yearly_hours", "display_monthly_hours"),
                 ]
             },
         ),
@@ -89,9 +90,17 @@ class SupervisionAdmin(BaseModelAdmin):
     def display_daily_hours(self, obj: Supervision) -> str:
         return _duration_fmt.get_admin_format(obj.daily_hours)
 
-    @display(description="Gesamtstunden")
-    def display_total_hours(self, obj: Supervision) -> str:
-        return _duration_fmt.get_admin_format(obj.total_hours)
+    @display(description="Jahresstunden")
+    def display_yearly_hours(self, obj: Supervision) -> str:
+        return _duration_fmt.get_admin_format(obj.yearly_hours)
+
+    @display(description="Monatsstunden")
+    def display_monthly_hours(self, obj: Supervision) -> str:
+        from datetime import timedelta
+
+        if obj.monthly_hours is None:
+            return "—"
+        return _duration_fmt.get_admin_format(timedelta(hours=float(obj.monthly_hours)))
 
     @display(description="Gesamtbetrag")
     def display_total_amount(self, obj: Supervision) -> str:

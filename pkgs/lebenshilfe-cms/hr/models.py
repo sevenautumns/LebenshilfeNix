@@ -258,12 +258,6 @@ class Employment(models.Model):
         return SchoolDays.total_school_days(self.start_date, self.end_date)
 
     @property
-    def daily_hours(self) -> timedelta | None:
-        if self.weekly_hours is None:
-            return None
-        return self.weekly_hours / 5
-
-    @property
     def calculated_months(self) -> Decimal | None:
         if self.end_date is None:
             return None
@@ -302,24 +296,6 @@ class Employment(models.Model):
         )
 
     @property
-    def yearly_hours(self) -> timedelta | None:
-        work_days = (
-            self.work_days_override
-            if self.work_days_override is not None
-            else self.calculated_work_days
-        )
-        if work_days is None or self.daily_hours is None:
-            return None
-        return self.daily_hours * work_days
-
-    @property
-    def monthly_hours(self) -> Decimal | None:
-        months = self._effective_months
-        if self.yearly_hours is None or not months:
-            return None
-        return Decimal(self.yearly_hours.total_seconds() / 3600) / months
-
-    @property
     def salary_agreement(self):
         from finance.models import SalaryAgreement
 
@@ -330,7 +306,7 @@ class Employment(models.Model):
 
     @property
     def calculated_gross_salary(self) -> Decimal | None:
-        if self.monthly_hours is None:
+        if self.weekly_hours is None:
             return None
         agreement = self.salary_agreement
         if not agreement or not self.contract_type:
@@ -346,7 +322,8 @@ class Employment(models.Model):
         rate = rate_map.get(self.contract_type)
         if rate is None:
             return None
-        return (rate * self.monthly_hours).quantize(
+        weekly_hours_dec = Decimal(self.weekly_hours.total_seconds() / 3600)
+        return (rate * weekly_hours_dec * Decimal("4")).quantize(
             Decimal("1E+1"), rounding=ROUND_HALF_UP
         )
 

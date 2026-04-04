@@ -154,23 +154,6 @@ class EmploymentTests(TestCase):
         defaults.update(kwargs)
         return Employment.objects.create(**defaults)
 
-    # --- daily_hours ---
-
-    def test_daily_hours(self):
-        """weekly_hours / 5 ergibt die täglichen Stunden."""
-        emp = Employment(weekly_hours=timedelta(hours=5))
-        self.assertEqual(emp.daily_hours, timedelta(hours=1))
-
-    def test_daily_hours_with_minutes(self):
-        """10:30 Wochenstunden geteilt durch 5 = 2:06 Tagesstunden."""
-        emp = Employment(weekly_hours=timedelta(hours=10, minutes=30))
-        self.assertEqual(emp.daily_hours, timedelta(hours=2, minutes=6))
-
-    def test_daily_hours_none_when_no_weekly_hours(self):
-        """Wenn weekly_hours None ist, soll daily_hours ebenfalls None sein."""
-        emp = Employment(weekly_hours=None)
-        self.assertIsNone(emp.daily_hours)
-
     # --- calculated_work_days ---
 
     def test_calculated_work_days(self):
@@ -251,52 +234,6 @@ class EmploymentTests(TestCase):
         )
         self.assertEqual(emp.calculated_months, Decimal("4.5"))
 
-    # --- yearly_hours ---
-
-    def test_yearly_hours(self):
-        """Jahresstunden = Tagesstunden × rechnerische Arbeitstage aus Stammdaten."""
-        emp = self._make_employment()
-        # daily_hours = 1h, calculated_work_days = 21 → 21h
-        self.assertEqual(emp.yearly_hours, timedelta(hours=21))
-
-    def test_yearly_hours_with_work_days_override(self):
-        """Mit work_days_override werden die überschriebenen Tage verwendet."""
-        emp = self._make_employment(work_days_override=10)
-        # daily_hours = 1h, override = 10 → 10h
-        self.assertEqual(emp.yearly_hours, timedelta(hours=10))
-
-    def test_yearly_hours_none_when_no_end_date(self):
-        """Ohne end_date können keine Jahresstunden berechnet werden."""
-        emp = Employment(
-            weekly_hours=timedelta(hours=5),
-            start_date=date(2024, 9, 1),
-            end_date=None,
-        )
-        self.assertIsNone(emp.yearly_hours)
-
-    # --- monthly_hours ---
-
-    def test_monthly_hours(self):
-        """Monatsstunden = Jahresstunden / Vertragsmonate."""
-        emp = self._make_employment(work_days_override=20, month_override=Decimal("2"))
-        # yearly = 1h × 20 = 20h, months = 2 → monthly = 10h
-        self.assertEqual(emp.monthly_hours, Decimal("10"))
-
-    def test_monthly_hours_with_month_override(self):
-        """month_override überschreibt die rechnerischen Vertragsmonate."""
-        emp = self._make_employment(work_days_override=20, month_override=Decimal("4"))
-        # yearly = 20h, months = 4 → monthly = 5h
-        self.assertEqual(emp.monthly_hours, Decimal("5"))
-
-    def test_monthly_hours_none_when_no_end_date(self):
-        """Ohne end_date können keine Monatsstunden berechnet werden."""
-        emp = Employment(
-            weekly_hours=timedelta(hours=5),
-            start_date=date(2024, 9, 1),
-            end_date=None,
-        )
-        self.assertIsNone(emp.monthly_hours)
-
     # --- salary_agreement ---
 
     def test_salary_agreement_found_by_start_date(self):
@@ -316,43 +253,35 @@ class EmploymentTests(TestCase):
     def test_gross_salary_school_accompaniment(self):
         """Schulbegleitung verwendet salary_standard für die Berechnung."""
         emp = self._make_employment(
-            work_days_override=20,
-            month_override=Decimal("1"),
+            weekly_hours=timedelta(hours=5),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
-        # monthly_hours = 20h, rate = 10.00 → 200 → gerundet auf 10 = 200
+        # weekly_hours = 5h, rate = 10.00 -> 5 * 4 * 10 = 200
         self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
 
     def test_gross_salary_tandem(self):
         """Tandem verwendet salary_tandem für die Berechnung."""
         emp = self._make_employment(
-            work_days_override=20,
-            month_override=Decimal("1"),
+            weekly_hours=timedelta(hours=5),
             contract_type=Employment.ContractType.TANDEM,
         )
-        # monthly_hours = 20h, rate = 15.00 → 300 → gerundet auf 10 = 300
+        # weekly_hours = 5h, rate = 15.00 -> 5 * 4 * 15 = 300
         self.assertEqual(emp.calculated_gross_salary, Decimal("300"))
 
     def test_gross_salary_rounds_half_up(self):
         """195 € wird auf 200 € aufgerundet (ROUND_HALF_UP)."""
-        # daily = 1.5h (weekly=7.5h), work_days=13, months=1 → monthly=19.5h
-        # rate=10 → 195.0 → rounds to 200
+        # weekly_hours = 4.875h (4h 52m 30s), rate=10 -> 4.875 * 4 * 10 = 195.0 -> rounds to 200
         emp = self._make_employment(
-            weekly_hours=timedelta(hours=7, minutes=30),
-            work_days_override=13,
-            month_override=Decimal("1"),
+            weekly_hours=timedelta(hours=4, minutes=52, seconds=30),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
         self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
 
     def test_gross_salary_rounds_down(self):
         """182 € wird auf 180 € abgerundet (Einer < 5)."""
-        # daily = 1h24m (weekly=7h), work_days=13, months=1 → monthly=18.2h
-        # rate=10 → 182.0 → rounds to 180
+        # weekly_hours = 4.55h (4h 33m), rate=10 -> 4.55 * 4 * 10 = 182.0 -> rounds to 180
         emp = self._make_employment(
-            weekly_hours=timedelta(hours=7),
-            work_days_override=13,
-            month_override=Decimal("1"),
+            weekly_hours=timedelta(hours=4, minutes=33),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
         self.assertEqual(emp.calculated_gross_salary, Decimal("180"))
@@ -360,11 +289,10 @@ class EmploymentTests(TestCase):
     def test_gross_salary_override_does_not_affect_calculated(self):
         """gross_salary_override hat keinen Einfluss auf calculated_gross_salary."""
         emp = self._make_employment(
-            work_days_override=20,
-            month_override=Decimal("1"),
+            weekly_hours=timedelta(hours=5),
             gross_salary_override=Decimal("999.00"),
         )
-        # Rechnerisch: 20h * 10€/h = 200€ — unabhängig vom Override
+        # Rechnerisch: 5h * 4 * 10€/h = 200€ — unabhängig vom Override
         self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
 
     def test_gross_salary_none_when_no_salary_agreement(self):
@@ -386,21 +314,16 @@ class EmploymentTests(TestCase):
         )
         self.assertIsNone(emp.calculated_gross_salary)
 
-    def test_gross_salary_none_when_no_end_date(self):
-        """Kein Brutto wenn kein end_date gesetzt ist (keine Monatsstunden berechenbar)."""
-        emp = self._make_employment(end_date=None)
-        self.assertIsNone(emp.calculated_gross_salary)
-
     # --- yearly_gross_salary ---
 
     def test_yearly_gross_salary(self):
         """Jahresbrutto = monatliches Brutto × Vertragsmonate."""
         emp = self._make_employment(
-            work_days_override=20,
+            weekly_hours=timedelta(hours=2, minutes=30),
             month_override=Decimal("2"),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
-        # monthly_hours = 20h / 2 = 10h, rate=10 → gross=100, yearly=100*2=200
+        # weekly_hours = 2.5h, rate=10 -> gross=100, yearly=100*2=200
         self.assertEqual(emp.yearly_gross_salary, Decimal("200"))
 
     def test_yearly_gross_salary_none_when_no_gross(self):

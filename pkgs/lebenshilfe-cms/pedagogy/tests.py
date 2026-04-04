@@ -67,24 +67,37 @@ class SupervisionTests(TestCase):
         sup = Supervision(weekly_hours=None)
         self.assertIsNone(sup.daily_hours)
 
-    # --- total_hours ---
+    # --- yearly_hours ---
 
-    def test_total_hours_with_override(self):
+    def test_yearly_hours_with_override(self):
         """Mit school_days_override werden die angegebenen Tage verwendet."""
         sup = Supervision(weekly_hours=timedelta(hours=5), school_days_override=10)
-        # daily_hours = 1h, override = 10 → total = 10h
-        self.assertEqual(sup.total_hours, timedelta(hours=10))
+        # daily_hours = 1h, override = 10 → yearly = 10h
+        self.assertEqual(sup.yearly_hours, timedelta(hours=10))
 
-    def test_total_hours_without_override_uses_school_days(self):
+    def test_yearly_hours_without_override_uses_school_days(self):
         """Ohne Override werden die Schultage aus der DB berechnet (21 Tage für Sep 2024)."""
         sup = self._make_supervision(school_days_override=None)
-        # daily_hours = 1h, school_days = 21 → total = 21h
-        self.assertEqual(sup.total_hours, timedelta(hours=21))
+        # daily_hours = 1h, school_days = 21 → yearly = 21h
+        self.assertEqual(sup.yearly_hours, timedelta(hours=21))
 
-    def test_total_hours_none_when_no_weekly_hours(self):
+    def test_yearly_hours_none_when_no_weekly_hours(self):
         """Wenn weekly_hours None ist, soll total_hours ebenfalls None sein."""
         sup = Supervision(weekly_hours=None, school_days_override=10)
-        self.assertIsNone(sup.total_hours)
+        self.assertIsNone(sup.yearly_hours)
+
+    # --- monthly_hours ---
+
+    def test_monthly_hours(self):
+        """Monatsstunden = Jahresstunden / Vertragsmonate."""
+        sup = self._make_supervision(school_days_override=20, months_override=2)
+        # yearly_hours = 20h, months = 2 -> monthly = 10h
+        self.assertEqual(sup.monthly_hours, Decimal("10"))
+
+    def test_monthly_hours_none_when_no_weekly_hours(self):
+        """Ohne weekly_hours können keine Monatsstunden berechnet werden."""
+        sup = Supervision(weekly_hours=None, school_days_override=20, months_override=2)
+        self.assertIsNone(sup.monthly_hours)
 
     # --- fee_agreement ---
 
@@ -114,7 +127,7 @@ class SupervisionTests(TestCase):
     def test_total_amount_standard(self):
         """Ohne Tandem wird price_standard verwendet."""
         sup = self._make_supervision(school_days_override=10)
-        # daily_hours = 1h, override = 10 → total = 10h → 10.00 * 10 = 100.00
+        # daily_hours = 1h, override = 10 → yearly = 10h → 10.00 * 10 = 100.00
         self.assertEqual(sup.total_amount, Decimal("100.00"))
 
     def test_total_amount_tandem(self):
@@ -123,7 +136,7 @@ class SupervisionTests(TestCase):
             tandem=self.tandem_student,
             school_days_override=10,
         )
-        # daily_hours = 1h, override = 10 → total = 10h → 15.00 * 10 = 150.00
+        # daily_hours = 1h, override = 10 → yearly = 10h → 15.00 * 10 = 150.00
         self.assertEqual(sup.total_amount, Decimal("150.00"))
 
     def test_total_amount_none_when_no_fee_agreement(self):
@@ -162,7 +175,7 @@ class SupervisionTests(TestCase):
             end_date=date(2024, 9, 30),
             school_days_override=10,
         )
-        # total = 100.00, months = 1 → installment = 100.00
+        # yearly = 100.00, months = 1 → installment = 100.00
         self.assertEqual(sup.monthly_installment, Decimal("100.00"))
 
     def test_monthly_installment_multi_month(self):
