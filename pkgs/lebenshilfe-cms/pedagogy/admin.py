@@ -59,6 +59,7 @@ class SupervisionAdmin(BaseModelAdmin):
                     ("start_date", "end_date"),
                     ("weekly_hours", "display_daily_hours"),
                     ("calculated_school_days", "school_days_override"),
+                    ("calculated_months", "months_override"),
                     ("display_yearly_hours", "display_monthly_hours"),
                 ]
             },
@@ -68,7 +69,6 @@ class SupervisionAdmin(BaseModelAdmin):
             {
                 "fields": [
                     "fee_agreement",
-                    ("calculated_months", "months_override"),
                     ("display_total_amount", "display_monthly_installment"),
                 ]
             },
