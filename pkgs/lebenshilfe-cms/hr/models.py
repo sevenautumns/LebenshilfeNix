@@ -286,9 +286,12 @@ class Employment(models.Model):
             )
             days_in_month = calendar.monthrange(prev_year, prev_month)[1]
             fraction = Decimal(days_in_month + day_diff) / Decimal(days_in_month)
-        return (Decimal(whole_months) + fraction).quantize(
-            Decimal("0.1"), rounding=ROUND_HALF_UP
-        )
+        return (
+            ((Decimal(whole_months) + fraction) * Decimal("2")).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+            / Decimal("2")
+        ).quantize(Decimal("0.1"))
 
     @property
     def _effective_months(self) -> Decimal | None:

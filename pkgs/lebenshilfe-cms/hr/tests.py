@@ -214,7 +214,7 @@ class EmploymentTests(TestCase):
         )
         self.assertEqual(emp.calculated_months, Decimal("1.0"))
 
-    def test_calculated_months_rounds_down_to_nearest_tenth(self):
+    def test_calculated_months_rounds_down_to_nearest_half_month(self):
         """Apr 1 bis Mai 2: 1 + 1/30 ≈ 1.033 wird auf 1.0 abgerundet."""
         emp = Employment(
             start_date=date(2024, 4, 1),
@@ -222,13 +222,13 @@ class EmploymentTests(TestCase):
         )
         self.assertEqual(emp.calculated_months, Decimal("1.0"))
 
-    def test_calculated_months_rounds_up_to_nearest_tenth(self):
-        """Apr 1 bis Mai 6: 1 + 5/30 ≈ 1.167 wird auf 1.2 aufgerundet."""
+    def test_calculated_months_rounds_up_to_nearest_half_month(self):
+        """Apr 1 bis Mai 9: 1 + 8/30 ≈ 1.266 wird auf 1.5 aufgerundet."""
         emp = Employment(
             start_date=date(2024, 4, 1),
-            end_date=date(2024, 5, 6),
+            end_date=date(2024, 5, 9),
         )
-        self.assertEqual(emp.calculated_months, Decimal("1.2"))
+        self.assertEqual(emp.calculated_months, Decimal("1.5"))
 
     def test_calculated_months_none_when_no_end_date(self):
         """Wenn end_date nicht gesetzt ist, soll calculated_months None sein."""
@@ -244,12 +244,12 @@ class EmploymentTests(TestCase):
         self.assertEqual(emp.calculated_months, Decimal("5.5"))
 
     def test_calculated_months_borrows_when_end_day_earlier_than_start_day(self):
-        """Aug 14 → Jan 5: borgt einen Monat, 4 + 22/31(Dez) ≈ 4.710 → 4.7."""
+        """Aug 14 → Jan 5: borgt einen Monat, 4 + 22/31(Dez) ≈ 4.710 → 4.5."""
         emp = Employment(
             start_date=date(2025, 8, 14),
             end_date=date(2026, 1, 5),
         )
-        self.assertEqual(emp.calculated_months, Decimal("4.7"))
+        self.assertEqual(emp.calculated_months, Decimal("4.5"))
 
     # --- yearly_hours ---
 
