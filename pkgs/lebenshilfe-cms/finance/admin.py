@@ -34,7 +34,13 @@ class GrossPersonnelCostsFilter(admin.SimpleListFilter):
 
 @admin.register(SalaryAgreement)
 class SalaryAgreementAdmin(BaseModelAdmin):
-    list_display = ("valid_from", "valid_to", "salary_standard")
+    list_display = (
+        "valid_from",
+        "valid_to",
+        "salary_standard",
+        "salary_tandem",
+        "salary_coordination",
+    )
     search_fields = ("valid_from", "valid_to")
     list_filter_submit = True
     list_filter = (("valid_from", RangeDateFilter), ("valid_to", RangeDateFilter))

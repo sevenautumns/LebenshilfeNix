@@ -5,15 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0012_supervision_months_override'),
+        ("pedagogy", "0012_supervision_months_override"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='supervision',
-            name='months_override',
-            field=models.PositiveSmallIntegerField(blank=True, help_text='Manuelle Überschreibung der berechneten Monate.', null=True, validators=[django.core.validators.MinValueValidator(1)], verbose_name='Monate (Überschreibung)'),
+            model_name="supervision",
+            name="months_override",
+            field=models.PositiveSmallIntegerField(
+                blank=True,
+                help_text="Manuelle Überschreibung der berechneten Monate.",
+                null=True,
+                validators=[django.core.validators.MinValueValidator(1)],
+                verbose_name="Monate (Überschreibung)",
+            ),
         ),
     ]
