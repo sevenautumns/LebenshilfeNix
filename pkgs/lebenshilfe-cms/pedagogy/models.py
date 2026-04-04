@@ -85,7 +85,7 @@ class Supervision(models.Model):
         blank=True,
         null=True,
         validators=[MinValueValidator(1)],
-        verbose_name="Monate (überschrieben)",
+        verbose_name="Monate (Überschreibung)",
         help_text="Manuelle Überschreibung der berechneten Monate.",
     )
 
