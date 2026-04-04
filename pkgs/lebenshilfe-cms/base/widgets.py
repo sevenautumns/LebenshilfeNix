@@ -27,6 +27,12 @@ class HourMinuteDurationWidget(MultiWidget):
         )
         super().__init__(widgets, attrs)
 
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        for subwidget in context["widget"]["subwidgets"]:
+            subwidget["attrs"]["x-model.fill"] = subwidget["name"]
+        return context
+
     def decompress(self, value):
         if value:
             if isinstance(value, str):
