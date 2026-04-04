@@ -174,9 +174,9 @@ class EmploymentTests(TestCase):
     # --- calculated_work_days ---
 
     def test_calculated_work_days(self):
-        """Arbeitstage werden aus den SchoolDays-Stammdaten berechnet (20 für Sep 2024)."""
+        """Arbeitstage werden aus den SchoolDays-Stammdaten berechnet (21 für Sep 2024)."""
         emp = self._make_employment()
-        self.assertEqual(emp.calculated_work_days, 20)
+        self.assertEqual(emp.calculated_work_days, 21)
 
     def test_calculated_work_days_none_when_no_end_date(self):
         """Wenn end_date nicht gesetzt ist, soll calculated_work_days None sein."""
@@ -256,8 +256,8 @@ class EmploymentTests(TestCase):
     def test_yearly_hours(self):
         """Jahresstunden = Tagesstunden × rechnerische Arbeitstage aus Stammdaten."""
         emp = self._make_employment()
-        # daily_hours = 1h, calculated_work_days = 20 → 20h
-        self.assertEqual(emp.yearly_hours, timedelta(hours=20))
+        # daily_hours = 1h, calculated_work_days = 21 → 21h
+        self.assertEqual(emp.yearly_hours, timedelta(hours=21))
 
     def test_yearly_hours_with_work_days_override(self):
         """Mit work_days_override werden die überschriebenen Tage verwendet."""

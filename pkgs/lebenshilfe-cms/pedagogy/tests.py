@@ -76,10 +76,10 @@ class SupervisionTests(TestCase):
         self.assertEqual(sup.total_hours, timedelta(hours=10))
 
     def test_total_hours_without_override_uses_school_days(self):
-        """Ohne Override werden die Schultage aus der DB berechnet (20 Tage für Sep 2024)."""
+        """Ohne Override werden die Schultage aus der DB berechnet (21 Tage für Sep 2024)."""
         sup = self._make_supervision(school_days_override=None)
-        # daily_hours = 1h, school_days = 20 → total = 20h
-        self.assertEqual(sup.total_hours, timedelta(hours=20))
+        # daily_hours = 1h, school_days = 21 → total = 21h
+        self.assertEqual(sup.total_hours, timedelta(hours=21))
 
     def test_total_hours_none_when_no_weekly_hours(self):
         """Wenn weekly_hours None ist, soll total_hours ebenfalls None sein."""

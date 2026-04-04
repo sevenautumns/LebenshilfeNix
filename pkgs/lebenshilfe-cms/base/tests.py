@@ -389,15 +389,15 @@ class SchoolDaysTests(TestCase):
         self.assertEqual(result, 0)
 
     def test_total_school_days_single_month(self):
-        """Summiert Schultage korrekt für einen einzelnen Monat."""
+        """Summiert Schultage, Feiertage und Urlaubstage korrekt für einen einzelnen Monat."""
         SchoolDays.objects.create(
             month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
         )
         result = SchoolDays.total_school_days(date(2024, 9, 1), date(2024, 9, 30))
-        self.assertEqual(result, 20)
+        self.assertEqual(result, 21)
 
     def test_total_school_days_multi_month(self):
-        """Summiert Schultage korrekt über mehrere Monate."""
+        """Summiert Schultage, Feiertage und Urlaubstage korrekt über mehrere Monate."""
         SchoolDays.objects.create(
             month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
         )
@@ -408,7 +408,7 @@ class SchoolDaysTests(TestCase):
             month=date(2024, 11, 1), school_days=15, public_holidays=0, vacation_days=5
         )
         result = SchoolDays.total_school_days(date(2024, 9, 1), date(2024, 11, 30))
-        self.assertEqual(result, 53)
+        self.assertEqual(result, 61)
 
     def test_total_school_days_filters_outside_range(self):
         """Monate außerhalb des Datumsbereichs werden nicht gezählt."""

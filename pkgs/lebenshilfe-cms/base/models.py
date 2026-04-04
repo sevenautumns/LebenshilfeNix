@@ -24,12 +24,14 @@ class SchoolDays(models.Model):
 
     @classmethod
     def total_school_days(cls, from_date: date, to_date: date) -> int:
-        """Summiert Schultage für alle Monate zwischen from_date und to_date (inklusiv, tagesgenau ignoriert)."""
+        """Summiert Schultage, Feiertage und Urlaubstage für alle Monate zwischen from_date und to_date (inklusiv, tagesgenau ignoriert)."""
         from_month = from_date.replace(day=1)
         to_month = to_date.replace(day=1)
         result = cls.objects.filter(
             month__gte=from_month, month__lte=to_month
-        ).aggregate(total=Sum("school_days"))
+        ).aggregate(
+            total=Sum(F("school_days") + F("public_holidays") + F("vacation_days"))
+        )
         return result["total"] or 0
 
 
