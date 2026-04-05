@@ -119,11 +119,11 @@ class ApplicantDesiredHoursTests(TestCase):
         self.assertEqual(applicant.desired_hours_summary, "1:05–2:30 Std.")
 
 
-# --- Employment property Tests ---
+# --- Employment calculations Tests ---
 
 
 class EmploymentTests(TestCase):
-    """Tests für die berechneten Properties von Employment."""
+    """Tests für die berechneten Felder von Employment (via Strategy Pattern)."""
 
     def setUp(self):
         self.employee = Employee.objects.create(first_name="Max", last_name="Betreuer")
@@ -154,24 +154,28 @@ class EmploymentTests(TestCase):
         defaults.update(kwargs)
         return Employment.objects.create(**defaults)
 
-    # --- calculated_work_days ---
+    def _calc(self, emp, key):
+        """Shortcut: holt den berechneten Wert für einen Key aus emp.calculations."""
+        return emp.calculations[key]["value"]
+
+    # --- work_days ---
 
     def test_calculated_work_days(self):
         """Arbeitstage werden aus den SchoolDays-Stammdaten berechnet (21 für Sep 2024)."""
         emp = self._make_employment()
-        self.assertEqual(emp.calculated_work_days, 21)
+        self.assertEqual(self._calc(emp, "work_days"), 21)
 
     def test_calculated_work_days_none_when_no_end_date(self):
-        """Wenn end_date nicht gesetzt ist, soll calculated_work_days None sein."""
+        """Wenn end_date nicht gesetzt ist, soll work_days None sein."""
         emp = Employment(
             employee=self.employee,
             start_date=date(2024, 9, 1),
             end_date=None,
             weekly_hours=timedelta(hours=5),
         )
-        self.assertIsNone(emp.calculated_work_days)
+        self.assertIsNone(self._calc(emp, "work_days"))
 
-    # --- calculated_months ---
+    # --- months ---
 
     def test_calculated_months_same_day_one_month_apart(self):
         """April 15 bis Mai 15 ergibt exakt 1.0 Monat."""
@@ -179,7 +183,7 @@ class EmploymentTests(TestCase):
             start_date=date(2024, 4, 15),
             end_date=date(2024, 5, 15),
         )
-        self.assertEqual(emp.calculated_months, Decimal("1"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("1"))
 
     def test_calculated_months_full_year(self):
         """Januar 1 bis Dezember 31 ergibt exakt 12.0 Monate."""
@@ -187,7 +191,7 @@ class EmploymentTests(TestCase):
             start_date=date(2024, 1, 1),
             end_date=date(2024, 12, 31),
         )
-        self.assertEqual(emp.calculated_months, Decimal("12"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("12"))
 
     def test_calculated_months_with_day_fraction(self):
         """Sep 1 bis Sep 30: 29/30 ≈ 0.967 wird auf 1.0 gerundet."""
@@ -195,7 +199,7 @@ class EmploymentTests(TestCase):
             start_date=date(2024, 9, 1),
             end_date=date(2024, 9, 30),
         )
-        self.assertEqual(emp.calculated_months, Decimal("1.0"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("1.0"))
 
     def test_calculated_months_rounds_down_to_nearest_half_month(self):
         """Apr 1 bis Mai 2: 1 + 1/30 ≈ 1.033 wird auf 1.0 abgerundet."""
@@ -203,7 +207,7 @@ class EmploymentTests(TestCase):
             start_date=date(2024, 4, 1),
             end_date=date(2024, 5, 2),
         )
-        self.assertEqual(emp.calculated_months, Decimal("1.0"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("1.0"))
 
     def test_calculated_months_rounds_up_to_nearest_half_month(self):
         """Apr 1 bis Mai 9: 1 + 8/30 ≈ 1.266 wird auf 1.5 aufgerundet."""
@@ -211,12 +215,12 @@ class EmploymentTests(TestCase):
             start_date=date(2024, 4, 1),
             end_date=date(2024, 5, 9),
         )
-        self.assertEqual(emp.calculated_months, Decimal("1.5"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("1.5"))
 
     def test_calculated_months_none_when_no_end_date(self):
-        """Wenn end_date nicht gesetzt ist, soll calculated_months None sein."""
+        """Wenn end_date nicht gesetzt ist, soll months None sein."""
         emp = Employment(start_date=date(2024, 9, 1), end_date=None)
-        self.assertIsNone(emp.calculated_months)
+        self.assertIsNone(self._calc(emp, "months"))
 
     def test_calculated_months_uses_actual_month_days(self):
         """Aug 14 → Jan 31: 5 + 17/31(Jan) ≈ 5.548 → 5.5, nicht 5.6 wie mit /30."""
@@ -224,7 +228,7 @@ class EmploymentTests(TestCase):
             start_date=date(2025, 8, 14),
             end_date=date(2026, 1, 31),
         )
-        self.assertEqual(emp.calculated_months, Decimal("5.5"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("5.5"))
 
     def test_calculated_months_borrows_when_end_day_earlier_than_start_day(self):
         """Aug 14 → Jan 5: borgt einen Monat, 4 + 22/31(Dez) ≈ 4.710 → 4.5."""
@@ -232,23 +236,25 @@ class EmploymentTests(TestCase):
             start_date=date(2025, 8, 14),
             end_date=date(2026, 1, 5),
         )
-        self.assertEqual(emp.calculated_months, Decimal("4.5"))
+        self.assertEqual(self._calc(emp, "months"), Decimal("4.5"))
 
     # --- salary_agreement ---
 
     def test_salary_agreement_found_by_start_date(self):
         """Gehaltsvereinbarung wird über das Startdatum gefunden."""
         emp = self._make_employment(start_date=date(2024, 6, 1))
-        self.assertEqual(emp.salary_agreement, self.salary_agreement)
+        self.assertEqual(
+            self._calc(emp, "salary_agreement"), str(self.salary_agreement)
+        )
 
     def test_salary_agreement_not_found_outside_dates(self):
         """Keine Gehaltsvereinbarung wenn start_date außerhalb der Gültigkeit liegt."""
         emp = self._make_employment(
             start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
         )
-        self.assertIsNone(emp.salary_agreement)
+        self.assertIsNone(self._calc(emp, "salary_agreement"))
 
-    # --- calculated_gross_salary ---
+    # --- gross_salary ---
 
     def test_gross_salary_school_accompaniment(self):
         """Schulbegleitung verwendet salary_standard für die Berechnung."""
@@ -257,7 +263,7 @@ class EmploymentTests(TestCase):
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
         # weekly_hours = 5h, rate = 10.00 -> 5 * 4 * 10 = 200
-        self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
+        self.assertEqual(self._calc(emp, "gross_salary"), Decimal("200"))
 
     def test_gross_salary_tandem(self):
         """Tandem verwendet salary_tandem für die Berechnung."""
@@ -266,7 +272,7 @@ class EmploymentTests(TestCase):
             contract_type=Employment.ContractType.TANDEM,
         )
         # weekly_hours = 5h, rate = 15.00 -> 5 * 4 * 15 = 300
-        self.assertEqual(emp.calculated_gross_salary, Decimal("300"))
+        self.assertEqual(self._calc(emp, "gross_salary"), Decimal("300"))
 
     def test_gross_salary_rounds_half_up(self):
         """195 € wird auf 200 € aufgerundet (ROUND_HALF_UP)."""
@@ -275,7 +281,7 @@ class EmploymentTests(TestCase):
             weekly_hours=timedelta(hours=4, minutes=52, seconds=30),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
-        self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
+        self.assertEqual(self._calc(emp, "gross_salary"), Decimal("200"))
 
     def test_gross_salary_rounds_down(self):
         """182 € wird auf 180 € abgerundet (Einer < 5)."""
@@ -284,54 +290,51 @@ class EmploymentTests(TestCase):
             weekly_hours=timedelta(hours=4, minutes=33),
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
-        self.assertEqual(emp.calculated_gross_salary, Decimal("180"))
+        self.assertEqual(self._calc(emp, "gross_salary"), Decimal("180"))
 
-    def test_gross_salary_override_does_not_affect_calculated(self):
-        """gross_salary_override hat keinen Einfluss auf calculated_gross_salary."""
+    def test_gross_salary_override_does_not_affect_calculated_value(self):
+        """overrides['gross_salary'] hat keinen Einfluss auf den rechnerischen gross_salary-Wert."""
         emp = self._make_employment(
             weekly_hours=timedelta(hours=5),
-            gross_salary_override=Decimal("999.00"),
+            overrides={"gross_salary": "999.00"},
         )
         # Rechnerisch: 5h * 4 * 10€/h = 200€ — unabhängig vom Override
-        self.assertEqual(emp.calculated_gross_salary, Decimal("200"))
+        self.assertEqual(self._calc(emp, "gross_salary"), Decimal("200"))
 
     def test_gross_salary_none_when_no_salary_agreement(self):
         """Kein Brutto wenn keine Gehaltsvereinbarung für das Startdatum vorhanden."""
         emp = self._make_employment(
             start_date=date(2025, 1, 1),
             end_date=date(2025, 6, 30),
-            work_days_override=20,
-            month_override=Decimal("1"),
+            overrides={"work_days": 20, "months": "1"},
         )
-        self.assertIsNone(emp.calculated_gross_salary)
+        self.assertIsNone(self._calc(emp, "gross_salary"))
 
     def test_gross_salary_none_when_no_contract_type(self):
         """Kein Brutto wenn kein Vertragstyp gesetzt ist."""
         emp = self._make_employment(
-            work_days_override=20,
-            month_override=Decimal("1"),
+            overrides={"work_days": 20, "months": "1"},
             contract_type="",
         )
-        self.assertIsNone(emp.calculated_gross_salary)
+        self.assertIsNone(self._calc(emp, "gross_salary"))
 
     # --- yearly_gross_salary ---
 
     def test_yearly_gross_salary(self):
-        """Jahresbrutto = monatliches Brutto × Vertragsmonate."""
+        """Jahresbrutto = monatliches Brutto × effektive Monate (aus overrides)."""
         emp = self._make_employment(
             weekly_hours=timedelta(hours=2, minutes=30),
-            month_override=Decimal("2"),
+            overrides={"months": "2"},
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
         # weekly_hours = 2.5h, rate=10 -> gross=100, yearly=100*2=200
-        self.assertEqual(emp.yearly_gross_salary, Decimal("200"))
+        self.assertEqual(self._calc(emp, "yearly_gross_salary"), Decimal("200"))
 
     def test_yearly_gross_salary_none_when_no_gross(self):
-        """Kein Jahresbrutto wenn calculated_gross_salary nicht berechnet werden kann."""
+        """Kein Jahresbrutto wenn gross_salary nicht berechnet werden kann."""
         emp = self._make_employment(
             start_date=date(2025, 1, 1),
             end_date=date(2025, 6, 30),
-            work_days_override=20,
-            month_override=Decimal("1"),
+            overrides={"work_days": 20, "months": "1"},
         )
-        self.assertIsNone(emp.yearly_gross_salary)
+        self.assertIsNone(self._calc(emp, "yearly_gross_salary"))
