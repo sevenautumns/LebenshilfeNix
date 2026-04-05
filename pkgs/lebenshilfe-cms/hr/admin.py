@@ -20,6 +20,7 @@ from base.admin import (
     BankAccountInline,
 )
 from base.fields import HourMinuteDurationField, EuroDecimalField
+from base.mixins import CalculatedFieldsMixin
 from .models import (
     Denomination,
     Employee,
@@ -63,7 +64,7 @@ class EmployeeAdmin(BaseModelAdmin):
 
 
 @admin.register(Employment)
-class EmploymentAdmin(BaseModelAdmin):
+class EmploymentAdmin(CalculatedFieldsMixin, BaseModelAdmin):
     list_display = (
         "employee",
         "contract_type",
@@ -79,13 +80,6 @@ class EmploymentAdmin(BaseModelAdmin):
     autocomplete_fields = ("employee",)
     list_filter_submit = True
     list_filter = (("start_date", RangeDateFilter), ("end_date", RangeDateFilter))
-    readonly_fields = (
-        "display_salary_agreement",
-        "display_calculated_work_days",
-        "display_calculated_months",
-        "display_calculated_gross_salary",
-        "display_yearly_gross_salary",
-    )
     fieldsets = [
         (
             None,
@@ -95,48 +89,15 @@ class EmploymentAdmin(BaseModelAdmin):
                     "contract_type",
                     ("start_date", "end_date"),
                     "weekly_hours",
+                    "version",
                 ]
             },
         ),
         (
             "Vergütung",
-            {
-                "fields": [
-                    "display_salary_agreement",
-                    ("display_calculated_work_days", "work_days_override"),
-                    ("display_calculated_months", "month_override"),
-                    ("display_calculated_gross_salary", "gross_salary_override"),
-                    "display_yearly_gross_salary",
-                ]
-            },
+            {"fields": []},  # populated dynamically by CalculatedFieldsMixin
         ),
     ]
-
-    @display(description="Gehaltsvereinbarung")
-    def display_salary_agreement(self, obj: Employment) -> str:
-        return str(obj.salary_agreement) if obj.salary_agreement else "—"
-
-    @display(description="Arbeitstage (rechnerisch)")
-    def display_calculated_work_days(self, obj: Employment) -> str:
-        return (
-            str(obj.calculated_work_days)
-            if obj.calculated_work_days is not None
-            else "—"
-        )
-
-    @display(description="Monate (rechnerisch)")
-    def display_calculated_months(self, obj: Employment) -> str:
-        if obj.calculated_months is None:
-            return "—"
-        return str(obj.calculated_months)
-
-    @display(description="Brutto laut Vertrag (rechnerisch)")
-    def display_calculated_gross_salary(self, obj: Employment) -> str:
-        return _euro_fmt.get_admin_format(obj.calculated_gross_salary)
-
-    @display(description="Jahresbrutto (rechnerisch)")
-    def display_yearly_gross_salary(self, obj: Employment) -> str:
-        return _euro_fmt.get_admin_format(obj.yearly_gross_salary)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("employee")
