@@ -70,8 +70,7 @@ class EmploymentAdmin(BaseModelAdmin):
         "start_date",
         "end_date",
         "weekly_hours",
-        "gross_salary",
-        "calculator_link",
+        "display_gross_salary",
     )
     actions_detail = ["edit_action", "calculator_action"]
     search_fields = (
@@ -111,6 +110,18 @@ class EmploymentAdmin(BaseModelAdmin):
 
     def has_calculator_action_permission(self, request, obj=None):
         return True
+
+    @display(description="Brutto laut Vertrag", ordering="gross_salary")
+    def display_gross_salary(self, obj: Employment):
+        if obj.gross_salary is not None:
+            from django.utils import formats
+
+            formatted = formats.number_format(
+                obj.gross_salary, decimal_pos=2, use_l10n=True
+            )
+            return format_html("{} €", formatted)
+        url = reverse("admin:hr_employment_calculator", args=[obj.pk])
+        return format_html('<a href="{}">Berechnen →</a>', url)
 
     @display(description="Rechner")
     def calculator_link(self, obj: Employment):
