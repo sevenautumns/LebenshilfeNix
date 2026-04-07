@@ -1,5 +1,7 @@
+from django.http import Http404
 from django.template.response import TemplateResponse
-from django.urls import path
+from django.urls import path, reverse
+from django.utils.html import format_html
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     BooleanRadioFilter,
@@ -11,6 +13,7 @@ from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
 from unfold.admin import TabularInline
+from unfold.decorators import display
 from base.admin import (
     BaseModelAdmin,
     AddressInline,
@@ -65,6 +68,7 @@ class EmploymentAdmin(BaseModelAdmin):
         "start_date",
         "end_date",
         "weekly_hours",
+        "calculator_link",
     )
     search_fields = (
         "employee__first_name",
@@ -92,38 +96,52 @@ class EmploymentAdmin(BaseModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("employee")
 
+    @display(description="Rechner")
+    def calculator_link(self, obj: Employment):
+        url = reverse("admin:hr_employment_calculator", args=[obj.pk])
+        return format_html('<a href="{}">Berechnen →</a>', url)
+
     def get_urls(self):
         custom = [
             path(
-                "calculator/",
+                "<int:pk>/calculator/",
                 self.admin_site.admin_view(self.calculator_view),
                 name="hr_employment_calculator",
             ),
         ]
         return custom + super().get_urls()
 
-    def calculator_view(self, request):
+    def calculator_view(self, request, pk: int):
         from .calculators import CalculatorInput, run_calculation
-        from .forms import SalaryCalculatorForm
+        from .forms import CalculatorOverridesForm
 
-        result = None
-        form = SalaryCalculatorForm(request.POST or None)
+        try:
+            employment = Employment.objects.select_related("employee").get(pk=pk)
+        except Employment.DoesNotExist:
+            raise Http404
+
+        form = CalculatorOverridesForm(request.POST or None)
+        month_override = None
+        work_days_override = None
         if request.method == "POST" and form.is_valid():
-            cd = form.cleaned_data
-            result = run_calculation(
-                CalculatorInput(
-                    start_date=cd["start_date"],
-                    end_date=cd.get("end_date"),
-                    weekly_hours=cd["weekly_hours"],
-                    contract_type=cd["contract_type"],
-                    month_override=cd.get("month_override"),
-                    work_days_override=cd.get("work_days_override"),
-                )
+            month_override = form.cleaned_data.get("month_override")
+            work_days_override = form.cleaned_data.get("work_days_override")
+
+        result = run_calculation(
+            CalculatorInput(
+                start_date=employment.start_date,
+                end_date=employment.end_date,
+                weekly_hours=employment.weekly_hours,
+                contract_type=employment.contract_type,
+                month_override=month_override,
+                work_days_override=work_days_override,
             )
+        )
 
         context = self.admin_site.each_context(request)
         context |= {
             "title": "Vergütungsrechner",
+            "employment": employment,
             "form": form,
             "result": result,
             "opts": self.model._meta,
