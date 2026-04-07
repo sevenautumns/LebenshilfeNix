@@ -19,14 +19,3 @@ class CalculatorOverridesForm(forms.Form):
             }
         ),
     )
-    work_days_override = forms.IntegerField(
-        label="Arbeitstage (Überschreibung)",
-        required=False,
-        min_value=0,
-        widget=forms.NumberInput(
-            attrs={
-                "class": " ".join(INPUT_CLASSES),
-                "placeholder": "z. B. 20",
-            }
-        ),
-    )

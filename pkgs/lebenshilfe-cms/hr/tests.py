@@ -3,12 +3,10 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from base.models import SchoolDays
 from finance.models import SalaryAgreement
 from hr.calculators import (
     CalculatorInput,
     calculate_months,
-    calculate_work_days,
     run_calculation,
 )
 from hr.models import Applicant, Employee, Employment, TrainingRecord, TrainingType
@@ -143,10 +141,6 @@ class CalculatorTests(TestCase):
             salary_honorary_standard=Decimal("5.00"),
             salary_honorary_tandem=Decimal("8.00"),
         )
-        # SchoolDays für September 2024
-        SchoolDays.objects.create(
-            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
-        )
 
     def _make_input(self, **kwargs) -> CalculatorInput:
         """Erstellt ein CalculatorInput mit sinnvollen Standardwerten."""
@@ -158,18 +152,6 @@ class CalculatorTests(TestCase):
         )
         defaults.update(kwargs)
         return CalculatorInput(**defaults)
-
-    # --- calculate_work_days ---
-
-    def test_calculated_work_days(self):
-        """Arbeitstage werden aus den SchoolDays-Stammdaten berechnet (21 für Sep 2024)."""
-        result = calculate_work_days(date(2024, 9, 1), date(2024, 9, 30))
-        self.assertEqual(result, 21)
-
-    def test_calculated_work_days_via_run_calculation(self):
-        """run_calculation liefert None für Arbeitstage wenn kein Enddatum."""
-        result = run_calculation(self._make_input(end_date=None))
-        self.assertIsNone(result.calculated_work_days)
 
     # --- calculate_months ---
 

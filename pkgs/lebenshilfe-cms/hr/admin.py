@@ -123,10 +123,8 @@ class EmploymentAdmin(BaseModelAdmin):
 
         form = CalculatorOverridesForm(request.POST or None)
         month_override = None
-        work_days_override = None
         if request.method == "POST" and form.is_valid():
             month_override = form.cleaned_data.get("month_override")
-            work_days_override = form.cleaned_data.get("work_days_override")
 
         result = run_calculation(
             CalculatorInput(
@@ -135,7 +133,6 @@ class EmploymentAdmin(BaseModelAdmin):
                 weekly_hours=employment.weekly_hours,
                 contract_type=employment.contract_type,
                 month_override=month_override,
-                work_days_override=work_days_override,
             )
         )
 
@@ -159,7 +156,6 @@ class EmploymentAdmin(BaseModelAdmin):
                 str(result.salary_agreement) if result.salary_agreement else "—",
                 False,
             ),
-            ("Arbeitstage (rechnerisch)", result.calculated_work_days, False),
             ("Monate (rechnerisch)", result.calculated_months, False),
             (
                 "Effektive Monate",

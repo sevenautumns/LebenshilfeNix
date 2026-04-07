@@ -11,13 +11,11 @@ class CalculatorInput:
     weekly_hours: timedelta
     contract_type: str
     month_override: Decimal | None = None
-    work_days_override: int | None = None
 
 
 @dataclass
 class CalculatorResult:
     salary_agreement: object | None  # finance.models.SalaryAgreement
-    calculated_work_days: int | None
     calculated_months: Decimal | None
     effective_months: Decimal | None
     monthly_gross_salary: Decimal | None
@@ -46,13 +44,6 @@ def calculate_months(start_date: date, end_date: date) -> Decimal:
         )
         / Decimal("2")
     ).quantize(Decimal("0.1"))
-
-
-def calculate_work_days(start_date: date, end_date: date) -> int:
-    """Berechnet Arbeitstage anhand der SchoolDays-Stammdaten."""
-    from base.models import SchoolDays
-
-    return SchoolDays.total_school_days(start_date, end_date)
 
 
 def get_salary_rate(agreement, contract_type: str) -> Decimal | None:
@@ -101,14 +92,6 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
             f"Kein Tarifvertrag für Startdatum {inp.start_date.strftime('%d.%m.%Y')} gefunden."
         )
 
-    # Arbeitstage
-    calculated_work_days: int | None = None
-    if inp.end_date is not None:
-        if inp.work_days_override is not None:
-            calculated_work_days = inp.work_days_override
-        else:
-            calculated_work_days = calculate_work_days(inp.start_date, inp.end_date)
-
     # Monate
     calculated_months: Decimal | None = None
     if inp.end_date is not None:
@@ -140,7 +123,6 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
 
     return CalculatorResult(
         salary_agreement=agreement,
-        calculated_work_days=calculated_work_days,
         calculated_months=calculated_months,
         effective_months=effective_months,
         monthly_gross_salary=monthly_gross,
