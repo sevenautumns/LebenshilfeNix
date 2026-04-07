@@ -102,7 +102,7 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
         calculated_months = calculate_months(inp.start_date, inp.end_date)
     else:
         warnings.append(
-            "Kein Enddatum angegeben — Monats- und Jahresbrutto nicht berechenbar."
+            "Kein Enddatum angegeben — Jahresbrutto nicht berechenbar."
         )
 
     effective_months: Decimal | None = (
