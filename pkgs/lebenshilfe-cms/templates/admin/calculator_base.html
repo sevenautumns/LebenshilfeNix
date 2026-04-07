@@ -19,24 +19,22 @@
 <h1 class="mb-6 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ title }}</h1>
 
 {# Quelldaten #}
-<div class="mb-6 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
-  <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Quelldaten</h2>
-  <dl class="grid grid-cols-2 gap-px bg-base-200 dark:bg-base-700 sm:grid-cols-4">
+{% component "unfold/components/card.html" with title="Quelldaten" class="mb-6" %}
+  <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
     {% for label, value in source_fields %}
-    <div class="bg-white px-6 py-4 dark:bg-base-900">
-      <dt class="text-xs font-medium uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</dt>
-      <dd class="mt-1 text-sm font-medium text-font-important-light dark:text-font-important-dark">{{ value }}</dd>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</p>
+      <p class="mt-1 text-sm font-medium text-font-important-light dark:text-font-important-dark">{{ value }}</p>
     </div>
     {% endfor %}
-  </dl>
-</div>
+  </div>
+{% endcomponent %}
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
   {# Überschreibungen #}
-  <div class="lg:col-span-1 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
-    <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Überschreibungen</h2>
-    <form method="post" class="p-6 space-y-5">
+  {% component "unfold/components/card.html" with title="Überschreibungen" class="lg:col-span-1" %}
+    <form method="post" class="space-y-5">
       {% csrf_token %}
       {% for field in form %}
       <div>
@@ -47,24 +45,21 @@
       {% endfor %}
       {% component "unfold/components/button.html" with submit=1 class="w-full justify-center" %}Neu berechnen{% endcomponent %}
     </form>
-  </div>
+  {% endcomponent %}
 
   {# Ergebnis #}
-  <div class="lg:col-span-2 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
-    <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Ergebnis</h2>
+  {% component "unfold/components/card.html" with title="Ergebnis" class="lg:col-span-2" %}
 
     {% if warnings %}
-    <div class="border-b border-base-200 px-6 py-3 dark:border-base-700">
-      {% for w in warnings %}{% include "unfold/helpers/messages/warning.html" with message=w %}{% endfor %}
-    </div>
+    {% for w in warnings %}{% include "unfold/helpers/messages/warning.html" with message=w %}{% endfor %}
+    {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
     {% endif %}
 
-    {# Primärergebnisse: große Zahlen, je mit optionalem gespeicherten Wert + Übernahme-Button #}
-    <div class="grid gap-px bg-base-200 dark:bg-base-700 border-b border-base-200 dark:border-base-800"
-         style="grid-template-columns: repeat({{ primary_results|length }}, minmax(0, 1fr));">
+    {# Primärergebnisse: große Zahlen #}
+    <div class="grid gap-6" style="grid-template-columns: repeat({{ primary_results|length }}, minmax(0, 1fr));">
       {% for r in primary_results %}
-      <div class="px-6 py-6 bg-white dark:bg-base-900">
-        <p class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">{{ r.label }}</p>
+      <div>
+        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ r.label }}</p>
         <p class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
           {% if r.value is not None %}{{ r.value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-300 dark:text-base-600">—</span>{% endif %}
         </p>
@@ -73,9 +68,9 @@
     </div>
 
     {# Gespeicherte Werte + Übernahme-Buttons #}
-    {% for r in primary_results %}
-    {% if r.stored_label %}
-    <div class="flex items-center justify-between border-b border-base-200 px-6 py-4 dark:border-base-800">
+    {% for r in primary_results %}{% if r.stored_label %}
+    {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
+    <div class="flex items-center justify-between">
       <div>
         <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ r.stored_label }}</p>
         <p class="mt-0.5 text-sm font-semibold text-font-important-light dark:text-font-important-dark">
@@ -89,13 +84,13 @@
       </form>
       {% endif %}
     </div>
-    {% endif %}
-    {% endfor %}
+    {% endif %}{% endfor %}
 
     {# Zwischenergebnisse #}
-    <dl>
+    {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
+    <dl class="space-y-3">
       {% for label, value, highlighted in result_rows %}
-      <div class="border-b border-base-200 px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4 dark:border-base-800">
+      <div class="sm:grid sm:grid-cols-2 sm:gap-4">
         <dt class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</dt>
         <dd class="mt-1 text-sm sm:mt-0 {% if highlighted %}font-semibold text-primary-600{% else %}text-font-important-light dark:text-font-important-dark{% endif %}">
           {{ value|default:"—" }}{% if highlighted %} <span class="font-normal text-xs">(überschrieben)</span>{% endif %}
@@ -103,7 +98,8 @@
       </div>
       {% endfor %}
     </dl>
-  </div>
+
+  {% endcomponent %}
 
 </div>
 {% endblock %}
