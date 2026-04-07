@@ -108,6 +108,11 @@ class EmploymentAdmin(BaseModelAdmin):
                 self.admin_site.admin_view(self.calculator_view),
                 name="hr_employment_calculator",
             ),
+            path(
+                "<int:pk>/calculator/apply/",
+                self.admin_site.admin_view(self.apply_salary_view),
+                name="hr_employment_calculator_apply",
+            ),
         ]
         return custom + super().get_urls()
 
@@ -172,10 +177,51 @@ class EmploymentAdmin(BaseModelAdmin):
             "result": result,
             "source_fields": source_fields,
             "result_rows": result_rows,
+            "stored_gross": employment.gross_salary,
+            "apply_url": reverse("admin:hr_employment_calculator_apply", args=[pk]),
             "opts": self.model._meta,
             "media": self.media + form.media,
         }
         return TemplateResponse(request, "admin/hr/employment/calculator.html", context)
+
+    def apply_salary_view(self, request, pk: int):
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        from .calculators import CalculatorInput, run_calculation
+
+        if request.method != "POST":
+            return redirect("admin:hr_employment_calculator", pk)
+
+        try:
+            employment = Employment.objects.select_related("employee").get(pk=pk)
+        except Employment.DoesNotExist:
+            raise Http404
+
+        result = run_calculation(
+            CalculatorInput(
+                start_date=employment.start_date,
+                end_date=employment.end_date,
+                weekly_hours=employment.weekly_hours,
+                contract_type=employment.contract_type,
+            )
+        )
+
+        if result.monthly_gross_salary is None:
+            messages.error(
+                request,
+                "Brutto konnte nicht berechnet werden — keine Übernahme möglich.",
+            )
+        else:
+            employment.gross_salary = result.monthly_gross_salary
+            employment.save(update_fields=["gross_salary"])
+            from django.utils.formats import number_format
+
+            formatted = number_format(
+                result.monthly_gross_salary, decimal_pos=2, use_l10n=True
+            )
+            messages.success(request, f"Brutto übernommen: {formatted} €")
+
+        return redirect(reverse("admin:hr_employment_calculator", args=[pk]))
 
 
 @admin.register(Absence)

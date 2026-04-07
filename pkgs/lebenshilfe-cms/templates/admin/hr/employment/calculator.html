@@ -69,7 +69,7 @@
 
     <div class="grid grid-cols-2 divide-x divide-gray-100 border-b border-gray-100 dark:divide-gray-800 dark:border-gray-800">
       <div class="px-6 py-6">
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Monatsbrutto</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Monatsbrutto (berechnet)</p>
         <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
           {% if result.monthly_gross_salary is not None %}{{ result.monthly_gross_salary|floatformat:2 }} €{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
         </p>
@@ -80,6 +80,25 @@
           {% if result.yearly_gross_salary is not None %}{{ result.yearly_gross_salary|floatformat:2 }} €{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
         </p>
       </div>
+    </div>
+
+    {# Gespeichertes Brutto + Übernahme-Button #}
+    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Aktuell gespeichert</p>
+        <p class="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+          {% if stored_gross is not None %}{{ stored_gross|floatformat:2 }} €{% else %}<span class="text-gray-400">—</span>{% endif %}
+        </p>
+      </div>
+      {% if result.monthly_gross_salary is not None %}
+      <form method="post" action="{{ apply_url }}">
+        {% csrf_token %}
+        <button type="submit"
+          class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
+          Übernehmen →
+        </button>
+      </form>
+      {% endif %}
     </div>
 
     <dl class="divide-y divide-gray-100 dark:divide-gray-800">
