@@ -1,41 +1,10 @@
-from datetime import timedelta
 from decimal import Decimal
 
 from django import forms
-from django.contrib.admin.widgets import AdminDateWidget
 from unfold.widgets import INPUT_CLASSES
 
-from base.widgets import HourMinuteDurationWidget
-from hr.models import Employment
 
-
-class HourMinuteDurationFormField(forms.DurationField):
-    widget = HourMinuteDurationWidget
-
-    def clean(self, value):
-        if isinstance(value, timedelta):
-            return value
-        return super().clean(value)
-
-
-class SalaryCalculatorForm(forms.Form):
-    start_date = forms.DateField(
-        label="Beginn Arbeitsverhältnis",
-        widget=AdminDateWidget,
-    )
-    end_date = forms.DateField(
-        label="Ende Arbeitsverhältnis",
-        required=False,
-        widget=AdminDateWidget,
-    )
-    weekly_hours = HourMinuteDurationFormField(
-        label="Wochenstunden",
-    )
-    contract_type = forms.ChoiceField(
-        label="Art des Vertrags",
-        choices=[("", "---------")] + list(Employment.ContractType.choices),
-        widget=forms.Select(attrs={"class": " ".join(INPUT_CLASSES)}),
-    )
+class CalculatorOverridesForm(forms.Form):
     month_override = forms.DecimalField(
         label="Monate (Überschreibung)",
         required=False,
@@ -61,13 +30,3 @@ class SalaryCalculatorForm(forms.Form):
             }
         ),
     )
-
-    def clean(self):
-        cleaned = super().clean()
-        start = cleaned.get("start_date")
-        end = cleaned.get("end_date")
-        if start and end and end < start:
-            raise forms.ValidationError(
-                "Das Enddatum darf nicht vor dem Startdatum liegen."
-            )
-        return cleaned
