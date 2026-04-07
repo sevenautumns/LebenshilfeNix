@@ -1,10 +1,8 @@
-import calendar
 from datetime import timedelta
-from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
-from base.models import Person, SchoolDays
+from base.models import Person
 from base.choices import CountryChoices, NationalityChoices
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
@@ -213,27 +211,13 @@ class Employment(models.Model):
         blank=True,
         verbose_name="Art des Vertrags",
     )
-    gross_salary_override = EuroDecimalField(
+    gross_salary = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
         blank=True,
         null=True,
-        verbose_name="Brutto laut Vertrag (Überschreibung)",
-        help_text="Überschreibt das Brutto laut Vertrag pro Monat für dieses Arbeitsverhältnis",
-    )
-    work_days_override = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Arbeitstage (Überschreibung)",
-        help_text="Überschreibt die Arbeitstage aus den Stammdaten für dieses Arbeitsverhältnis",
-    )
-    month_override = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Monate (Überschreibung)",
-        help_text="Überschreibt die rechnerischen Vertragsmonate für dieses Arbeitsverhältnis",
+        verbose_name="Brutto laut Vertrag",
+        help_text="Monatliches Bruttogehalt laut Arbeitsvertrag",
     )
 
     class Meta:
@@ -250,90 +234,6 @@ class Employment(models.Model):
     def __str__(self):
         end = self.end_date.strftime("%d.%m.%Y") if self.end_date else "laufend"
         return f"Arbeitsverhältnis {self.employee.full_name} ({self.start_date.strftime('%d.%m.%Y')} - {end})"
-
-    @property
-    def calculated_work_days(self) -> int | None:
-        if self.end_date is None:
-            return None
-        return SchoolDays.total_school_days(self.start_date, self.end_date)
-
-    @property
-    def calculated_months(self) -> Decimal | None:
-        if self.end_date is None:
-            return None
-        whole_months = (self.end_date.year - self.start_date.year) * 12 + (
-            self.end_date.month - self.start_date.month
-        )
-        day_diff = self.end_date.day - self.start_date.day
-        if day_diff >= 0:
-            days_in_month = calendar.monthrange(
-                self.end_date.year, self.end_date.month
-            )[1]
-            fraction = Decimal(day_diff) / Decimal(days_in_month)
-        else:
-            whole_months -= 1
-            prev_month = self.end_date.month - 1 or 12
-            prev_year = (
-                self.end_date.year
-                if self.end_date.month > 1
-                else self.end_date.year - 1
-            )
-            days_in_month = calendar.monthrange(prev_year, prev_month)[1]
-            fraction = Decimal(days_in_month + day_diff) / Decimal(days_in_month)
-        return (
-            ((Decimal(whole_months) + fraction) * Decimal("2")).quantize(
-                Decimal("1"), rounding=ROUND_HALF_UP
-            )
-            / Decimal("2")
-        ).quantize(Decimal("0.1"))
-
-    @property
-    def _effective_months(self) -> Decimal | None:
-        return (
-            self.month_override
-            if self.month_override is not None
-            else self.calculated_months
-        )
-
-    @property
-    def salary_agreement(self):
-        from finance.models import SalaryAgreement
-
-        return SalaryAgreement.objects.filter(
-            valid_from__lte=self.start_date,
-            valid_to__gte=self.start_date,
-        ).first()
-
-    @property
-    def calculated_gross_salary(self) -> Decimal | None:
-        if self.weekly_hours is None:
-            return None
-        agreement = self.salary_agreement
-        if not agreement or not self.contract_type:
-            return None
-        rate_map = {
-            Employment.ContractType.SCHOOL_ACCOMPANIMENT: agreement.salary_standard,
-            Employment.ContractType.TANDEM: agreement.salary_tandem,
-            Employment.ContractType.SCHOOL_ACCOMPANIMENT_HONORARY: agreement.salary_honorary_standard,
-            Employment.ContractType.TANDEM_HONORARY: agreement.salary_honorary_tandem,
-            Employment.ContractType.COORDINATION: agreement.salary_coordination,
-            Employment.ContractType.MANAGEMENT: agreement.salary_management,
-        }
-        rate = rate_map.get(self.contract_type)
-        if rate is None:
-            return None
-        weekly_hours_dec = Decimal(self.weekly_hours.total_seconds() / 3600)
-        return (rate * weekly_hours_dec * Decimal("4")).quantize(
-            Decimal("1E+1"), rounding=ROUND_HALF_UP
-        )
-
-    @property
-    def yearly_gross_salary(self) -> Decimal | None:
-        gross = self.calculated_gross_salary
-        months = self._effective_months
-        if gross is None or months is None:
-            return None
-        return gross * months
 
 
 class OtherEmployment(models.Model):
