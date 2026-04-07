@@ -3,7 +3,7 @@
 
 {% block breadcrumbs %}
 <nav aria-label="{% translate 'Breadcrumbs' %}">
-  <div class="mb-4 flex gap-x-3 text-sm font-medium text-gray-400 dark:text-gray-500">
+  <div class="mb-4 flex gap-x-3 text-sm font-medium text-base-400 dark:text-base-500">
     <a href="{% url 'admin:index' %}" class="hover:text-primary-600">{% translate 'Home' %}</a>
     {% for item in breadcrumb_items %}
     <span>/</span>
@@ -16,16 +16,16 @@
 {% block content %}
 {{ media }}
 
-<h1 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">{{ title }}</h1>
+<h1 class="mb-6 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ title }}</h1>
 
 {# Quelldaten #}
-<div class="mb-6 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-  <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Quelldaten</h2>
-  <dl class="grid grid-cols-2 gap-px bg-gray-200 dark:bg-gray-700 sm:grid-cols-4">
+<div class="mb-6 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
+  <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Quelldaten</h2>
+  <dl class="grid grid-cols-2 gap-px bg-base-200 dark:bg-base-700 sm:grid-cols-4">
     {% for label, value in source_fields %}
-    <div class="bg-white px-6 py-4 dark:bg-gray-900">
-      <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ label }}</dt>
-      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ value }}</dd>
+    <div class="bg-white px-6 py-4 dark:bg-base-900">
+      <dt class="text-xs font-medium uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</dt>
+      <dd class="mt-1 text-sm font-medium text-font-important-light dark:text-font-important-dark">{{ value }}</dd>
     </div>
     {% endfor %}
   </dl>
@@ -34,13 +34,13 @@
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
   {# Überschreibungen #}
-  <div class="lg:col-span-1 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-    <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Überschreibungen</h2>
+  <div class="lg:col-span-1 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
+    <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Überschreibungen</h2>
     <form method="post" class="p-6 space-y-5">
       {% csrf_token %}
       {% for field in form %}
       <div>
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-base-700 dark:text-base-300">{{ field.label }}</label>
         <div class="mt-1">{{ field }}</div>
         {% if field.errors %}<p class="mt-1 text-xs text-red-600">{{ field.errors|join:", " }}</p>{% endif %}
       </div>
@@ -52,25 +52,25 @@
   </div>
 
   {# Ergebnis #}
-  <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-    <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Ergebnis</h2>
+  <div class="lg:col-span-2 rounded-lg border border-base-200 bg-white dark:border-base-700 dark:bg-base-900">
+    <h2 class="border-b border-base-200 px-6 py-4 text-base font-semibold text-font-important-light dark:border-base-700 dark:text-font-important-dark">Ergebnis</h2>
 
     {% if warnings %}
-    <div class="border-b border-yellow-200 bg-yellow-50 px-6 py-3 dark:border-yellow-800 dark:bg-yellow-900/20">
-      <ul class="list-disc pl-5 text-sm text-yellow-800 dark:text-yellow-300">
+    <div class="border-b border-base-200 bg-orange-100 px-6 py-3 dark:border-base-700 dark:bg-orange-500/20">
+      <ul class="list-disc pl-5 text-sm text-orange-700 dark:text-orange-400">
         {% for w in warnings %}<li>{{ w }}</li>{% endfor %}
       </ul>
     </div>
     {% endif %}
 
     {# Primärergebnisse: große Zahlen, je mit optionalem gespeicherten Wert + Übernahme-Button #}
-    <div class="grid divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-100 dark:border-gray-800"
+    <div class="grid gap-px bg-base-200 dark:bg-base-700 border-b border-base-200 dark:border-base-800"
          style="grid-template-columns: repeat({{ primary_results|length }}, minmax(0, 1fr));">
       {% for r in primary_results %}
-      <div class="px-6 py-6">
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ r.label }}</p>
-        <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-          {% if r.value is not None %}{{ r.value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
+      <div class="px-6 py-6 bg-white dark:bg-base-900">
+        <p class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">{{ r.label }}</p>
+        <p class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+          {% if r.value is not None %}{{ r.value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-300 dark:text-base-600">—</span>{% endif %}
         </p>
       </div>
       {% endfor %}
@@ -79,11 +79,11 @@
     {# Gespeicherte Werte + Übernahme-Buttons #}
     {% for r in primary_results %}
     {% if r.stored_label %}
-    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+    <div class="flex items-center justify-between border-b border-base-200 px-6 py-4 dark:border-base-800">
       <div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ r.stored_label }}</p>
-        <p class="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-          {% if r.stored_value is not None %}{{ r.stored_value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-gray-400">—</span>{% endif %}
+        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ r.stored_label }}</p>
+        <p class="mt-0.5 text-sm font-semibold text-font-important-light dark:text-font-important-dark">
+          {% if r.stored_value is not None %}{{ r.stored_value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-400">—</span>{% endif %}
         </p>
       </div>
       {% if r.apply_url %}
@@ -100,11 +100,11 @@
     {% endfor %}
 
     {# Zwischenergebnisse #}
-    <dl class="divide-y divide-gray-100 dark:divide-gray-800">
+    <dl>
       {% for label, value, highlighted in result_rows %}
-      <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
-        <dt class="text-sm text-gray-500 dark:text-gray-400">{{ label }}</dt>
-        <dd class="mt-1 text-sm sm:mt-0 {% if highlighted %}font-semibold text-primary-600{% else %}text-gray-900 dark:text-white{% endif %}">
+      <div class="border-b border-base-200 px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4 dark:border-base-800">
+        <dt class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</dt>
+        <dd class="mt-1 text-sm sm:mt-0 {% if highlighted %}font-semibold text-primary-600{% else %}text-font-important-light dark:text-font-important-dark{% endif %}">
           {{ value|default:"—" }}{% if highlighted %} <span class="font-normal text-xs">(überschrieben)</span>{% endif %}
         </dd>
       </div>
