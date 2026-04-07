@@ -20,168 +20,79 @@
 {% block content %}
 {{ media }}
 
-<div class="mb-6">
-  <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Vergütungsrechner</h1>
-  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-    Berechnung des monatlichen und jährlichen Bruttogehalts auf Basis der Vertragsdaten.
-  </p>
-</div>
+<h1 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">Vergütungsrechner</h1>
 
-{# --- Quelldaten (read-only) --- #}
+{# Quelldaten #}
 <div class="mb-6 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-  <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Quelldaten</h2>
-  </div>
+  <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Quelldaten</h2>
   <dl class="grid grid-cols-2 gap-px bg-gray-200 dark:bg-gray-700 sm:grid-cols-4">
+    {% for label, value in source_fields %}
     <div class="bg-white px-6 py-4 dark:bg-gray-900">
-      <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Mitarbeiter:in</dt>
-      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ employment.employee }}</dd>
+      <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ label }}</dt>
+      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ value }}</dd>
     </div>
-    <div class="bg-white px-6 py-4 dark:bg-gray-900">
-      <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Art des Vertrags</dt>
-      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-        {{ employment.get_contract_type_display|default:"—" }}
-      </dd>
-    </div>
-    <div class="bg-white px-6 py-4 dark:bg-gray-900">
-      <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Zeitraum</dt>
-      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-        {{ employment.start_date|date:"d.m.Y" }} –
-        {% if employment.end_date %}{{ employment.end_date|date:"d.m.Y" }}{% else %}<em class="text-gray-400">laufend</em>{% endif %}
-      </dd>
-    </div>
-    <div class="bg-white px-6 py-4 dark:bg-gray-900">
-      <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Wochenstunden</dt>
-      <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-        {% with h=employment.weekly_hours.seconds|add:employment.weekly_hours.days|floatformat:0 %}
-          {{ employment.weekly_hours }}
-        {% endwith %}
-      </dd>
-    </div>
+    {% endfor %}
   </dl>
 </div>
 
-{# --- Überschreibungen + Ergebnis nebeneinander --- #}
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-  {# Überschreibungen (schmale Spalte) #}
-  <div class="lg:col-span-1">
-    <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-      <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Überschreibungen</h2>
-        <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Optional — ersetzt rechnerische Werte</p>
+  {# Überschreibungen #}
+  <div class="lg:col-span-1 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Überschreibungen</h2>
+    <form method="post" class="p-6 space-y-5">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ field.label }}</label>
+        <div class="mt-1">{{ field }}</div>
+        {% if field.errors %}<p class="mt-1 text-xs text-red-600">{{ field.errors|join:", " }}</p>{% endif %}
       </div>
-      <form method="post" class="p-6 space-y-5">
-        {% csrf_token %}
-
-        {% if form.non_field_errors %}
-        <div class="rounded-md bg-red-50 p-3 dark:bg-red-900/20">
-          <ul class="list-disc pl-4 text-sm text-red-700 dark:text-red-400">
-            {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-
-        <div>
-          <label for="{{ form.month_override.id_for_label }}"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {{ form.month_override.label }}
-          </label>
-          <div class="mt-1">{{ form.month_override }}</div>
-          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Schritte à 0,5 Monate</p>
-          {% if form.month_override.errors %}
-          <p class="mt-1 text-xs text-red-600">{{ form.month_override.errors|join:", " }}</p>
-          {% endif %}
-        </div>
-
-        <div>
-          <label for="{{ form.work_days_override.id_for_label }}"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {{ form.work_days_override.label }}
-          </label>
-          <div class="mt-1">{{ form.work_days_override }}</div>
-          {% if form.work_days_override.errors %}
-          <p class="mt-1 text-xs text-red-600">{{ form.work_days_override.errors|join:", " }}</p>
-          {% endif %}
-        </div>
-
-        <button type="submit"
-          class="w-full inline-flex justify-center items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
-          Neu berechnen
-        </button>
-      </form>
-    </div>
+      {% endfor %}
+      <button type="submit" class="w-full inline-flex justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
+        Neu berechnen
+      </button>
+    </form>
   </div>
 
-  {# Ergebnisse (breite Spalte) #}
-  <div class="lg:col-span-2">
-    <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-      <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Ergebnis</h2>
-      </div>
+  {# Ergebnis #}
+  <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <h2 class="border-b border-gray-200 px-6 py-4 text-base font-semibold text-gray-900 dark:border-gray-700 dark:text-white">Ergebnis</h2>
 
-      {% if result.warnings %}
-      <div class="border-b border-yellow-200 bg-yellow-50 px-6 py-3 dark:border-yellow-800 dark:bg-yellow-900/20">
-        <ul class="list-disc pl-5 text-sm text-yellow-800 dark:text-yellow-300">
-          {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-
-      {# Monatsbrutto + Jahresbrutto — prominent #}
-      <div class="grid grid-cols-2 divide-x divide-gray-100 border-b border-gray-100 dark:divide-gray-800 dark:border-gray-800">
-        <div class="px-6 py-6">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Monatsbrutto</p>
-          <p class="mt-1 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {% if result.monthly_gross_salary is not None %}
-              {{ result.monthly_gross_salary|floatformat:2 }} €
-            {% else %}
-              <span class="text-gray-300 dark:text-gray-600">—</span>
-            {% endif %}
-          </p>
-        </div>
-        <div class="px-6 py-6">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Jahresbrutto</p>
-          <p class="mt-1 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {% if result.yearly_gross_salary is not None %}
-              {{ result.yearly_gross_salary|floatformat:2 }} €
-            {% else %}
-              <span class="text-gray-300 dark:text-gray-600">—</span>
-            {% endif %}
-          </p>
-        </div>
-      </div>
-
-      {# Detailzeilen #}
-      <dl class="divide-y divide-gray-100 dark:divide-gray-800">
-        <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
-          <dt class="text-sm text-gray-500 dark:text-gray-400">Tarifvertrag</dt>
-          <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0">{{ result.salary_agreement|default:"—" }}</dd>
-        </div>
-        <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
-          <dt class="text-sm text-gray-500 dark:text-gray-400">Arbeitstage (rechnerisch)</dt>
-          <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0">
-            {% if result.calculated_work_days is not None %}{{ result.calculated_work_days }}{% else %}—{% endif %}
-          </dd>
-        </div>
-        <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
-          <dt class="text-sm text-gray-500 dark:text-gray-400">Monate (rechnerisch)</dt>
-          <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0">
-            {% if result.calculated_months is not None %}{{ result.calculated_months }}{% else %}—{% endif %}
-          </dd>
-        </div>
-        <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
-          <dt class="text-sm text-gray-500 dark:text-gray-400">Effektive Monate</dt>
-          <dd class="mt-1 text-sm {% if result.effective_months != result.calculated_months %}font-semibold text-primary-600{% else %}text-gray-900 dark:text-white{% endif %} sm:mt-0">
-            {% if result.effective_months is not None %}{{ result.effective_months }}
-              {% if result.effective_months != result.calculated_months %}(überschrieben){% endif %}
-            {% else %}—{% endif %}
-          </dd>
-        </div>
-      </dl>
+    {% if result.warnings %}
+    <div class="border-b border-yellow-200 bg-yellow-50 px-6 py-3 dark:border-yellow-800 dark:bg-yellow-900/20">
+      <ul class="list-disc pl-5 text-sm text-yellow-800 dark:text-yellow-300">
+        {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
+      </ul>
     </div>
+    {% endif %}
+
+    <div class="grid grid-cols-2 divide-x divide-gray-100 border-b border-gray-100 dark:divide-gray-800 dark:border-gray-800">
+      <div class="px-6 py-6">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Monatsbrutto</p>
+        <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+          {% if result.monthly_gross_salary is not None %}{{ result.monthly_gross_salary|floatformat:2 }} €{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
+        </p>
+      </div>
+      <div class="px-6 py-6">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Jahresbrutto</p>
+        <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+          {% if result.yearly_gross_salary is not None %}{{ result.yearly_gross_salary|floatformat:2 }} €{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <dl class="divide-y divide-gray-100 dark:divide-gray-800">
+      {% for label, value, highlighted in result_rows %}
+      <div class="px-6 py-3 sm:grid sm:grid-cols-2 sm:gap-4">
+        <dt class="text-sm text-gray-500 dark:text-gray-400">{{ label }}</dt>
+        <dd class="mt-1 text-sm sm:mt-0 {% if highlighted %}font-semibold text-primary-600{% else %}text-gray-900 dark:text-white{% endif %}">
+          {{ value|default:"—" }}{% if highlighted %} <span class="font-normal text-xs">(überschrieben)</span>{% endif %}
+        </dd>
+      </div>
+      {% endfor %}
+    </dl>
   </div>
 
 </div>
-
 {% endblock %}

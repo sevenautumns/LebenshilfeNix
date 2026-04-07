@@ -112,6 +112,7 @@ class EmploymentAdmin(BaseModelAdmin):
         return custom + super().get_urls()
 
     def calculator_view(self, request, pk: int):
+        from base.fields import HourMinuteDurationField
         from .calculators import CalculatorInput, run_calculation
         from .forms import CalculatorOverridesForm
 
@@ -138,12 +139,43 @@ class EmploymentAdmin(BaseModelAdmin):
             )
         )
 
+        end = (
+            employment.end_date.strftime("%d.%m.%Y")
+            if employment.end_date
+            else "laufend"
+        )
+        source_fields = [
+            ("Mitarbeiter:in", str(employment.employee)),
+            ("Art des Vertrags", employment.get_contract_type_display() or "—"),
+            ("Zeitraum", f"{employment.start_date.strftime('%d.%m.%Y')} – {end}"),
+            (
+                "Wochenstunden",
+                HourMinuteDurationField.format_std(employment.weekly_hours),
+            ),
+        ]
+        result_rows = [
+            (
+                "Tarifvertrag",
+                str(result.salary_agreement) if result.salary_agreement else "—",
+                False,
+            ),
+            ("Arbeitstage (rechnerisch)", result.calculated_work_days, False),
+            ("Monate (rechnerisch)", result.calculated_months, False),
+            (
+                "Effektive Monate",
+                result.effective_months,
+                result.effective_months != result.calculated_months,
+            ),
+        ]
+
         context = self.admin_site.each_context(request)
         context |= {
             "title": "Vergütungsrechner",
             "employment": employment,
             "form": form,
             "result": result,
+            "source_fields": source_fields,
+            "result_rows": result_rows,
             "opts": self.model._meta,
             "media": self.media + form.media,
         }
