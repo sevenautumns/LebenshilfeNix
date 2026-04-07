@@ -11,6 +11,7 @@ class CalculatorInput:
     weekly_hours: timedelta
     contract_type: str
     month_override: Decimal | None = None
+    salary_agreement_override: object | None = None  # finance.models.SalaryAgreement
 
 
 @dataclass
@@ -83,14 +84,17 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
     warnings: list[str] = []
 
     # Gehaltsvereinbarung ermitteln
-    agreement = SalaryAgreement.objects.filter(
-        valid_from__lte=inp.start_date,
-        valid_to__gte=inp.start_date,
-    ).first()
-    if agreement is None:
-        warnings.append(
-            f"Kein Tarifvertrag für Startdatum {inp.start_date.strftime('%d.%m.%Y')} gefunden."
-        )
+    if inp.salary_agreement_override is not None:
+        agreement = inp.salary_agreement_override
+    else:
+        agreement = SalaryAgreement.objects.filter(
+            valid_from__lte=inp.start_date,
+            valid_to__gte=inp.start_date,
+        ).first()
+        if agreement is None:
+            warnings.append(
+                f"Kein Tarifvertrag für Startdatum {inp.start_date.strftime('%d.%m.%Y')} gefunden."
+            )
 
     # Monate
     calculated_months: Decimal | None = None

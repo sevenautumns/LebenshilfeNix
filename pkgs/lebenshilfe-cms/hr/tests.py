@@ -1,7 +1,9 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from finance.models import SalaryAgreement
 from hr.calculators import (
@@ -302,3 +304,71 @@ class CalculatorTests(TestCase):
             )
         )
         self.assertIsNone(result.yearly_gross_salary)
+
+
+# --- Calculator View Smoke Tests ---
+
+
+class CalculatorViewTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="password"
+        )
+        self.client = Client()
+        self.client.login(username="admin", password="password")
+
+        self.employee = Employee.objects.create(first_name="Anna", last_name="Test")
+        self.salary_agreement = SalaryAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            salary_standard=Decimal("10.00"),
+            salary_tandem=Decimal("15.00"),
+            salary_coordination=Decimal("20.00"),
+            salary_management=Decimal("25.00"),
+            salary_honorary_standard=Decimal("5.00"),
+            salary_honorary_tandem=Decimal("8.00"),
+        )
+        self.employment = Employment.objects.create(
+            employee=self.employee,
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 12, 31),
+            weekly_hours=timedelta(hours=5),
+            contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
+        )
+
+    def test_calculator_page_get(self):
+        """GET auf die Calculator-Seite liefert HTTP 200."""
+        url = reverse("admin:hr_employment_calculator", args=[self.employment.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_calculator_404_for_missing_employment(self):
+        """GET mit nicht existierender pk liefert HTTP 404."""
+        url = reverse("admin:hr_employment_calculator", args=[9999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_calculator_post_month_override(self):
+        """POST mit month_override liefert HTTP 200 und verarbeitet den Wert."""
+        url = reverse("admin:hr_employment_calculator", args=[self.employment.pk])
+        response = self.client.post(url, {"month_override": "3.0"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_calculator_post_salary_agreement_override(self):
+        """POST mit salary_agreement_override liefert HTTP 200 und nutzt das gewählte Agreement."""
+        url = reverse("admin:hr_employment_calculator", args=[self.employment.pk])
+        response = self.client.post(
+            url, {"salary_agreement_override": str(self.salary_agreement.pk)}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_apply_redirects_to_calculator(self):
+        """POST auf /apply/ speichert das Brutto und leitet zurück zum Rechner."""
+        url = reverse("admin:hr_employment_calculator_apply", args=[self.employment.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(
+            reverse("admin:hr_employment_calculator", args=[self.employment.pk]),
+            response["Location"],
+        )

@@ -1,4 +1,5 @@
 from django.http import Http404
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -13,7 +14,8 @@ from django.contrib import admin
 from django.utils import timezone
 from django.db.models import Q
 from unfold.admin import TabularInline
-from unfold.decorators import display
+from unfold.decorators import action, display
+from unfold.enums import ActionVariant
 from base.admin import (
     BaseModelAdmin,
     AddressInline,
@@ -68,8 +70,10 @@ class EmploymentAdmin(BaseModelAdmin):
         "start_date",
         "end_date",
         "weekly_hours",
+        "gross_salary",
         "calculator_link",
     )
+    actions_detail = ["edit_action", "calculator_action"]
     search_fields = (
         "employee__first_name",
         "employee__last_name",
@@ -95,6 +99,18 @@ class EmploymentAdmin(BaseModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("employee")
+
+    @action(
+        description="Vergütungsrechner",
+        url_path="calculator-action",
+        permissions=["calculator_action"],
+        variant=ActionVariant.DEFAULT,
+    )
+    def calculator_action(self, request, object_id: int):
+        return redirect(reverse("admin:hr_employment_calculator", args=[object_id]))
+
+    def has_calculator_action_permission(self, request, obj=None):
+        return True
 
     @display(description="Rechner")
     def calculator_link(self, obj: Employment):
@@ -128,8 +144,12 @@ class EmploymentAdmin(BaseModelAdmin):
 
         form = CalculatorOverridesForm(request.POST or None)
         month_override = None
+        salary_agreement_override = None
         if request.method == "POST" and form.is_valid():
             month_override = form.cleaned_data.get("month_override")
+            salary_agreement_override = form.cleaned_data.get(
+                "salary_agreement_override"
+            )
 
         result = run_calculation(
             CalculatorInput(
@@ -138,6 +158,7 @@ class EmploymentAdmin(BaseModelAdmin):
                 weekly_hours=employment.weekly_hours,
                 contract_type=employment.contract_type,
                 month_override=month_override,
+                salary_agreement_override=salary_agreement_override,
             )
         )
 
@@ -146,6 +167,8 @@ class EmploymentAdmin(BaseModelAdmin):
             if employment.end_date
             else "laufend"
         )
+        opts = self.model._meta
+        apply_url = reverse("admin:hr_employment_calculator_apply", args=[pk])
         source_fields = [
             ("Mitarbeiter:in", str(employment.employee)),
             ("Art des Vertrags", employment.get_contract_type_display() or "—"),
@@ -154,6 +177,26 @@ class EmploymentAdmin(BaseModelAdmin):
                 "Wochenstunden",
                 HourMinuteDurationField.format_std(employment.weekly_hours),
             ),
+        ]
+        primary_results = [
+            {
+                "label": "Monatsbrutto (berechnet)",
+                "value": result.monthly_gross_salary,
+                "unit": "€",
+                "stored_label": "Aktuell gespeichert",
+                "stored_value": employment.gross_salary,
+                "apply_url": apply_url
+                if result.monthly_gross_salary is not None
+                else None,
+            },
+            {
+                "label": "Jahresbrutto",
+                "value": result.yearly_gross_salary,
+                "unit": "€",
+                "stored_label": None,
+                "stored_value": None,
+                "apply_url": None,
+            },
         ]
         result_rows = [
             (
@@ -168,25 +211,39 @@ class EmploymentAdmin(BaseModelAdmin):
                 result.effective_months != result.calculated_months,
             ),
         ]
+        breadcrumb_items = [
+            {
+                "label": opts.app_config.verbose_name,
+                "url": reverse("admin:app_list", kwargs={"app_label": opts.app_label}),
+            },
+            {
+                "label": str(opts.verbose_name_plural).capitalize(),
+                "url": reverse("admin:hr_employment_changelist"),
+            },
+            {
+                "label": str(employment),
+                "url": reverse("admin:hr_employment_change", args=[employment.pk]),
+            },
+            {"label": "Vergütungsrechner", "url": None},
+        ]
 
         context = self.admin_site.each_context(request)
         context |= {
             "title": "Vergütungsrechner",
             "employment": employment,
             "form": form,
-            "result": result,
             "source_fields": source_fields,
+            "primary_results": primary_results,
             "result_rows": result_rows,
-            "stored_gross": employment.gross_salary,
-            "apply_url": reverse("admin:hr_employment_calculator_apply", args=[pk]),
-            "opts": self.model._meta,
+            "warnings": result.warnings,
+            "breadcrumb_items": breadcrumb_items,
+            "opts": opts,
             "media": self.media + form.media,
         }
-        return TemplateResponse(request, "admin/hr/employment/calculator.html", context)
+        return TemplateResponse(request, "admin/calculator_base.html", context)
 
     def apply_salary_view(self, request, pk: int):
         from django.contrib import messages
-        from django.shortcuts import redirect
         from .calculators import CalculatorInput, run_calculation
 
         if request.method != "POST":

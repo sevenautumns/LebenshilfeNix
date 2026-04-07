@@ -5,15 +5,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('hr', '0020_employment_weekly_hours_and_work_days'),
+        ("hr", "0020_employment_weekly_hours_and_work_days"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='employment',
-            name='weekly_hours',
-            field=base.fields.HourMinuteDurationField(help_text='Wöchentlicher Stundenumfang laut Arbeitsvertrag', verbose_name='Wochenstunden'),
+            model_name="employment",
+            name="weekly_hours",
+            field=base.fields.HourMinuteDurationField(
+                help_text="Wöchentlicher Stundenumfang laut Arbeitsvertrag",
+                verbose_name="Wochenstunden",
+            ),
         ),
     ]
