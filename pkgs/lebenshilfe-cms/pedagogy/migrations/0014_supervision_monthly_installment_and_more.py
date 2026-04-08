@@ -5,20 +5,31 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0013_alter_supervision_months_override'),
+        ("pedagogy", "0013_alter_supervision_months_override"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='supervision',
-            name='monthly_installment',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Abschlag pro Monat'),
+            model_name="supervision",
+            name="monthly_installment",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Abschlag pro Monat",
+            ),
         ),
         migrations.AddField(
-            model_name='supervision',
-            name='total_amount',
-            field=base.fields.EuroDecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Gesamtbetrag'),
+            model_name="supervision",
+            name="total_amount",
+            field=base.fields.EuroDecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True,
+                verbose_name="Gesamtbetrag",
+            ),
         ),
     ]
