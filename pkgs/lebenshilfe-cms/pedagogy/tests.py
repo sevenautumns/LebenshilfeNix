@@ -4,12 +4,13 @@ from datetime import date, timedelta
 from django.test import TestCase
 
 from base.models import SchoolDays
-from finance.models import CostPayer, FeeAgreement
+from finance.models import CostPayer, FeeAgreement, PoolAgreement
 from hr.models import Employee
+from pedagogy.calculators import SupervisionCalculatorInput, run_supervision_calculation
 from pedagogy.models import School, Student, Supervision
 
 
-class SupervisionTests(TestCase):
+class SupervisionModelTests(TestCase):
     """Tests für die berechneten Properties und die save()-Logik von Supervision."""
 
     def setUp(self):
@@ -23,14 +24,6 @@ class SupervisionTests(TestCase):
         )
         self.tandem_student = Student.objects.create(
             first_name="Ben", last_name="Tandem", payer=self.payer
-        )
-        self.fee_agreement = FeeAgreement.objects.create(
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
-            price_standard=Decimal("10.00"),
-            price_tandem=Decimal("15.00"),
-            price_coordination=Decimal("20.00"),
-            responsible_payer=self.payer,
         )
         # SchoolDays für September 2024
         SchoolDays.objects.create(
@@ -103,11 +96,27 @@ class SupervisionTests(TestCase):
 
     def test_fee_agreement_found_by_responsible_payer(self):
         """Entgeltvereinbarung wird über den Kostenträger und das Startdatum gefunden."""
+        fee = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("10.00"),
+            price_tandem=Decimal("15.00"),
+            price_coordination=Decimal("20.00"),
+            responsible_payer=self.payer,
+        )
         sup = self._make_supervision(start_date=date(2024, 9, 1))
-        self.assertEqual(sup.fee_agreement, self.fee_agreement)
+        self.assertEqual(sup.fee_agreement, fee)
 
     def test_fee_agreement_not_found_outside_dates(self):
         """Keine Entgeltvereinbarung wenn start_date außerhalb der Gültigkeit liegt."""
+        FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("10.00"),
+            price_tandem=Decimal("15.00"),
+            price_coordination=Decimal("20.00"),
+            responsible_payer=self.payer,
+        )
         sup = self._make_supervision(
             start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
         )
@@ -115,36 +124,20 @@ class SupervisionTests(TestCase):
 
     def test_fee_agreement_not_found_for_other_payer(self):
         """Keine Entgeltvereinbarung wenn kein passender Kostenträger vorhanden ist."""
+        FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("10.00"),
+            price_tandem=Decimal("15.00"),
+            price_coordination=Decimal("20.00"),
+            responsible_payer=self.payer,
+        )
         other_payer = CostPayer.objects.create(identifier="Anderer Kostenträger")
         other_student = Student.objects.create(
             first_name="Lena", last_name="Andere", payer=other_payer
         )
         sup = self._make_supervision(student=other_student, start_date=date(2024, 9, 1))
         self.assertIsNone(sup.fee_agreement)
-
-    # --- total_amount ---
-
-    def test_total_amount_standard(self):
-        """Ohne Tandem wird price_standard verwendet."""
-        sup = self._make_supervision(school_days_override=10)
-        # daily_hours = 1h, override = 10 → yearly = 10h → 10.00 * 10 = 100.00
-        self.assertEqual(sup.total_amount, Decimal("100.00"))
-
-    def test_total_amount_tandem(self):
-        """Mit Tandem wird price_tandem verwendet."""
-        sup = self._make_supervision(
-            tandem=self.tandem_student,
-            school_days_override=10,
-        )
-        # daily_hours = 1h, override = 10 → yearly = 10h → 15.00 * 10 = 150.00
-        self.assertEqual(sup.total_amount, Decimal("150.00"))
-
-    def test_total_amount_none_when_no_fee_agreement(self):
-        """Kein Betrag wenn keine Entgeltvereinbarung gefunden wird."""
-        sup = self._make_supervision(
-            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
-        )
-        self.assertIsNone(sup.total_amount)
 
     # --- calculated_months ---
 
@@ -155,53 +148,6 @@ class SupervisionTests(TestCase):
             end_date=date(2024, 11, 5),
         )
         self.assertEqual(sup.calculated_months, 3)
-
-    # --- monthly_installment ---
-
-    def test_monthly_installment_with_override(self):
-        """Monats-Override überschreibt die berechneten Monate für den Abschlag."""
-        sup = self._make_supervision(
-            start_date=date(2024, 9, 1),
-            end_date=date(2024, 11, 30),
-            school_days_override=30,
-            months_override=2,
-        )
-        self.assertEqual(sup.monthly_installment, Decimal("150.00"))
-
-    def test_monthly_installment_single_month(self):
-        """Gesamtbetrag bei einem einzigen Monat ergibt den vollen Betrag als Abschlag."""
-        sup = self._make_supervision(
-            start_date=date(2024, 9, 1),
-            end_date=date(2024, 9, 30),
-            school_days_override=10,
-        )
-        # yearly = 100.00, months = 1 → installment = 100.00
-        self.assertEqual(sup.monthly_installment, Decimal("100.00"))
-
-    def test_monthly_installment_multi_month(self):
-        """Gesamtbetrag wird durch die Anzahl der Monate geteilt."""
-        SchoolDays.objects.create(
-            month=date(2024, 10, 1), school_days=22, public_holidays=0, vacation_days=0
-        )
-        SchoolDays.objects.create(
-            month=date(2024, 11, 1), school_days=18, public_holidays=0, vacation_days=0
-        )
-        sup = self._make_supervision(
-            start_date=date(2024, 9, 1),
-            end_date=date(2024, 11, 30),
-            school_days_override=30,
-        )
-        # total_hours = 1h * 30 = 30h → total_amount = 10.00 * 30 = 300.00
-        # months = (2024-2024)*12 + 11 - 9 + 1 = 3
-        # installment = 300.00 / 3 = 100.00
-        self.assertEqual(sup.monthly_installment, Decimal("100.00"))
-
-    def test_monthly_installment_none_when_no_fee_agreement(self):
-        """Kein Abschlag wenn kein Gesamtbetrag berechnet werden kann."""
-        sup = self._make_supervision(
-            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
-        )
-        self.assertIsNone(sup.monthly_installment)
 
     # --- save() ---
 
@@ -230,3 +176,211 @@ class SupervisionTests(TestCase):
         sup.save()
         sup.refresh_from_db()
         self.assertFalse(sup.is_tandem_prophylactic)
+
+
+class SupervisionCalculatorTests(TestCase):
+    """Tests für run_supervision_calculation() in pedagogy/calculators.py."""
+
+    def setUp(self):
+        self.payer = CostPayer.objects.create(identifier="Bezirk Testland")
+        self.school = School.objects.create(name="Testschule")
+        self.caretaker = Employee.objects.create(
+            first_name="Klaus", last_name="Betreuer"
+        )
+        self.student = Student.objects.create(
+            first_name="Anna", last_name="Schüler", payer=self.payer
+        )
+        self.tandem_student = Student.objects.create(
+            first_name="Ben", last_name="Tandem", payer=self.payer
+        )
+        self.fee_agreement = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("10.00"),
+            price_tandem=Decimal("15.00"),
+            price_coordination=Decimal("20.00"),
+            responsible_payer=self.payer,
+        )
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
+        )
+
+    def _make_supervision(self, **kwargs):
+        defaults = dict(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 9, 30),
+            weekly_hours=timedelta(hours=5),
+        )
+        defaults.update(kwargs)
+        return Supervision.objects.create(**defaults)
+
+    def _calc(self, supervision, months_override=None):
+        return run_supervision_calculation(
+            SupervisionCalculatorInput(
+                supervision=supervision,
+                months_override=months_override,
+            )
+        )
+
+    # --- FEV-Pfad ---
+
+    def test_fev_total_amount_standard(self):
+        """Ohne Tandem wird price_standard für den Gesamtbetrag verwendet."""
+        sup = self._make_supervision(school_days_override=10)
+        result = self._calc(sup)
+        # daily_hours = 1h, 10 days → yearly = 10h → 10.00 * 10 = 100.00
+        self.assertEqual(result.calculated_total_amount, Decimal("100.00"))
+        self.assertFalse(result.is_pool_rate)
+
+    def test_fev_total_amount_tandem(self):
+        """Mit Tandem wird price_tandem verwendet."""
+        sup = self._make_supervision(
+            tandem=self.tandem_student, school_days_override=10
+        )
+        result = self._calc(sup)
+        # 15.00 * 10 = 150.00
+        self.assertEqual(result.calculated_total_amount, Decimal("150.00"))
+
+    def test_fev_monthly_installment_single_month(self):
+        """Gesamtbetrag / 1 Monat = voller Betrag als Abschlag."""
+        sup = self._make_supervision(school_days_override=10)
+        result = self._calc(sup)
+        self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
+
+    def test_fev_monthly_installment_multi_month(self):
+        """Gesamtbetrag wird durch die Anzahl der Monate geteilt."""
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 11, 30),
+            school_days_override=30,
+        )
+        result = self._calc(sup)
+        # total = 10.00 * 30h = 300.00, months = 3 → installment = 100.00
+        self.assertEqual(result.calculated_total_amount, Decimal("300.00"))
+        self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
+        self.assertEqual(result.months, Decimal("3"))
+
+    def test_fev_months_override_respected(self):
+        """months_override überschreibt die berechneten Monate."""
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 11, 30),
+            school_days_override=30,
+        )
+        result = self._calc(sup, months_override=Decimal("2"))
+        # total = 300.00, override = 2 → installment = 150.00
+        self.assertEqual(result.calculated_monthly_installment, Decimal("150.00"))
+        self.assertEqual(result.months, Decimal("2"))
+
+    def test_fev_none_when_no_fee_agreement(self):
+        """Kein Betrag wenn keine Entgeltvereinbarung vorhanden ist."""
+        sup = self._make_supervision(
+            start_date=date(2025, 1, 1), end_date=date(2025, 6, 30)
+        )
+        result = self._calc(sup)
+        self.assertIsNone(result.calculated_total_amount)
+        self.assertIsNone(result.calculated_monthly_installment)
+        self.assertTrue(len(result.warnings) > 0)
+
+    def test_fev_none_when_no_yearly_hours(self):
+        """Kein Betrag wenn keine Jahresstunden berechenbar sind (weekly_hours=None)."""
+        sup = Supervision(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 9, 30),
+            weekly_hours=None,
+        )
+        result = self._calc(sup)
+        self.assertIsNone(result.calculated_total_amount)
+
+    # --- Pool-Pfad ---
+
+    def test_pool_uses_flat_rate_as_installment(self):
+        """Bei Poolvereinbarung wird flat_rate als Abschlag verwendet."""
+        pool = PoolAgreement.objects.create(
+            payer=self.payer,
+            school=self.school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+        )
+        sup = self._make_supervision()
+        result = self._calc(sup)
+        self.assertTrue(result.is_pool_rate)
+        self.assertEqual(result.pool_agreement, pool)
+        self.assertEqual(result.calculated_monthly_installment, Decimal("500.00"))
+
+    def test_pool_total_amount_is_flat_rate_times_months(self):
+        """Gesamtbetrag bei Pool = flat_rate × Monate."""
+        PoolAgreement.objects.create(
+            payer=self.payer,
+            school=self.school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+        )
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 1), end_date=date(2024, 11, 30)
+        )
+        result = self._calc(sup)
+        # months = 3, flat_rate = 500 → total = 1500
+        self.assertEqual(result.calculated_total_amount, Decimal("1500.00"))
+
+    def test_pool_months_override_affects_total(self):
+        """months_override beeinflusst den Gesamtbetrag auch beim Pool-Pfad."""
+        PoolAgreement.objects.create(
+            payer=self.payer,
+            school=self.school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+        )
+        sup = self._make_supervision(
+            start_date=date(2024, 9, 1), end_date=date(2024, 11, 30)
+        )
+        result = self._calc(sup, months_override=Decimal("2"))
+        # override = 2, flat_rate = 500 → total = 1000, installment = 500
+        self.assertEqual(result.calculated_total_amount, Decimal("1000.00"))
+        self.assertEqual(result.calculated_monthly_installment, Decimal("500.00"))
+
+    def test_pool_not_applied_when_outside_validity(self):
+        """Poolvereinbarung wird nicht verwendet wenn start_date außerhalb liegt."""
+        PoolAgreement.objects.create(
+            payer=self.payer,
+            school=self.school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 8, 31),  # endet vor September
+        )
+        sup = self._make_supervision(start_date=date(2024, 9, 1))
+        result = self._calc(sup)
+        self.assertFalse(result.is_pool_rate)
+
+    def test_pool_not_applied_for_other_school(self):
+        """Poolvereinbarung gilt nicht für eine andere Schule."""
+        other_school = School.objects.create(name="Andere Schule")
+        PoolAgreement.objects.create(
+            payer=self.payer,
+            school=other_school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+        )
+        sup = self._make_supervision()  # uses self.school
+        result = self._calc(sup)
+        self.assertFalse(result.is_pool_rate)

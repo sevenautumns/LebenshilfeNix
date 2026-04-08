@@ -101,9 +101,7 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
     if inp.end_date is not None:
         calculated_months = calculate_months(inp.start_date, inp.end_date)
     else:
-        warnings.append(
-            "Kein Enddatum angegeben — Jahresbrutto nicht berechenbar."
-        )
+        warnings.append("Kein Enddatum angegeben — Jahresbrutto nicht berechenbar.")
 
     effective_months: Decimal | None = (
         inp.month_override if inp.month_override is not None else calculated_months

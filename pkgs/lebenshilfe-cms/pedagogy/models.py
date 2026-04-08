@@ -4,7 +4,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person, SchoolDays
-from base.fields import HourMinuteDurationField
+from base.fields import EuroDecimalField, HourMinuteDurationField
 
 
 class School(models.Model):
@@ -88,6 +88,20 @@ class Supervision(models.Model):
         verbose_name="Monate (Überschreibung)",
         help_text="Manuelle Überschreibung der berechneten Monate.",
     )
+    total_amount = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Gesamtbetrag",
+    )
+    monthly_installment = EuroDecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Abschlag pro Monat",
+    )
 
     class Meta:
         verbose_name = "Betreuung"
@@ -157,16 +171,6 @@ class Supervision(models.Model):
     fee_agreement.fget.short_description = "Entgeltvereinbarung"  # type: ignore[attr-defined]
 
     @property
-    def total_amount(self) -> Decimal | None:
-        fee = self.fee_agreement
-        if fee is None:
-            return None
-        price = fee.price_tandem if self.tandem_id else fee.price_standard
-        return price * Decimal(self.yearly_hours.total_seconds() / 3600)
-
-    total_amount.fget.short_description = "Gesamtbetrag"  # type: ignore[attr-defined]
-
-    @property
     def calculated_months(self) -> int:
         return (
             (self.end_date.year - self.start_date.year) * 12
@@ -176,20 +180,6 @@ class Supervision(models.Model):
         )
 
     calculated_months.fget.short_description = "Monate (rechnerisch)"  # type: ignore[attr-defined]
-
-    @property
-    def monthly_installment(self) -> Decimal | None:
-        amount = self.total_amount
-        if amount is None:
-            return None
-        months = (
-            self.months_override
-            if self.months_override is not None
-            else self.calculated_months
-        )
-        return amount / months
-
-    monthly_installment.fget.short_description = "Abschlag pro Monat"  # type: ignore[attr-defined]
 
     def save(self, *args: object, **kwargs: object) -> None:
         if not self.tandem_id:
