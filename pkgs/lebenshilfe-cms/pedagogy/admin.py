@@ -250,7 +250,7 @@ class SupervisionAdmin(BaseModelAdmin):
                 "label": "Gesamtbetrag (berechnet)",
                 "value": result.calculated_total_amount,
                 "unit": "€",
-                "stored_label": "Aktuell gespeichert",
+                "stored_label": "Gespeicherter Gesamtbetrag",
                 "stored_value": supervision.total_amount,
                 "apply_url": apply_total_url
                 if result.calculated_total_amount is not None
@@ -260,7 +260,7 @@ class SupervisionAdmin(BaseModelAdmin):
                 "label": "Abschlag pro Monat (berechnet)",
                 "value": result.calculated_monthly_installment,
                 "unit": "€",
-                "stored_label": "Aktuell gespeichert",
+                "stored_label": "Gespeicherter Abschlag",
                 "stored_value": supervision.monthly_installment,
                 "apply_url": apply_installment_url
                 if result.calculated_monthly_installment is not None

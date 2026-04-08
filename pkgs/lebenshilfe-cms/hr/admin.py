@@ -194,7 +194,7 @@ class EmploymentAdmin(BaseModelAdmin):
                 "label": "Monatsbrutto (berechnet)",
                 "value": result.monthly_gross_salary,
                 "unit": "€",
-                "stored_label": "Aktuell gespeichert",
+                "stored_label": "Gespeichertes Monatsbrutto",
                 "stored_value": employment.gross_salary,
                 "apply_url": apply_url
                 if result.monthly_gross_salary is not None
