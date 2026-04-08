@@ -6,11 +6,14 @@ from decimal import Decimal
 class SupervisionCalculatorInput:
     supervision: object  # pedagogy.models.Supervision
     months_override: Decimal | None = None
+    school_days_override: int | None = None
+    fee_agreement_override: object | None = None  # finance.models.FeeAgreement
 
 
 @dataclass
 class SupervisionCalculatorResult:
     months: Decimal | None
+    school_days: int | None
     fee_agreement: object | None  # finance.models.FeeAgreement
     pool_agreement: object | None  # finance.models.PoolAgreement
     calculated_total_amount: Decimal | None
@@ -36,6 +39,13 @@ def run_supervision_calculation(
         else Decimal(calculated_months)
     )
 
+    # Schultage ermitteln
+    school_days: int | None = (
+        inp.school_days_override
+        if inp.school_days_override is not None
+        else sup.calculated_school_days
+    )
+
     # Poolvereinbarung prüfen
     pool = None
     if sup.student_id and sup.school_id:
@@ -56,6 +66,7 @@ def run_supervision_calculation(
         monthly_installment = pool.flat_rate
         return SupervisionCalculatorResult(
             months=months,
+            school_days=school_days,
             fee_agreement=None,
             pool_agreement=pool,
             calculated_total_amount=total_amount,
@@ -65,29 +76,34 @@ def run_supervision_calculation(
         )
 
     # Entgeltvereinbarung (FEV) — stündliche Abrechnung
-    fee = sup.fee_agreement
+    fee = (
+        inp.fee_agreement_override
+        if inp.fee_agreement_override is not None
+        else sup.fee_agreement
+    )
     if fee is None:
         warnings.append(
             f"Keine Entgeltvereinbarung für Kostenträger und Startdatum"
             f" {sup.start_date.strftime('%d.%m.%Y')} gefunden."
         )
 
-    if sup.yearly_hours is None:
-        warnings.append(
-            "Jahresstunden nicht berechenbar — Betreuungsstunden oder Schultage fehlen."
-        )
+    # Jahresstunden inline berechnen
+    daily_hours = sup.daily_hours
+    if daily_hours is None:
+        warnings.append("Wochenstunden fehlen — Jahresstunden nicht berechenbar.")
 
     total_amount = None
     monthly_installment = None
 
-    if fee is not None and sup.yearly_hours is not None:
+    if fee is not None and daily_hours is not None and school_days is not None:
+        yearly_hours_dec = Decimal((daily_hours * school_days).total_seconds() / 3600)
         price = fee.price_tandem if sup.tandem_id else fee.price_standard
-        yearly_hours_dec = Decimal(sup.yearly_hours.total_seconds() / 3600)
         total_amount = price * yearly_hours_dec
         monthly_installment = total_amount / months
 
     return SupervisionCalculatorResult(
         months=months,
+        school_days=school_days,
         fee_agreement=fee,
         pool_agreement=None,
         calculated_total_amount=total_amount,

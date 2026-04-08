@@ -12,11 +12,10 @@ from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
-from base.fields import HourMinuteDurationField, EuroDecimalField
+from base.fields import EuroDecimalField
 
 from .models import School, Student, Supervision, Request
 
-_duration_fmt = HourMinuteDurationField()
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
 
@@ -50,40 +49,14 @@ class SupervisionAdmin(BaseModelAdmin):
     list_filter = ("school", ("start_date", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
-    readonly_fields = (
-        "calculated_school_days",
-        "calculated_months",
-        "display_daily_hours",
-        "display_yearly_hours",
-        "display_monthly_hours",
-        "fee_agreement",
-    )
+    readonly_fields = ("total_amount", "monthly_installment")
     conditional_fields = {"is_tandem_prophylactic": "!!tandem"}
     fieldsets = [
         ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
         ("Tandem", {"fields": [("tandem", "is_tandem_prophylactic")]}),
         ("Betreuung", {"fields": ["caretaker", ("school", "class_name")]}),
-        (
-            "Zeitraum & Stunden",
-            {
-                "fields": [
-                    ("start_date", "end_date"),
-                    ("weekly_hours", "display_daily_hours"),
-                    ("calculated_school_days", "school_days_override"),
-                    ("calculated_months", "months_override"),
-                    ("display_yearly_hours", "display_monthly_hours"),
-                ]
-            },
-        ),
-        (
-            "Abrechnung",
-            {
-                "fields": [
-                    "fee_agreement",
-                    ("total_amount", "monthly_installment"),
-                ]
-            },
-        ),
+        ("Zeitraum", {"fields": [("start_date", "end_date"), "weekly_hours"]}),
+        ("Abrechnung", {"fields": [("total_amount", "monthly_installment")]}),
     ]
 
     def get_readonly_fields(self, request, obj=None):
@@ -110,22 +83,6 @@ class SupervisionAdmin(BaseModelAdmin):
         if not obj.tandem_id:
             return None
         return obj.is_tandem_prophylactic
-
-    @display(description="Stunden pro Tag")
-    def display_daily_hours(self, obj: Supervision) -> str:
-        return _duration_fmt.get_admin_format(obj.daily_hours)
-
-    @display(description="Jahresstunden")
-    def display_yearly_hours(self, obj: Supervision) -> str:
-        return _duration_fmt.get_admin_format(obj.yearly_hours)
-
-    @display(description="Monatsstunden")
-    def display_monthly_hours(self, obj: Supervision) -> str:
-        from datetime import timedelta
-
-        if obj.monthly_hours is None:
-            return "—"
-        return _duration_fmt.get_admin_format(timedelta(hours=float(obj.monthly_hours)))
 
     @display(description="Gesamtbetrag", ordering="total_amount")
     def display_total_amount(self, obj: Supervision) -> str:
@@ -172,15 +129,52 @@ class SupervisionAdmin(BaseModelAdmin):
         except Supervision.DoesNotExist:
             raise Http404
 
-    def _build_apply_url(self, url_name: str, pk: int, months_override) -> str:
-        url = reverse(url_name, args=[pk])
+    def _override_params(
+        self, months_override, school_days_override, fee_agreement_override
+    ) -> dict:
+        params = {}
         if months_override is not None:
-            url += "?" + urlencode({"months_override": str(months_override)})
+            params["months_override"] = str(months_override)
+        if school_days_override is not None:
+            params["school_days_override"] = str(school_days_override)
+        if fee_agreement_override is not None:
+            params["fee_agreement_override"] = str(fee_agreement_override.pk)
+        return params
+
+    def _build_redirect_url(self, url_name: str, pk: int, params: dict) -> str:
+        url = reverse(url_name, args=[pk])
+        if params:
+            url += "?" + urlencode(params)
         return url
 
-    def calculator_view(self, request, pk: int):
+    def _parse_overrides(self, data: dict):
+        """Liest Override-Werte aus GET-Params oder POST-Daten."""
         from decimal import Decimal
+        from finance.models import FeeAgreement
 
+        months_override = None
+        school_days_override = None
+        fee_agreement_override = None
+
+        if mo := data.get("months_override"):
+            try:
+                months_override = Decimal(mo)
+            except Exception:
+                pass
+        if sd := data.get("school_days_override"):
+            try:
+                school_days_override = int(sd)
+            except Exception:
+                pass
+        if fev_pk := data.get("fee_agreement_override"):
+            try:
+                fee_agreement_override = FeeAgreement.objects.get(pk=int(fev_pk))
+            except Exception:
+                pass
+
+        return months_override, school_days_override, fee_agreement_override
+
+    def calculator_view(self, request, pk: int):
         from base.fields import HourMinuteDurationField as HMField
 
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
@@ -189,36 +183,48 @@ class SupervisionAdmin(BaseModelAdmin):
         supervision = self._get_supervision(pk)
 
         months_override = None
+        school_days_override = None
+        fee_agreement_override = None
+
         if request.method == "POST":
             form = SupervisionCalculatorOverridesForm(request.POST)
             if form.is_valid():
                 months_override = form.cleaned_data.get("months_override")
+                school_days_override = form.cleaned_data.get("school_days_override")
+                fee_agreement_override = form.cleaned_data.get("fee_agreement_override")
         else:
-            # Pre-populate from query params (preserved after apply redirect)
+            months_override, school_days_override, fee_agreement_override = (
+                self._parse_overrides(request.GET)
+            )
             initial = {}
-            if mo := request.GET.get("months_override"):
-                try:
-                    months_override = Decimal(mo)
-                    initial["months_override"] = months_override
-                except Exception:
-                    pass
+            if months_override is not None:
+                initial["months_override"] = months_override
+            if school_days_override is not None:
+                initial["school_days_override"] = school_days_override
+            if fee_agreement_override is not None:
+                initial["fee_agreement_override"] = fee_agreement_override
             form = SupervisionCalculatorOverridesForm(initial=initial or None)
 
         result = run_supervision_calculation(
             SupervisionCalculatorInput(
                 supervision=supervision,
                 months_override=months_override,
+                school_days_override=school_days_override,
+                fee_agreement_override=fee_agreement_override,
             )
         )
 
         opts = self.model._meta
-        apply_total_url = self._build_apply_url(
-            "admin:pedagogy_supervision_calculator_apply_total", pk, months_override
+        override_params = self._override_params(
+            months_override, school_days_override, fee_agreement_override
         )
-        apply_installment_url = self._build_apply_url(
+        apply_total_url = self._build_redirect_url(
+            "admin:pedagogy_supervision_calculator_apply_total", pk, override_params
+        )
+        apply_installment_url = self._build_redirect_url(
             "admin:pedagogy_supervision_calculator_apply_installment",
             pk,
-            months_override,
+            override_params,
         )
 
         source_fields = [
@@ -236,6 +242,7 @@ class SupervisionAdmin(BaseModelAdmin):
                 "Wochenstunden",
                 HMField.format_std(supervision.weekly_hours),
             ),
+            ("Schultage (rechnerisch)", supervision.calculated_school_days),
         ]
 
         primary_results = [
@@ -270,10 +277,15 @@ class SupervisionAdmin(BaseModelAdmin):
                 (
                     "Entgeltvereinbarung",
                     str(result.fee_agreement) if result.fee_agreement else "—",
-                    False,
+                    fee_agreement_override is not None,
                 )
             )
         result_rows += [
+            (
+                "Schultage (effektiv)",
+                result.school_days,
+                school_days_override is not None,
+            ),
             ("Monate (rechnerisch)", supervision.calculated_months, False),
             (
                 "Effektive Monate",
@@ -315,28 +327,33 @@ class SupervisionAdmin(BaseModelAdmin):
         }
         return TemplateResponse(request, "admin/calculator_base.html", context)
 
+    def _run_calc_from_request(self, supervision: Supervision, request):
+        from .calculators import SupervisionCalculatorInput, run_supervision_calculation
+
+        months_override, school_days_override, fee_agreement_override = (
+            self._parse_overrides(request.GET)
+        )
+        return (
+            run_supervision_calculation(
+                SupervisionCalculatorInput(
+                    supervision=supervision,
+                    months_override=months_override,
+                    school_days_override=school_days_override,
+                    fee_agreement_override=fee_agreement_override,
+                )
+            ),
+            months_override,
+            school_days_override,
+            fee_agreement_override,
+        )
+
     def apply_total_view(self, request, pk: int):
         if request.method != "POST":
             return redirect(reverse("admin:pedagogy_supervision_calculator", args=[pk]))
 
-        from decimal import Decimal
-
-        from .calculators import SupervisionCalculatorInput, run_supervision_calculation
-
         supervision = self._get_supervision(pk)
-        months_override_str = request.GET.get("months_override")
-        months_override = None
-        if months_override_str:
-            try:
-                months_override = Decimal(months_override_str)
-            except Exception:
-                pass
-
-        result = run_supervision_calculation(
-            SupervisionCalculatorInput(
-                supervision=supervision,
-                months_override=months_override,
-            )
+        result, months_override, school_days_override, fee_agreement_override = (
+            self._run_calc_from_request(supervision, request)
         )
 
         if result.calculated_total_amount is None:
@@ -352,33 +369,22 @@ class SupervisionAdmin(BaseModelAdmin):
             )
             messages.success(request, f"Gesamtbetrag übernommen: {formatted} €")
 
-        redirect_url = reverse("admin:pedagogy_supervision_calculator", args=[pk])
-        if months_override is not None:
-            redirect_url += "?" + urlencode({"months_override": str(months_override)})
-        return redirect(redirect_url)
+        params = self._override_params(
+            months_override, school_days_override, fee_agreement_override
+        )
+        return redirect(
+            self._build_redirect_url(
+                "admin:pedagogy_supervision_calculator", pk, params
+            )
+        )
 
     def apply_installment_view(self, request, pk: int):
         if request.method != "POST":
             return redirect(reverse("admin:pedagogy_supervision_calculator", args=[pk]))
 
-        from decimal import Decimal
-
-        from .calculators import SupervisionCalculatorInput, run_supervision_calculation
-
         supervision = self._get_supervision(pk)
-        months_override_str = request.GET.get("months_override")
-        months_override = None
-        if months_override_str:
-            try:
-                months_override = Decimal(months_override_str)
-            except Exception:
-                pass
-
-        result = run_supervision_calculation(
-            SupervisionCalculatorInput(
-                supervision=supervision,
-                months_override=months_override,
-            )
+        result, months_override, school_days_override, fee_agreement_override = (
+            self._run_calc_from_request(supervision, request)
         )
 
         if result.calculated_monthly_installment is None:
@@ -394,10 +400,14 @@ class SupervisionAdmin(BaseModelAdmin):
             )
             messages.success(request, f"Abschlag übernommen: {formatted} €")
 
-        redirect_url = reverse("admin:pedagogy_supervision_calculator", args=[pk])
-        if months_override is not None:
-            redirect_url += "?" + urlencode({"months_override": str(months_override)})
-        return redirect(redirect_url)
+        params = self._override_params(
+            months_override, school_days_override, fee_agreement_override
+        )
+        return redirect(
+            self._build_redirect_url(
+                "admin:pedagogy_supervision_calculator", pk, params
+            )
+        )
 
 
 @admin.register(Request)

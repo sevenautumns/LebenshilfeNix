@@ -1,7 +1,5 @@
-from decimal import Decimal
 from datetime import timedelta
 from django.db import models
-from django.core.validators import MinValueValidator
 from django.db.models import Q, F, CheckConstraint
 from base.models import Person, SchoolDays
 from base.fields import EuroDecimalField, HourMinuteDurationField
@@ -75,19 +73,6 @@ class Supervision(models.Model):
     start_date = models.DateField(verbose_name="Beginn")
     end_date = models.DateField(verbose_name="Ende")
     weekly_hours = HourMinuteDurationField(verbose_name="Wochenstunden")
-    school_days_override = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Schultage (Überschreibung)",
-        help_text="Überschreibt die Schultage aus den Stammdaten für diese Betreuung",
-    )
-    months_override = models.PositiveSmallIntegerField(
-        blank=True,
-        null=True,
-        validators=[MinValueValidator(1)],
-        verbose_name="Monate (Überschreibung)",
-        help_text="Manuelle Überschreibung der berechneten Monate.",
-    )
     total_amount = EuroDecimalField(
         max_digits=10,
         decimal_places=2,
@@ -130,32 +115,6 @@ class Supervision(models.Model):
         return self.weekly_hours / 5
 
     daily_hours.fget.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
-
-    @property
-    def yearly_hours(self) -> timedelta | None:
-        if self.daily_hours is None:
-            return None
-        days = (
-            self.school_days_override
-            if self.school_days_override is not None
-            else self.calculated_school_days
-        )
-        return self.daily_hours * days
-
-    yearly_hours.fget.short_description = "Jahresstunden"  # type: ignore[attr-defined]
-
-    @property
-    def monthly_hours(self) -> Decimal | None:
-        months = (
-            self.months_override
-            if self.months_override is not None
-            else self.calculated_months
-        )
-        if self.yearly_hours is None or not months:
-            return None
-        return Decimal(self.yearly_hours.total_seconds() / 3600) / months
-
-    monthly_hours.fget.short_description = "Monatsstunden"  # type: ignore[attr-defined]
 
     @property
     def fee_agreement(self):

@@ -5,6 +5,24 @@ from unfold.widgets import INPUT_CLASSES
 
 
 class SupervisionCalculatorOverridesForm(forms.Form):
+    fee_agreement_override = forms.ModelChoiceField(
+        label="Entgeltvereinbarung (Überschreibung)",
+        queryset=None,  # gesetzt in __init__
+        required=False,
+        empty_label="— automatisch nach Kostenträger + Startdatum —",
+        widget=forms.Select(attrs={"class": " ".join(INPUT_CLASSES)}),
+    )
+    school_days_override = forms.IntegerField(
+        label="Schultage (Überschreibung)",
+        required=False,
+        min_value=1,
+        widget=forms.NumberInput(
+            attrs={
+                "class": " ".join(INPUT_CLASSES),
+                "placeholder": "z. B. 185",
+            }
+        ),
+    )
     months_override = forms.DecimalField(
         label="Monate (Überschreibung)",
         required=False,
@@ -19,3 +37,11 @@ class SupervisionCalculatorOverridesForm(forms.Form):
             }
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from finance.models import FeeAgreement
+
+        self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(
+            "-valid_from"
+        )

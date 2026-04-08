@@ -25,13 +25,11 @@ class SupervisionModelTests(TestCase):
         self.tandem_student = Student.objects.create(
             first_name="Ben", last_name="Tandem", payer=self.payer
         )
-        # SchoolDays für September 2024
         SchoolDays.objects.create(
             month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
         )
 
     def _make_supervision(self, **kwargs):
-        """Erstellt eine gespeicherte Supervision mit sinnvollen Standardwerten."""
         defaults = dict(
             student=self.student,
             caretaker=self.caretaker,
@@ -59,38 +57,6 @@ class SupervisionModelTests(TestCase):
         """Wenn weekly_hours None ist, soll daily_hours ebenfalls None sein."""
         sup = Supervision(weekly_hours=None)
         self.assertIsNone(sup.daily_hours)
-
-    # --- yearly_hours ---
-
-    def test_yearly_hours_with_override(self):
-        """Mit school_days_override werden die angegebenen Tage verwendet."""
-        sup = Supervision(weekly_hours=timedelta(hours=5), school_days_override=10)
-        # daily_hours = 1h, override = 10 → yearly = 10h
-        self.assertEqual(sup.yearly_hours, timedelta(hours=10))
-
-    def test_yearly_hours_without_override_uses_school_days(self):
-        """Ohne Override werden die Schultage aus der DB berechnet (21 Tage für Sep 2024)."""
-        sup = self._make_supervision(school_days_override=None)
-        # daily_hours = 1h, school_days = 21 → yearly = 21h
-        self.assertEqual(sup.yearly_hours, timedelta(hours=21))
-
-    def test_yearly_hours_none_when_no_weekly_hours(self):
-        """Wenn weekly_hours None ist, soll total_hours ebenfalls None sein."""
-        sup = Supervision(weekly_hours=None, school_days_override=10)
-        self.assertIsNone(sup.yearly_hours)
-
-    # --- monthly_hours ---
-
-    def test_monthly_hours(self):
-        """Monatsstunden = Jahresstunden / Vertragsmonate."""
-        sup = self._make_supervision(school_days_override=20, months_override=2)
-        # yearly_hours = 20h, months = 2 -> monthly = 10h
-        self.assertEqual(sup.monthly_hours, Decimal("10"))
-
-    def test_monthly_hours_none_when_no_weekly_hours(self):
-        """Ohne weekly_hours können keine Monatsstunden berechnet werden."""
-        sup = Supervision(weekly_hours=None, school_days_override=20, months_override=2)
-        self.assertIsNone(sup.monthly_hours)
 
     # --- fee_agreement ---
 
@@ -217,37 +183,32 @@ class SupervisionCalculatorTests(TestCase):
         defaults.update(kwargs)
         return Supervision.objects.create(**defaults)
 
-    def _calc(self, supervision, months_override=None):
+    def _calc(self, supervision, **kwargs):
         return run_supervision_calculation(
-            SupervisionCalculatorInput(
-                supervision=supervision,
-                months_override=months_override,
-            )
+            SupervisionCalculatorInput(supervision=supervision, **kwargs)
         )
 
     # --- FEV-Pfad ---
 
     def test_fev_total_amount_standard(self):
         """Ohne Tandem wird price_standard für den Gesamtbetrag verwendet."""
-        sup = self._make_supervision(school_days_override=10)
-        result = self._calc(sup)
+        sup = self._make_supervision()
+        result = self._calc(sup, school_days_override=10)
         # daily_hours = 1h, 10 days → yearly = 10h → 10.00 * 10 = 100.00
         self.assertEqual(result.calculated_total_amount, Decimal("100.00"))
         self.assertFalse(result.is_pool_rate)
 
     def test_fev_total_amount_tandem(self):
         """Mit Tandem wird price_tandem verwendet."""
-        sup = self._make_supervision(
-            tandem=self.tandem_student, school_days_override=10
-        )
-        result = self._calc(sup)
+        sup = self._make_supervision(tandem=self.tandem_student)
+        result = self._calc(sup, school_days_override=10)
         # 15.00 * 10 = 150.00
         self.assertEqual(result.calculated_total_amount, Decimal("150.00"))
 
     def test_fev_monthly_installment_single_month(self):
         """Gesamtbetrag / 1 Monat = voller Betrag als Abschlag."""
-        sup = self._make_supervision(school_days_override=10)
-        result = self._calc(sup)
+        sup = self._make_supervision()
+        result = self._calc(sup, school_days_override=10)
         self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
 
     def test_fev_monthly_installment_multi_month(self):
@@ -255,9 +216,8 @@ class SupervisionCalculatorTests(TestCase):
         sup = self._make_supervision(
             start_date=date(2024, 9, 1),
             end_date=date(2024, 11, 30),
-            school_days_override=30,
         )
-        result = self._calc(sup)
+        result = self._calc(sup, school_days_override=30)
         # total = 10.00 * 30h = 300.00, months = 3 → installment = 100.00
         self.assertEqual(result.calculated_total_amount, Decimal("300.00"))
         self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
@@ -268,12 +228,37 @@ class SupervisionCalculatorTests(TestCase):
         sup = self._make_supervision(
             start_date=date(2024, 9, 1),
             end_date=date(2024, 11, 30),
-            school_days_override=30,
         )
-        result = self._calc(sup, months_override=Decimal("2"))
+        result = self._calc(sup, school_days_override=30, months_override=Decimal("2"))
         # total = 300.00, override = 2 → installment = 150.00
         self.assertEqual(result.calculated_monthly_installment, Decimal("150.00"))
         self.assertEqual(result.months, Decimal("2"))
+
+    def test_fev_school_days_override_respected(self):
+        """school_days_override überschreibt die berechneten Schultage."""
+        sup = self._make_supervision()
+        result = self._calc(sup, school_days_override=5)
+        # daily_hours = 1h, 5 days → yearly = 5h → 10.00 * 5 = 50.00
+        self.assertEqual(result.calculated_total_amount, Decimal("50.00"))
+        self.assertEqual(result.school_days, 5)
+
+    def test_fev_fee_agreement_override_used(self):
+        """fee_agreement_override überschreibt die automatisch gefundene FEV."""
+        other_fee = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("20.00"),
+            price_tandem=Decimal("25.00"),
+            price_coordination=Decimal("30.00"),
+            responsible_payer=CostPayer.objects.create(identifier="Anderer"),
+        )
+        sup = self._make_supervision()
+        result = self._calc(
+            sup, school_days_override=10, fee_agreement_override=other_fee
+        )
+        # 20.00 * 10 = 200.00
+        self.assertEqual(result.calculated_total_amount, Decimal("200.00"))
+        self.assertEqual(result.fee_agreement, other_fee)
 
     def test_fev_none_when_no_fee_agreement(self):
         """Kein Betrag wenn keine Entgeltvereinbarung vorhanden ist."""
@@ -285,8 +270,8 @@ class SupervisionCalculatorTests(TestCase):
         self.assertIsNone(result.calculated_monthly_installment)
         self.assertTrue(len(result.warnings) > 0)
 
-    def test_fev_none_when_no_yearly_hours(self):
-        """Kein Betrag wenn keine Jahresstunden berechenbar sind (weekly_hours=None)."""
+    def test_fev_none_when_no_weekly_hours(self):
+        """Kein Betrag wenn keine Wochenstunden angegeben sind."""
         sup = Supervision(
             student=self.student,
             caretaker=self.caretaker,
@@ -295,7 +280,7 @@ class SupervisionCalculatorTests(TestCase):
             end_date=date(2024, 9, 30),
             weekly_hours=None,
         )
-        result = self._calc(sup)
+        result = self._calc(sup, school_days_override=10)
         self.assertIsNone(result.calculated_total_amount)
 
     # --- Pool-Pfad ---
@@ -350,7 +335,6 @@ class SupervisionCalculatorTests(TestCase):
             start_date=date(2024, 9, 1), end_date=date(2024, 11, 30)
         )
         result = self._calc(sup, months_override=Decimal("2"))
-        # override = 2, flat_rate = 500 → total = 1000, installment = 500
         self.assertEqual(result.calculated_total_amount, Decimal("1000.00"))
         self.assertEqual(result.calculated_monthly_installment, Decimal("500.00"))
 
@@ -363,7 +347,7 @@ class SupervisionCalculatorTests(TestCase):
             approved_supervisions=5,
             prophylactic_supervisions=2,
             valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 8, 31),  # endet vor September
+            valid_to=date(2024, 8, 31),
         )
         sup = self._make_supervision(start_date=date(2024, 9, 1))
         result = self._calc(sup)
@@ -381,6 +365,6 @@ class SupervisionCalculatorTests(TestCase):
             valid_from=date(2024, 1, 1),
             valid_to=date(2024, 12, 31),
         )
-        sup = self._make_supervision()  # uses self.school
+        sup = self._make_supervision()
         result = self._calc(sup)
         self.assertFalse(result.is_pool_rate)
