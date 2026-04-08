@@ -49,7 +49,7 @@ class SupervisionAdmin(BaseModelAdmin):
     list_filter = ("school", ("start_date", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
     autocomplete_fields = ("student", "tandem", "caretaker", "school")
-    readonly_fields = ("total_amount", "monthly_installment")
+    readonly_fields = ()
     conditional_fields = {"is_tandem_prophylactic": "!!tandem"}
     fieldsets = [
         ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
@@ -322,6 +322,9 @@ class SupervisionAdmin(BaseModelAdmin):
             "result_rows": result_rows,
             "warnings": result.warnings,
             "breadcrumb_items": breadcrumb_items,
+            "change_url": reverse(
+                "admin:pedagogy_supervision_change", args=[supervision.pk]
+            ),
             "opts": opts,
             "media": self.media + form.media,
         }

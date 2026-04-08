@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0014_supervision_monthly_installment_and_more'),
+        ("pedagogy", "0014_supervision_monthly_installment_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='supervision',
-            name='months_override',
+            model_name="supervision",
+            name="months_override",
         ),
         migrations.RemoveField(
-            model_name='supervision',
-            name='school_days_override',
+            model_name="supervision",
+            name="school_days_override",
         ),
     ]
