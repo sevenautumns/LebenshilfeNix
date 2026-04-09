@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
-from django.db.models import F, Sum, Window
+from django.db.models import Count, Sum
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -342,14 +342,15 @@ class SchulAuswertungAdmin(BaseModelAdmin):
         "display_student",
         "display_payer",
         "weekly_hours",
-        "display_school_total",
     ]
     list_filter = [
         ("school", AutocompleteSelectFilter),
         KostentraegerFilter,
+        ("start_date", RangeDateFilter),
     ]
     list_filter_submit = True
     list_display_links = None
+    list_after_template = "admin/pedagogy/schulauswertung_footer.html"
     ordering = ["school__name", "student__last_name", "student__first_name"]
     search_fields = ["student__first_name", "student__last_name", "school__name"]
 
@@ -358,13 +359,27 @@ class SchulAuswertungAdmin(BaseModelAdmin):
             super()
             .get_queryset(request)
             .select_related("school", "student", "student__payer")
-            .annotate(
-                school_total=Window(
-                    expression=Sum("weekly_hours"),
-                    partition_by=[F("school_id")],
-                )
-            )
         )
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            qs = response.context_data["cl"].queryset
+            agg = qs.aggregate(
+                total_hours=Sum("weekly_hours"),
+                student_count=Count("student_id", distinct=True),
+                school_count=Count("school_id", distinct=True),
+            )
+            response.context_data["summary_total_hours"] = (
+                HourMinuteDurationField.format_std(agg["total_hours"])
+                if agg["total_hours"]
+                else "–"
+            )
+            response.context_data["summary_student_count"] = agg["student_count"] or 0
+            response.context_data["summary_school_count"] = agg["school_count"] or 0
+        except (AttributeError, KeyError):
+            pass
+        return response
 
     def has_add_permission(self, request):
         return False
@@ -389,9 +404,3 @@ class SchulAuswertungAdmin(BaseModelAdmin):
     @display(description="Kostenträger", ordering="student__payer__identifier")
     def display_payer(self, obj: SchulAuswertung) -> str:
         return str(obj.student.payer)
-
-    @display(description="Summe Schule")
-    def display_school_total(self, obj: SchulAuswertung) -> str:
-        if not obj.school_total:
-            return "–"
-        return HourMinuteDurationField.format_std(obj.school_total)
