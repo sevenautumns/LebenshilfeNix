@@ -16,21 +16,21 @@
 {% block content %}
 {{ media }}
 
-<div class="mb-4 flex items-center justify-between">
-  <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ title }}</h1>
+{% component "unfold/components/flex.html" with class="mb-4 items-center justify-between" %}
+  {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
+  
   {% if change_url %}
-  {% component "unfold/components/button.html" with href=change_url %}← Zurück zur Bearbeitung{% endcomponent %}
+    {% component "unfold/components/button.html" with href=change_url icon="arrow_back" %}
+      Zurück zur Bearbeitung
+    {% endcomponent %}
   {% endif %}
-</div>
+{% endcomponent %}
 
 {# Quelldaten #}
 {% component "unfold/components/card.html" with title="Quelldaten" class="mb-6" %}
-  <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+  <div class="grid grid-cols-2 gap-0 sm:grid-cols-4">
     {% for label, value in source_fields %}
-    <div>
-      <p class="text-xs font-medium uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</p>
-      <p class="mt-1 text-sm font-medium text-font-important-light dark:text-font-important-dark">{{ value }}</p>
-    </div>
+      {% include "unfold/helpers/field_readonly.html" with title=label value=value %}
     {% endfor %}
   </div>
 {% endcomponent %}
@@ -39,12 +39,17 @@
 
   {# Überschreibungen #}
   {% component "unfold/components/card.html" with title="Überschreibungen" class="lg:col-span-1" %}
-    <form method="post" class="space-y-5">
+    <form method="post">
       {% csrf_token %}
-      {% for field in form %}
-        {% include "unfold/helpers/field.html" %}
-      {% endfor %}
-      {% component "unfold/components/button.html" with submit=1 class="w-full justify-center" %}Neu berechnen{% endcomponent %}
+      {% component "unfold/components/flex.html" with col=1 class="gap-3" %}
+        {% for field in form %}
+          {% include "unfold/helpers/field.html" %}
+        {% endfor %}
+        
+        {% component "unfold/components/button.html" with submit=1 class="w-full justify-center" %}
+          Neu berechnen
+        {% endcomponent %}
+      {% endcomponent %}
     </form>
   {% endcomponent %}
 
@@ -52,55 +57,83 @@
   {% component "unfold/components/card.html" with title="Ergebnis" class="lg:col-span-2" %}
 
     {% if warnings %}
-    {% for w in warnings %}{% include "unfold/helpers/messages/warning.html" with message=w %}{% endfor %}
-    {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
+      {% component "unfold/components/flex.html" with col=1 class="gap-3" %}
+        {% for w in warnings %}
+          {% include "unfold/helpers/messages/warning.html" with message=w class="!mb-0" %}
+        {% endfor %}
+      {% endcomponent %}
+      {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
     {% endif %}
 
     {# Primärergebnisse: große Zahlen #}
     <div class="grid gap-6" style="grid-template-columns: repeat({{ primary_results|length }}, minmax(0, 1fr));">
       {% for r in primary_results %}
-      <div>
-        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ r.label }}</p>
-        <p class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
-          {% if r.value is not None %}{{ r.value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-300 dark:text-base-600">—</span>{% endif %}
-        </p>
-      </div>
+        <div>
+          {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+            {{ r.label }}
+          {% endcomponent %}
+          
+          <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+            {% if r.value is not None %}
+              {{ r.value|floatformat:2 }} <span class="text-lg font-semibold">{{ r.unit }}</span>
+            {% else %}
+              <span class="text-base-300 dark:text-base-600">—</span>
+            {% endif %}
+          </div>
+        </div>
       {% endfor %}
     </div>
 
     {# Gespeicherte Werte + Übernahme-Buttons #}
     {% for r in primary_results %}{% if r.stored_label %}
-    {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ r.stored_label }}</p>
-        <p class="mt-0.5 text-sm font-semibold text-font-important-light dark:text-font-important-dark">
-          {% if r.stored_value is not None %}{{ r.stored_value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-400">—</span>{% endif %}
-        </p>
-      </div>
-      {% if r.apply_url %}
-      <form method="post" action="{{ r.apply_url }}">
-        {% csrf_token %}
-        {% component "unfold/components/button.html" with submit=1 %}Übernehmen →{% endcomponent %}
-      </form>
-      {% endif %}
-    </div>
+      {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
+      
+      {% component "unfold/components/flex.html" with class="items-center justify-between" %}
+        <div>
+          {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+            {{ r.stored_label }}
+          {% endcomponent %}
+          
+          {% component "unfold/components/text.html" with class="font-semibold text-font-important-light dark:text-font-important-dark mt-0.5" %}
+            {% if r.stored_value is not None %}{{ r.stored_value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-400">—</span>{% endif %}
+          {% endcomponent %}
+        </div>
+        
+        {% if r.apply_url %}
+          <form method="post" action="{{ r.apply_url }}">
+            {% csrf_token %}
+            {% component "unfold/components/button.html" with submit=1 %}
+              Übernehmen
+              {% component "unfold/components/icon.html" with class="text-sm ml-2" %}arrow_forward{% endcomponent %}
+            {% endcomponent %}
+          </form>
+        {% endif %}
+      {% endcomponent %}
     {% endif %}{% endfor %}
 
     {# Zwischenergebnisse #}
     {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
-    <dl class="space-y-3">
+    
+    {% component "unfold/components/flex.html" with col=1 class="gap-3" %}
       {% for label, value, highlighted in result_rows %}
-      <div class="sm:grid sm:grid-cols-2 sm:gap-4">
-        <dt class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ label }}</dt>
-        <dd class="mt-1 text-sm sm:mt-0 {% if highlighted %}font-semibold text-primary-600{% else %}text-font-important-light dark:text-font-important-dark{% endif %}">
-          {{ value|default:"—" }}{% if highlighted %} <span class="font-normal text-xs">(überschrieben)</span>{% endif %}
-        </dd>
-      </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4">
+          <div>
+            {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+              {{ label }}
+            {% endcomponent %}
+          </div>
+          <div>
+            {% component "unfold/components/text.html" with class=highlighted|yesno:"font-semibold text-primary-600 dark:text-primary-500,font-medium text-font-important-light dark:text-font-important-dark" %}
+              {{ value|default:"—" }}
+              {% if highlighted %}
+                <span class="font-normal text-xs text-font-subtle-light dark:text-font-subtle-dark">(überschrieben)</span>
+              {% endif %}
+            {% endcomponent %}
+          </div>
+        </div>
       {% endfor %}
-    </dl>
+    {% endcomponent %}
 
   {% endcomponent %}
-
 </div>
 {% endblock %}
