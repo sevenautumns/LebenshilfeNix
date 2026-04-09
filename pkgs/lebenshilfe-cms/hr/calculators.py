@@ -16,6 +16,7 @@ class CalculatorInput:
 
 @dataclass
 class CalculatorResult:
+    input: CalculatorInput
     salary_agreement: object | None  # finance.models.SalaryAgreement
     calculated_months: Decimal | None
     effective_months: Decimal | None
@@ -124,6 +125,7 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
         yearly_gross = calculate_yearly_gross(monthly_gross, effective_months)
 
     return CalculatorResult(
+        input=inp,
         salary_agreement=agreement,
         calculated_months=calculated_months,
         effective_months=effective_months,
