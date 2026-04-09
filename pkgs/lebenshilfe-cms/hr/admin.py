@@ -46,15 +46,20 @@ class OtherEmploymentInline(TabularInline):
 class EmploymentCalculatorView(BaseCalculatorView):
     title = "Vergütungsrechner"
 
+    def get_form_class(self):
+        from .forms import CalculatorOverridesForm
+
+        return CalculatorOverridesForm
+
     @classmethod
     def parse_overrides(cls, data: dict) -> dict:
         from decimal import Decimal
         from finance.models import SalaryAgreement
 
         overrides = {}
-        if mo := data.get("month_override"):
+        if mo := data.get("months_override"):
             try:
-                overrides["month_override"] = Decimal(mo)
+                overrides["months_override"] = Decimal(mo)
             except Exception:
                 pass
         if sa_pk := data.get("salary_agreement_override"):
@@ -69,8 +74,8 @@ class EmploymentCalculatorView(BaseCalculatorView):
     @classmethod
     def overrides_to_params(cls, overrides: dict) -> dict:
         params = {}
-        if mo := overrides.get("month_override"):
-            params["month_override"] = str(mo)
+        if mo := overrides.get("months_override"):
+            params["months_override"] = str(mo)
         if sa := overrides.get("salary_agreement_override"):
             params["salary_agreement_override"] = str(sa.pk)
         return params
@@ -93,15 +98,14 @@ class EmploymentCalculatorView(BaseCalculatorView):
         i = result.input
         override_params = self.overrides_to_params(
             {
-                "month_override": i.month_override,
+                "months_override": i.months_override,
                 "salary_agreement_override": i.salary_agreement_override,
             }
         )
-        apply_url = reverse("admin:hr_employment_calculator_apply", args=[obj.pk])
-        if override_params:
-            from urllib.parse import urlencode
+        apply_url = self.build_apply_url(
+            obj, "admin:hr_employment_calculator_apply", override_params
+        )
 
-            apply_url += "?" + urlencode(override_params)
         return [
             {
                 "label": "Monatsbrutto (berechnet)",
@@ -124,64 +128,41 @@ class EmploymentCalculatorView(BaseCalculatorView):
         ]
 
     def get_result_rows(self, obj: Employment, result):
+        from django.utils.formats import number_format
+
         return [
             (
                 "Tarifvertrag",
                 str(result.salary_agreement) if result.salary_agreement else "—",
                 False,
             ),
-            ("Monate (rechnerisch)", result.calculated_months, False),
+            (
+                "Monate (rechnerisch)",
+                number_format(result.calculated_months, decimal_pos=1, use_l10n=True)
+                if result.calculated_months is not None
+                else "—",
+                False,
+            ),
             (
                 "Effektive Monate",
-                result.effective_months,
+                number_format(result.effective_months, decimal_pos=1, use_l10n=True)
+                if result.effective_months is not None
+                else "—",
                 result.effective_months != result.calculated_months,
             ),
         ]
 
-    def _render_calculator(
-        self,
-        employment: Employment,
-        form,
-        month_override=None,
-        salary_agreement_override=None,
-    ):
-        from .calculators import CalculatorInput, run_calculation
+    def run_calculation(self, obj: Employment, overrides: dict):
+        from .calculators import CalculatorInput, run_calculation as _run_calculation
 
-        result = run_calculation(
+        return _run_calculation(
             CalculatorInput(
-                start_date=employment.start_date,
-                end_date=employment.end_date,
-                weekly_hours=employment.weekly_hours,
-                contract_type=employment.contract_type,
-                month_override=month_override,
-                salary_agreement_override=salary_agreement_override,
+                start_date=obj.start_date,
+                end_date=obj.end_date,
+                weekly_hours=obj.weekly_hours,
+                contract_type=obj.contract_type,
+                **overrides,
             )
-        )
-
-        return self.render_to_response(
-            self.get_context_data(obj=employment, result=result, form=form)
-        )
-
-    def get(self, request, *args, **kwargs):
-        from .forms import CalculatorOverridesForm
-
-        employment = self.get_object()
-        return self._render_calculator(employment, CalculatorOverridesForm())
-
-    def post(self, request, *args, **kwargs):
-        from .forms import CalculatorOverridesForm
-
-        employment = self.get_object()
-        form = CalculatorOverridesForm(request.POST)
-        month_override = None
-        salary_agreement_override = None
-        if form.is_valid():
-            month_override = form.cleaned_data.get("month_override")
-            salary_agreement_override = form.cleaned_data.get(
-                "salary_agreement_override"
-            )
-        return self._render_calculator(
-            employment, form, month_override, salary_agreement_override
         )
 
 
@@ -190,11 +171,8 @@ class EmploymentApplySalaryView(BaseApplyView):
     calculator_url_name = "admin:hr_employment_calculator"
     calculator_view_class = EmploymentCalculatorView
 
-    def fetch_object(self, pk: int):
-        try:
-            return Employment.objects.select_related("employee").get(pk=pk)
-        except Employment.DoesNotExist:
-            raise Http404
+    def get_queryset(self):
+        return Employment.objects.select_related("employee")
 
     def run_calculation(self, obj: Employment, overrides: dict):
         from .calculators import CalculatorInput, run_calculation as _run_calculation

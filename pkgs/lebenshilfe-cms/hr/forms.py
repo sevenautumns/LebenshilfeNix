@@ -12,7 +12,7 @@ class CalculatorOverridesForm(forms.Form):
         empty_label="— automatisch nach Startdatum —",
         widget=forms.Select(attrs={"class": " ".join(INPUT_CLASSES)}),
     )
-    month_override = forms.DecimalField(
+    months_override = forms.DecimalField(
         label="Monate (Überschreibung)",
         required=False,
         min_value=Decimal("0.5"),

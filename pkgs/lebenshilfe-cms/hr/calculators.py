@@ -10,7 +10,7 @@ class CalculatorInput:
     end_date: date | None
     weekly_hours: timedelta
     contract_type: str
-    month_override: Decimal | None = None
+    months_override: Decimal | None = None
     salary_agreement_override: object | None = None  # finance.models.SalaryAgreement
 
 
@@ -105,7 +105,7 @@ def run_calculation(inp: CalculatorInput) -> CalculatorResult:
         warnings.append("Kein Enddatum angegeben — Jahresbrutto nicht berechenbar.")
 
     effective_months: Decimal | None = (
-        inp.month_override if inp.month_override is not None else calculated_months
+        inp.months_override if inp.months_override is not None else calculated_months
     )
 
     # Monatsbrutto

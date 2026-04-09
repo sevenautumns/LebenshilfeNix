@@ -290,7 +290,7 @@ class CalculatorTests(TestCase):
             self._make_input(
                 weekly_hours=timedelta(hours=2, minutes=30),
                 contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
-                month_override=Decimal("2"),
+                months_override=Decimal("2"),
             )
         )
         self.assertEqual(result.yearly_gross_salary, Decimal("200"))
@@ -349,10 +349,10 @@ class CalculatorViewTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_calculator_post_month_override(self):
-        """POST mit month_override liefert HTTP 200 und verarbeitet den Wert."""
+    def test_calculator_post_months_override(self):
+        """POST mit months_override liefert HTTP 200 und verarbeitet den Wert."""
         url = reverse("admin:hr_employment_calculator", args=[self.employment.pk])
-        response = self.client.post(url, {"month_override": "3.0"})
+        response = self.client.post(url, {"months_override": "3.0"})
         self.assertEqual(response.status_code, 200)
 
     def test_calculator_post_salary_agreement_override(self):

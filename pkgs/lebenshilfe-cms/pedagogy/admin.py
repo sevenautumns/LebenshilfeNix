@@ -22,6 +22,11 @@ _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 class SupervisionCalculatorView(BaseCalculatorView):
     title = "Betreuungsrechner"
 
+    def get_form_class(self):
+        from .forms import SupervisionCalculatorOverridesForm
+
+        return SupervisionCalculatorOverridesForm
+
     def get_queryset(self):
         return Supervision.objects.select_related(
             "student", "student__payer", "caretaker", "school", "tandem"
@@ -95,17 +100,13 @@ class SupervisionCalculatorView(BaseCalculatorView):
             }
         )
 
-        def _apply_url(url_name):
-            url = reverse(url_name, args=[obj.pk])
-            if override_params:
-                url += "?" + urlencode(override_params)
-            return url
-
-        apply_total_url = _apply_url(
-            "admin:pedagogy_supervision_calculator_apply_total"
+        apply_total_url = self.build_apply_url(
+            obj, "admin:pedagogy_supervision_calculator_apply_total", override_params
         )
-        apply_installment_url = _apply_url(
-            "admin:pedagogy_supervision_calculator_apply_installment"
+        apply_installment_url = self.build_apply_url(
+            obj,
+            "admin:pedagogy_supervision_calculator_apply_installment",
+            override_params,
         )
 
         return [
@@ -132,6 +133,8 @@ class SupervisionCalculatorView(BaseCalculatorView):
         ]
 
     def get_result_rows(self, obj: Supervision, result):
+        from django.utils.formats import number_format
+
         i = result.input
         rows = []
         if result.is_pool_rate and result.pool_agreement:
@@ -151,49 +154,25 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 result.school_days,
                 i.school_days_override is not None,
             ),
-            ("Monate (rechnerisch)", obj.calculated_months, False),
+            (
+                "Monate (rechnerisch)",
+                number_format(obj.calculated_months, decimal_pos=1, use_l10n=True),
+                False,
+            ),
             (
                 "Effektive Monate",
-                result.months,
+                number_format(result.months, decimal_pos=1, use_l10n=True),
                 result.months != obj.calculated_months,
             ),
         ]
         return rows
 
-    def _render_calculator(self, supervision: Supervision, form, **overrides):
+    def run_calculation(self, obj: Supervision, overrides: dict):
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
 
-        result = run_supervision_calculation(
-            SupervisionCalculatorInput(supervision=supervision, **overrides)
+        return run_supervision_calculation(
+            SupervisionCalculatorInput(supervision=obj, **overrides)
         )
-
-        return self.render_to_response(
-            self.get_context_data(obj=supervision, result=result, form=form)
-        )
-
-    def get(self, request, *args, **kwargs):
-        from .forms import SupervisionCalculatorOverridesForm
-
-        supervision = self.get_object()
-        overrides = self.parse_overrides(request.GET)
-        form = SupervisionCalculatorOverridesForm(initial=overrides or None)
-        return self._render_calculator(supervision, form, **overrides)
-
-    def post(self, request, *args, **kwargs):
-        from .forms import SupervisionCalculatorOverridesForm
-
-        supervision = self.get_object()
-        form = SupervisionCalculatorOverridesForm(request.POST)
-        overrides = {}
-        if form.is_valid():
-            for key in (
-                "months_override",
-                "school_days_override",
-                "fee_agreement_override",
-            ):
-                if (val := form.cleaned_data.get(key)) is not None:
-                    overrides[key] = val
-        return self._render_calculator(supervision, form, **overrides)
 
 
 class SupervisionBaseApplyView(BaseApplyView):
@@ -201,13 +180,10 @@ class SupervisionBaseApplyView(BaseApplyView):
     calculator_url_name = "admin:pedagogy_supervision_calculator"
     calculator_view_class = SupervisionCalculatorView
 
-    def fetch_object(self, pk: int):
-        try:
-            return Supervision.objects.select_related(
-                "student", "student__payer", "caretaker", "school", "tandem"
-            ).get(pk=pk)
-        except Supervision.DoesNotExist:
-            raise Http404
+    def get_queryset(self):
+        return Supervision.objects.select_related(
+            "student", "student__payer", "caretaker", "school", "tandem"
+        )
 
     def run_calculation(self, obj: Supervision, overrides: dict):
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
