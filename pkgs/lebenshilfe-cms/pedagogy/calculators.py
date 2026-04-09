@@ -12,6 +12,7 @@ class SupervisionCalculatorInput:
 
 @dataclass
 class SupervisionCalculatorResult:
+    input: SupervisionCalculatorInput
     months: Decimal | None
     school_days: int | None
     fee_agreement: object | None  # finance.models.FeeAgreement
@@ -65,6 +66,7 @@ def run_supervision_calculation(
         total_amount = pool.flat_rate * months
         monthly_installment = pool.flat_rate
         return SupervisionCalculatorResult(
+            input=inp,
             months=months,
             school_days=school_days,
             fee_agreement=None,
@@ -102,6 +104,7 @@ def run_supervision_calculation(
         monthly_installment = total_amount / months
 
     return SupervisionCalculatorResult(
+        input=inp,
         months=months,
         school_days=school_days,
         fee_agreement=fee,
