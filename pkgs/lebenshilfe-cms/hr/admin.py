@@ -2,8 +2,8 @@ from django.contrib import admin, messages
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import path, reverse
+from django.utils.formats import number_format
 from django.utils.html import format_html
-from django.views.generic import TemplateView, View
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     BooleanRadioFilter,
@@ -16,7 +16,6 @@ from django.db.models import Q
 from unfold.admin import TabularInline
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
-from unfold.views import UnfoldModelAdminViewMixin
 from base.admin import (
     BaseModelAdmin,
     AddressInline,
@@ -24,7 +23,7 @@ from base.admin import (
     EmailInline,
     BankAccountInline,
 )
-from base.admin_views import BaseCalculatorView
+from base.admin_views import BaseApplyView, BaseCalculatorView
 from .models import (
     Denomination,
     Employee,
@@ -47,6 +46,35 @@ class OtherEmploymentInline(TabularInline):
 class EmploymentCalculatorView(BaseCalculatorView):
     title = "Vergütungsrechner"
 
+    @classmethod
+    def parse_overrides(cls, data: dict) -> dict:
+        from decimal import Decimal
+        from finance.models import SalaryAgreement
+
+        overrides = {}
+        if mo := data.get("month_override"):
+            try:
+                overrides["month_override"] = Decimal(mo)
+            except Exception:
+                pass
+        if sa_pk := data.get("salary_agreement_override"):
+            try:
+                overrides["salary_agreement_override"] = SalaryAgreement.objects.get(
+                    pk=int(sa_pk)
+                )
+            except Exception:
+                pass
+        return overrides
+
+    @classmethod
+    def overrides_to_params(cls, overrides: dict) -> dict:
+        params = {}
+        if mo := overrides.get("month_override"):
+            params["month_override"] = str(mo)
+        if sa := overrides.get("salary_agreement_override"):
+            params["salary_agreement_override"] = str(sa.pk)
+        return params
+
     def get_source_fields(self, obj: Employment):
         from base.fields import HourMinuteDurationField
 
@@ -62,7 +90,18 @@ class EmploymentCalculatorView(BaseCalculatorView):
         ]
 
     def get_primary_results(self, obj: Employment, result):
+        i = result.input
+        override_params = self.overrides_to_params(
+            {
+                "month_override": i.month_override,
+                "salary_agreement_override": i.salary_agreement_override,
+            }
+        )
         apply_url = reverse("admin:hr_employment_calculator_apply", args=[obj.pk])
+        if override_params:
+            from urllib.parse import urlencode
+
+            apply_url += "?" + urlencode(override_params)
         return [
             {
                 "label": "Monatsbrutto (berechnet)",
@@ -146,48 +185,42 @@ class EmploymentCalculatorView(BaseCalculatorView):
         )
 
 
-class EmploymentApplySalaryView(UnfoldModelAdminViewMixin, View):
+class EmploymentApplySalaryView(BaseApplyView):
     title = "Vergütungsrechner"
-    permission_required = []
+    calculator_url_name = "admin:hr_employment_calculator"
+    calculator_view_class = EmploymentCalculatorView
 
-    def get(self, request, *args, **kwargs):
-        return redirect(
-            reverse("admin:hr_employment_calculator", args=[self.kwargs["pk"]])
-        )
-
-    def post(self, request, *args, **kwargs):
-        from django.utils.formats import number_format
-        from .calculators import CalculatorInput, run_calculation
-
-        pk = self.kwargs["pk"]
+    def fetch_object(self, pk: int):
         try:
-            employment = Employment.objects.select_related("employee").get(pk=pk)
+            return Employment.objects.select_related("employee").get(pk=pk)
         except Employment.DoesNotExist:
             raise Http404
 
-        result = run_calculation(
+    def run_calculation(self, obj: Employment, overrides: dict):
+        from .calculators import CalculatorInput, run_calculation as _run_calculation
+
+        return _run_calculation(
             CalculatorInput(
-                start_date=employment.start_date,
-                end_date=employment.end_date,
-                weekly_hours=employment.weekly_hours,
-                contract_type=employment.contract_type,
+                start_date=obj.start_date,
+                end_date=obj.end_date,
+                weekly_hours=obj.weekly_hours,
+                contract_type=obj.contract_type,
+                **overrides,
             )
         )
 
-        if result.monthly_gross_salary is None:
-            messages.error(
-                request,
-                "Brutto konnte nicht berechnet werden — keine Übernahme möglich.",
-            )
-        else:
-            employment.gross_salary = result.monthly_gross_salary
-            employment.save(update_fields=["gross_salary"])
-            formatted = number_format(
-                result.monthly_gross_salary, decimal_pos=2, use_l10n=True
-            )
-            messages.success(request, f"Brutto übernommen: {formatted} €")
+    def get_value(self, result):
+        return result.monthly_gross_salary
 
-        return redirect(reverse("admin:hr_employment_calculator", args=[pk]))
+    def save_value(self, obj: Employment, value) -> None:
+        obj.gross_salary = value
+        obj.save(update_fields=["gross_salary"])
+
+    def error_message(self) -> str:
+        return "Brutto konnte nicht berechnet werden — keine Übernahme möglich."
+
+    def success_message(self, formatted: str) -> str:
+        return f"Brutto übernommen: {formatted} €"
 
 
 @admin.register(Employee)
