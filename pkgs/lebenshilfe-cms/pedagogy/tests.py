@@ -369,3 +369,116 @@ class SupervisionCalculatorTests(TestCase):
         sup = self._make_supervision()
         result = self._calc(sup)
         self.assertFalse(result.is_pool_rate)
+
+
+class SupervisionCalculatorViewTests(TestCase):
+    """Smoke-Tests für die SupervisionCalculatorView in pedagogy/admin.py."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from django.test import Client
+
+        User = get_user_model()
+        self.user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="password"
+        )
+        self.client = Client()
+        self.client.login(username="admin", password="password")
+
+        self.payer = CostPayer.objects.create(identifier="Bezirk Testland")
+        self.school = School.objects.create(name="Testschule")
+        self.caretaker = Employee.objects.create(
+            first_name="Klaus", last_name="Betreuer"
+        )
+        self.student = Student.objects.create(
+            first_name="Anna", last_name="Schüler", payer=self.payer
+        )
+        self.fee_agreement = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("10.00"),
+            price_tandem=Decimal("15.00"),
+            price_coordination=Decimal("20.00"),
+            responsible_payer=self.payer,
+        )
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
+        )
+        self.supervision = Supervision.objects.create(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 9, 30),
+            weekly_hours=timedelta(hours=5),
+        )
+
+    def test_calculator_page_get(self):
+        """GET auf die Calculator-Seite liefert HTTP 200."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_calculator_404_for_missing_supervision(self):
+        """GET mit nicht existierender pk liefert HTTP 404."""
+        url = reverse("admin:pedagogy_supervision_calculator", args=[9999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_calculator_post_months_override(self):
+        """POST mit months_override liefert HTTP 200 und verarbeitet den Wert."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+        )
+        response = self.client.post(url, {"months_override": "2"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_calculator_post_school_days_override(self):
+        """POST mit school_days_override liefert HTTP 200 und verarbeitet den Wert."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+        )
+        response = self.client.post(url, {"school_days_override": "10"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_calculator_post_fee_agreement_override(self):
+        """POST mit fee_agreement_override liefert HTTP 200 und nutzt das gewählte Agreement."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+        )
+        response = self.client.post(
+            url, {"fee_agreement_override": str(self.fee_agreement.pk)}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_apply_total_redirects_to_calculator(self):
+        """POST auf /apply-total/ speichert den Gesamtbetrag und leitet zurück zum Rechner."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator_apply_total",
+            args=[self.supervision.pk],
+        )
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(
+            reverse(
+                "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+            ),
+            response["Location"],
+        )
+
+    def test_apply_installment_redirects_to_calculator(self):
+        """POST auf /apply-installment/ speichert den Abschlag und leitet zurück zum Rechner."""
+        url = reverse(
+            "admin:pedagogy_supervision_calculator_apply_installment",
+            args=[self.supervision.pk],
+        )
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(
+            reverse(
+                "admin:pedagogy_supervision_calculator", args=[self.supervision.pk]
+            ),
+            response["Location"],
+        )
