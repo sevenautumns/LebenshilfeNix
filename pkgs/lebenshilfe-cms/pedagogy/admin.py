@@ -390,9 +390,6 @@ class SchulAuswertungAdmin(BaseModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def add_view(self, request, form_url="", extra_context=None):
-        return redirect(reverse("admin:pedagogy_supervision_add"))
-
     @display(description="Schule", ordering="school__name")
     def display_school(self, obj: SchulAuswertung) -> str:
         return obj.school.name
