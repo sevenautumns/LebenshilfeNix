@@ -1,7 +1,12 @@
-from django.urls import reverse
-from django.views.generic import TemplateView
-from unfold.views import UnfoldModelAdminViewMixin
+from urllib.parse import urlencode
+
+from django.contrib import messages
 from django.http import Http404
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.formats import number_format
+from django.views.generic import TemplateView, View
+from unfold.views import UnfoldModelAdminViewMixin
 
 
 class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
@@ -30,6 +35,16 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
 
     def get_warnings(self, result):
         return getattr(result, "warnings", [])
+
+    @classmethod
+    def parse_overrides(cls, data: dict) -> dict:
+        """Parst Override-Werte aus GET/POST-Daten. In Subklassen überschreiben."""
+        return {}
+
+    @classmethod
+    def overrides_to_params(cls, overrides: dict) -> dict:
+        """Serialisiert Override-Werte zu URL-Query-Params. In Subklassen überschreiben."""
+        return {}
 
     def get_breadcrumb_items(self, obj):
         opts = self.model_admin.model._meta
@@ -76,3 +91,62 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
             }
         )
         return ctx
+
+
+class BaseApplyView(UnfoldModelAdminViewMixin, View):
+    """Basisklasse für Apply-Views nach dem Template-Method-Pattern.
+
+    Subklassen müssen setzen:
+      - title, calculator_url_name, calculator_view_class
+
+    Subklassen müssen implementieren:
+      - fetch_object, run_calculation, get_value, save_value,
+        error_message, success_message
+    """
+
+    title: str = ""
+    permission_required = []
+    calculator_url_name: str = ""
+    calculator_view_class: type[BaseCalculatorView]
+
+    def get_redirect_url(self, pk: int, overrides: dict | None = None) -> str:
+        url = reverse(self.calculator_url_name, args=[pk])
+        if overrides:
+            url += "?" + urlencode(overrides)
+        return url
+
+    def get(self, request, *args, **kwargs):
+        return redirect(self.get_redirect_url(self.kwargs["pk"]))
+
+    def fetch_object(self, pk: int):
+        raise NotImplementedError
+
+    def run_calculation(self, obj, overrides: dict):
+        raise NotImplementedError
+
+    def get_value(self, result):
+        raise NotImplementedError
+
+    def save_value(self, obj, value) -> None:
+        raise NotImplementedError
+
+    def error_message(self) -> str:
+        raise NotImplementedError
+
+    def success_message(self, formatted: str) -> str:
+        raise NotImplementedError
+
+    def post(self, request, *args, **kwargs):
+        pk = self.kwargs["pk"]
+        overrides = self.calculator_view_class.parse_overrides(request.GET)
+        obj = self.fetch_object(pk)
+        result = self.run_calculation(obj, overrides)
+        value = self.get_value(result)
+        if value is None:
+            messages.error(request, self.error_message())
+        else:
+            self.save_value(obj, value)
+            formatted = number_format(value, decimal_pos=2, use_l10n=True)
+            messages.success(request, self.success_message(formatted))
+        params = self.calculator_view_class.overrides_to_params(overrides)
+        return redirect(self.get_redirect_url(pk, params))
