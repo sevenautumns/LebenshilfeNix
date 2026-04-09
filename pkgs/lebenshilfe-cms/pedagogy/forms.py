@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django import forms
-from unfold.widgets import INPUT_CLASSES
+from unfold.widgets import INPUT_CLASSES, UnfoldAdminSelect2Widget
 
 
 class SupervisionCalculatorOverridesForm(forms.Form):
@@ -10,7 +10,7 @@ class SupervisionCalculatorOverridesForm(forms.Form):
         queryset=None,  # gesetzt in __init__
         required=False,
         empty_label="— automatisch nach Kostenträger + Startdatum —",
-        widget=forms.Select(attrs={"class": " ".join(INPUT_CLASSES)}),
+        widget=UnfoldAdminSelect2Widget(),
     )
     school_days_override = forms.IntegerField(
         label="Schultage (Überschreibung)",
