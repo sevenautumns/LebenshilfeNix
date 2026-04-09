@@ -13,6 +13,7 @@ from unfold.enums import ActionVariant
 from unfold.views import UnfoldModelAdminViewMixin
 
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
+from base.admin_views import BaseCalculatorView
 from base.fields import EuroDecimalField
 
 from .models import School, Student, Supervision, Request
@@ -20,10 +21,13 @@ from .models import School, Student, Supervision, Request
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
 
-class SupervisionCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
+class SupervisionCalculatorView(BaseCalculatorView):
     title = "Betreuungsrechner"
-    template_name = "admin/calculator_base.html"
-    permission_required = []
+
+    def get_queryset(self):
+        return Supervision.objects.select_related(
+            "student", "student__payer", "caretaker", "school", "tandem"
+        )
 
     @staticmethod
     def _get_supervision(pk: int) -> Supervision:
@@ -103,6 +107,95 @@ class SupervisionCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
             fee_agreement_override,
         )
 
+    def get_source_fields(self, obj: Supervision):
+        from base.fields import HourMinuteDurationField as HMField
+
+        return [
+            ("Schüler:in", str(obj.student)),
+            (
+                "Kostenträger",
+                str(obj.student.payer) if obj.student_id else "—",
+            ),
+            ("Schule", str(obj.school)),
+            (
+                "Zeitraum",
+                f"{obj.start_date.strftime('%d.%m.%Y')} – {obj.end_date.strftime('%d.%m.%Y')}",
+            ),
+            (
+                "Wochenstunden",
+                HMField.format_std(obj.weekly_hours),
+            ),
+            ("Schultage (rechnerisch)", obj.calculated_school_days),
+        ]
+
+    def get_primary_results(self, obj: Supervision, result):
+        i = result.input
+        override_params = self._override_params(
+            i.months_override, i.school_days_override, i.fee_agreement_override
+        )
+        apply_total_url = self._build_redirect_url(
+            "admin:pedagogy_supervision_calculator_apply_total",
+            obj.pk,
+            override_params,
+        )
+        apply_installment_url = self._build_redirect_url(
+            "admin:pedagogy_supervision_calculator_apply_installment",
+            obj.pk,
+            override_params,
+        )
+
+        return [
+            {
+                "label": "Gesamtbetrag (berechnet)",
+                "value": result.calculated_total_amount,
+                "unit": "€",
+                "stored_label": "Gespeicherter Gesamtbetrag",
+                "stored_value": obj.total_amount,
+                "apply_url": apply_total_url
+                if result.calculated_total_amount is not None
+                else None,
+            },
+            {
+                "label": "Abschlag pro Monat (berechnet)",
+                "value": result.calculated_monthly_installment,
+                "unit": "€",
+                "stored_label": "Gespeicherter Abschlag",
+                "stored_value": obj.monthly_installment,
+                "apply_url": apply_installment_url
+                if result.calculated_monthly_installment is not None
+                else None,
+            },
+        ]
+
+    def get_result_rows(self, obj: Supervision, result):
+        i = result.input
+        rows = []
+        if result.is_pool_rate and result.pool_agreement:
+            rows.append(("Abrechnungsart", "Pauschale (Poolvereinbarung)", True))
+            rows.append(("Poolvereinbarung", str(result.pool_agreement), False))
+        else:
+            rows.append(
+                (
+                    "Entgeltvereinbarung",
+                    str(result.fee_agreement) if result.fee_agreement else "—",
+                    i.fee_agreement_override is not None,
+                )
+            )
+        rows += [
+            (
+                "Schultage (effektiv)",
+                result.school_days,
+                i.school_days_override is not None,
+            ),
+            ("Monate (rechnerisch)", obj.calculated_months, False),
+            (
+                "Effektive Monate",
+                result.months,
+                result.months != obj.calculated_months,
+            ),
+        ]
+        return rows
+
     def _render_calculator(
         self,
         supervision: Supervision,
@@ -111,7 +204,6 @@ class SupervisionCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
         school_days_override=None,
         fee_agreement_override=None,
     ):
-        from base.fields import HourMinuteDurationField as HMField
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
 
         result = run_supervision_calculation(
@@ -123,126 +215,15 @@ class SupervisionCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
             )
         )
 
-        pk = supervision.pk
-        opts = self.model_admin.model._meta
-        override_params = self._override_params(
-            months_override, school_days_override, fee_agreement_override
+        return self.render_to_response(
+            self.get_context_data(obj=supervision, result=result, form=form)
         )
-        apply_total_url = self._build_redirect_url(
-            "admin:pedagogy_supervision_calculator_apply_total", pk, override_params
-        )
-        apply_installment_url = self._build_redirect_url(
-            "admin:pedagogy_supervision_calculator_apply_installment",
-            pk,
-            override_params,
-        )
-
-        source_fields = [
-            ("Schüler:in", str(supervision.student)),
-            (
-                "Kostenträger",
-                str(supervision.student.payer) if supervision.student_id else "—",
-            ),
-            ("Schule", str(supervision.school)),
-            (
-                "Zeitraum",
-                f"{supervision.start_date.strftime('%d.%m.%Y')} – {supervision.end_date.strftime('%d.%m.%Y')}",
-            ),
-            (
-                "Wochenstunden",
-                HMField.format_std(supervision.weekly_hours),
-            ),
-            ("Schultage (rechnerisch)", supervision.calculated_school_days),
-        ]
-
-        primary_results = [
-            {
-                "label": "Gesamtbetrag (berechnet)",
-                "value": result.calculated_total_amount,
-                "unit": "€",
-                "stored_label": "Gespeicherter Gesamtbetrag",
-                "stored_value": supervision.total_amount,
-                "apply_url": apply_total_url
-                if result.calculated_total_amount is not None
-                else None,
-            },
-            {
-                "label": "Abschlag pro Monat (berechnet)",
-                "value": result.calculated_monthly_installment,
-                "unit": "€",
-                "stored_label": "Gespeicherter Abschlag",
-                "stored_value": supervision.monthly_installment,
-                "apply_url": apply_installment_url
-                if result.calculated_monthly_installment is not None
-                else None,
-            },
-        ]
-
-        result_rows = []
-        if result.is_pool_rate and result.pool_agreement:
-            result_rows.append(("Abrechnungsart", "Pauschale (Poolvereinbarung)", True))
-            result_rows.append(("Poolvereinbarung", str(result.pool_agreement), False))
-        else:
-            result_rows.append(
-                (
-                    "Entgeltvereinbarung",
-                    str(result.fee_agreement) if result.fee_agreement else "—",
-                    fee_agreement_override is not None,
-                )
-            )
-        result_rows += [
-            (
-                "Schultage (effektiv)",
-                result.school_days,
-                school_days_override is not None,
-            ),
-            ("Monate (rechnerisch)", supervision.calculated_months, False),
-            (
-                "Effektive Monate",
-                result.months,
-                result.months != supervision.calculated_months,
-            ),
-        ]
-
-        breadcrumb_items = [
-            {
-                "label": opts.app_config.verbose_name,
-                "url": reverse("admin:app_list", kwargs={"app_label": opts.app_label}),
-            },
-            {
-                "label": str(opts.verbose_name_plural).capitalize(),
-                "url": reverse("admin:pedagogy_supervision_changelist"),
-            },
-            {
-                "label": str(supervision),
-                "url": reverse(
-                    "admin:pedagogy_supervision_change", args=[supervision.pk]
-                ),
-            },
-            {"label": "Betreuungsrechner", "url": None},
-        ]
-
-        extra_ctx = {
-            "supervision": supervision,
-            "form": form,
-            "source_fields": source_fields,
-            "primary_results": primary_results,
-            "result_rows": result_rows,
-            "warnings": result.warnings,
-            "breadcrumb_items": breadcrumb_items,
-            "change_url": reverse(
-                "admin:pedagogy_supervision_change", args=[supervision.pk]
-            ),
-            "opts": opts,
-            "media": self.model_admin.media + form.media,
-        }
-        return self.render_to_response(self.get_context_data(**extra_ctx))
 
     def get(self, request, *args, **kwargs):
         from .forms import SupervisionCalculatorOverridesForm
 
         pk = self.kwargs["pk"]
-        supervision = self._get_supervision(pk)
+        supervision = self.get_object()
         months_override, school_days_override, fee_agreement_override = (
             self._parse_overrides(request.GET)
         )
@@ -265,8 +246,7 @@ class SupervisionCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         from .forms import SupervisionCalculatorOverridesForm
 
-        pk = self.kwargs["pk"]
-        supervision = self._get_supervision(pk)
+        supervision = self.get_object()
         form = SupervisionCalculatorOverridesForm(request.POST)
         months_override = school_days_override = fee_agreement_override = None
         if form.is_valid():

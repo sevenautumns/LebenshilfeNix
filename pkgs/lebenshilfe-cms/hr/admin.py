@@ -24,6 +24,7 @@ from base.admin import (
     EmailInline,
     BankAccountInline,
 )
+from base.admin_views import BaseCalculatorView
 from .models import (
     Denomination,
     Employee,
@@ -43,65 +44,32 @@ class OtherEmploymentInline(TabularInline):
     hide_title = True
 
 
-class EmploymentCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
+class EmploymentCalculatorView(BaseCalculatorView):
     title = "Vergütungsrechner"
-    template_name = "admin/calculator_base.html"
-    permission_required = []
 
-    def _get_employment(self) -> Employment:
-        try:
-            return Employment.objects.select_related("employee").get(
-                pk=self.kwargs["pk"]
-            )
-        except Employment.DoesNotExist:
-            raise Http404
-
-    def _render_calculator(
-        self,
-        employment: Employment,
-        form,
-        month_override=None,
-        salary_agreement_override=None,
-    ):
+    def get_source_fields(self, obj: Employment):
         from base.fields import HourMinuteDurationField
-        from .calculators import CalculatorInput, run_calculation
 
-        result = run_calculation(
-            CalculatorInput(
-                start_date=employment.start_date,
-                end_date=employment.end_date,
-                weekly_hours=employment.weekly_hours,
-                contract_type=employment.contract_type,
-                month_override=month_override,
-                salary_agreement_override=salary_agreement_override,
-            )
-        )
-
-        pk = employment.pk
-        opts = self.model_admin.model._meta
-        apply_url = reverse("admin:hr_employment_calculator_apply", args=[pk])
-        end = (
-            employment.end_date.strftime("%d.%m.%Y")
-            if employment.end_date
-            else "laufend"
-        )
-
-        source_fields = [
-            ("Mitarbeiter:in", str(employment.employee)),
-            ("Art des Vertrags", employment.get_contract_type_display() or "—"),
-            ("Zeitraum", f"{employment.start_date.strftime('%d.%m.%Y')} – {end}"),
+        end = obj.end_date.strftime("%d.%m.%Y") if obj.end_date else "laufend"
+        return [
+            ("Mitarbeiter:in", str(obj.employee)),
+            ("Art des Vertrags", obj.get_contract_type_display() or "—"),
+            ("Zeitraum", f"{obj.start_date.strftime('%d.%m.%Y')} – {end}"),
             (
                 "Wochenstunden",
-                HourMinuteDurationField.format_std(employment.weekly_hours),
+                HourMinuteDurationField.format_std(obj.weekly_hours),
             ),
         ]
-        primary_results = [
+
+    def get_primary_results(self, obj: Employment, result):
+        apply_url = reverse("admin:hr_employment_calculator_apply", args=[obj.pk])
+        return [
             {
                 "label": "Monatsbrutto (berechnet)",
                 "value": result.monthly_gross_salary,
                 "unit": "€",
                 "stored_label": "Gespeichertes Monatsbrutto",
-                "stored_value": employment.gross_salary,
+                "stored_value": obj.gross_salary,
                 "apply_url": apply_url
                 if result.monthly_gross_salary is not None
                 else None,
@@ -115,7 +83,9 @@ class EmploymentCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
                 "apply_url": None,
             },
         ]
-        result_rows = [
+
+    def get_result_rows(self, obj: Employment, result):
+        return [
             (
                 "Tarifvertrag",
                 str(result.salary_agreement) if result.salary_agreement else "—",
@@ -128,45 +98,41 @@ class EmploymentCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
                 result.effective_months != result.calculated_months,
             ),
         ]
-        breadcrumb_items = [
-            {
-                "label": opts.app_config.verbose_name,
-                "url": reverse("admin:app_list", kwargs={"app_label": opts.app_label}),
-            },
-            {
-                "label": str(opts.verbose_name_plural).capitalize(),
-                "url": reverse("admin:hr_employment_changelist"),
-            },
-            {
-                "label": str(employment),
-                "url": reverse("admin:hr_employment_change", args=[pk]),
-            },
-            {"label": "Vergütungsrechner", "url": None},
-        ]
 
-        extra_ctx = {
-            "employment": employment,
-            "form": form,
-            "source_fields": source_fields,
-            "primary_results": primary_results,
-            "result_rows": result_rows,
-            "warnings": result.warnings,
-            "breadcrumb_items": breadcrumb_items,
-            "opts": opts,
-            "media": self.model_admin.media + form.media,
-        }
-        return self.render_to_response(self.get_context_data(**extra_ctx))
+    def _render_calculator(
+        self,
+        employment: Employment,
+        form,
+        month_override=None,
+        salary_agreement_override=None,
+    ):
+        from .calculators import CalculatorInput, run_calculation
+
+        result = run_calculation(
+            CalculatorInput(
+                start_date=employment.start_date,
+                end_date=employment.end_date,
+                weekly_hours=employment.weekly_hours,
+                contract_type=employment.contract_type,
+                month_override=month_override,
+                salary_agreement_override=salary_agreement_override,
+            )
+        )
+
+        return self.render_to_response(
+            self.get_context_data(obj=employment, result=result, form=form)
+        )
 
     def get(self, request, *args, **kwargs):
         from .forms import CalculatorOverridesForm
 
-        employment = self._get_employment()
+        employment = self.get_object()
         return self._render_calculator(employment, CalculatorOverridesForm())
 
     def post(self, request, *args, **kwargs):
         from .forms import CalculatorOverridesForm
 
-        employment = self._get_employment()
+        employment = self.get_object()
         form = CalculatorOverridesForm(request.POST)
         month_override = None
         salary_agreement_override = None
