@@ -55,6 +55,7 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 "months_override": i.months_override,
                 "school_days_override": i.school_days_override,
                 "fee_agreement_override": i.fee_agreement_override,
+                "use_fee_agreement": True if i.use_fee_agreement else None,
             }
         )
 
@@ -95,17 +96,35 @@ class SupervisionCalculatorView(BaseCalculatorView):
 
         i = result.input
         rows = []
-        if result.is_pool_rate and result.pool_agreement:
+
+        # Abrechnungsart — hervorheben wenn Pool vorhanden aber FEV erzwungen
+        fee_forced = i.use_fee_agreement and result.pool_agreement is not None
+        if result.is_pool_rate:
             rows.append(("Abrechnungsart", "Pauschale (Poolvereinbarung)", True))
-            rows.append(("Poolvereinbarung", str(result.pool_agreement), False))
         else:
             rows.append(
-                (
-                    "Entgeltvereinbarung",
-                    str(result.fee_agreement) if result.fee_agreement else "—",
-                    i.fee_agreement_override is not None,
-                )
+                ("Abrechnungsart", "Stundensatz (Entgeltvereinbarung)", fee_forced)
             )
+
+        # Poolvereinbarung — immer anzeigen, hervorheben wenn vorhanden aber nicht verwendet
+        pool_not_used = result.pool_agreement is not None and not result.is_pool_rate
+        rows.append(
+            (
+                "Poolvereinbarung",
+                str(result.pool_agreement) if result.pool_agreement else "—",
+                pool_not_used,
+            )
+        )
+
+        # Entgeltvereinbarung — immer anzeigen
+        rows.append(
+            (
+                "Entgeltvereinbarung",
+                str(result.fee_agreement) if result.fee_agreement else "—",
+                i.fee_agreement_override is not None,
+            )
+        )
+
         rows += [
             (
                 "Schultage (effektiv)",

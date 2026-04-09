@@ -8,6 +8,7 @@ class SupervisionCalculatorInput:
     months_override: Decimal | None = None
     school_days_override: int | None = None
     fee_agreement_override: object | None = None  # finance.models.FeeAgreement
+    use_fee_agreement: bool = False
 
 
 @dataclass
@@ -47,7 +48,7 @@ def run_supervision_calculation(
         else sup.calculated_school_days
     )
 
-    # Poolvereinbarung prüfen
+    # Poolvereinbarung immer suchen
     pool = None
     if sup.student_id and sup.school_id:
         try:
@@ -62,14 +63,24 @@ def run_supervision_calculation(
                 valid_to__gte=sup.start_date,
             ).first()
 
-    if pool is not None:
+    # Entgeltvereinbarung immer suchen (auch wenn Pool gefunden)
+    fee = (
+        inp.fee_agreement_override
+        if inp.fee_agreement_override is not None
+        else sup.fee_agreement
+    )
+
+    # Entscheidung: Pool verwenden wenn vorhanden und nicht explizit FEV erzwungen
+    use_pool = pool is not None and not inp.use_fee_agreement
+
+    if use_pool:
         total_amount = pool.flat_rate * months
         monthly_installment = pool.flat_rate
         return SupervisionCalculatorResult(
             input=inp,
             months=months,
             school_days=school_days,
-            fee_agreement=None,
+            fee_agreement=fee,
             pool_agreement=pool,
             calculated_total_amount=total_amount,
             calculated_monthly_installment=monthly_installment,
@@ -77,12 +88,7 @@ def run_supervision_calculation(
             warnings=warnings,
         )
 
-    # Entgeltvereinbarung (FEV) — stündliche Abrechnung
-    fee = (
-        inp.fee_agreement_override
-        if inp.fee_agreement_override is not None
-        else sup.fee_agreement
-    )
+    # Stündliche Abrechnung via Entgeltvereinbarung
     if fee is None:
         warnings.append(
             f"Keine Entgeltvereinbarung für Kostenträger und Startdatum"
@@ -108,7 +114,7 @@ def run_supervision_calculation(
         months=months,
         school_days=school_days,
         fee_agreement=fee,
-        pool_agreement=None,
+        pool_agreement=pool,
         calculated_total_amount=total_amount,
         calculated_monthly_installment=monthly_installment,
         is_pool_rate=False,

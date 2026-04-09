@@ -37,6 +37,10 @@ class SupervisionCalculatorOverridesForm(forms.Form):
             }
         ),
     )
+    use_fee_agreement = forms.BooleanField(
+        label="Entgeltvereinbarung erzwingen (statt Poolvereinbarung)",
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
