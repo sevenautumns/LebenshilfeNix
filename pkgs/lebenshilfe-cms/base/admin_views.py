@@ -110,15 +110,20 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
             self.get_context_data(obj=obj, result=result, form=form)
         )
 
+    def get_form_class(self):
+        return self.form_class
+
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
         overrides = self.parse_overrides(request.GET)
-        form = self.form_class(initial=overrides or None) if self.form_class else None
+        form_class = self.get_form_class()
+        form = form_class(initial=overrides or None) if form_class else None
         return self._render_calculator(obj, form, overrides)
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
-        form = self.form_class(request.POST) if self.form_class else None
+        form_class = self.get_form_class()
+        form = form_class(request.POST) if form_class else None
         overrides = {}
         if form and form.is_valid():
             for key, val in form.cleaned_data.items():
