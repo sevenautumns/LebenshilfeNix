@@ -209,3 +209,10 @@ class Request(models.Model):
 
     def __str__(self):
         return f"Antrag: {self.student.full_name} ({self.get_state_display()})"
+
+
+class SchulAuswertung(Supervision):
+    class Meta:
+        proxy = True
+        verbose_name = "Schulauswertung"
+        verbose_name_plural = "Schulauswertungen"

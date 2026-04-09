@@ -65,7 +65,8 @@ class TestAdminSmoke:
         url = reverse(f"admin:{app}_{name}_add")
 
         response = superuser_client.get(url)
-        assert response.status_code == 200
+        # Read-only admins may redirect instead of showing an add form (302)
+        assert response.status_code in (200, 302)
 
     @pytest.mark.parametrize("model, admin_class", get_edit_models())
     @pytest.mark.parametrize(

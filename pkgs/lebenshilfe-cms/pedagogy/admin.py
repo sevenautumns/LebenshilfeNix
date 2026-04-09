@@ -1,20 +1,22 @@
 from urllib.parse import urlencode
 
 from django.contrib import admin, messages
+from django.contrib.admin import SimpleListFilter
+from django.db.models import F, Sum, Window
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.formats import number_format
 from django.utils.html import format_html
-from unfold.contrib.filters.admin import RangeDateFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, RangeDateFilter
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 
 from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
 from base.admin_views import BaseApplyView, BaseCalculatorView
-from base.fields import EuroDecimalField
+from base.fields import EuroDecimalField, HourMinuteDurationField
 
-from .models import School, Student, Supervision, Request
+from .models import School, SchulAuswertung, Student, Supervision, Request
 
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
@@ -311,3 +313,85 @@ class RequestAdmin(BaseModelAdmin):
 @admin.register(School)
 class SchoolAdmin(BaseModelAdmin):
     search_fields = ("name",)
+
+
+class KostentraegerFilter(SimpleListFilter):
+    title = "Kostenträger"
+    parameter_name = "kostentraeger"
+
+    def lookups(self, request, model_admin):
+        from finance.models import CostPayer
+
+        qs = (
+            CostPayer.objects.filter(students__supervisions__isnull=False)
+            .distinct()
+            .order_by("identifier")
+        )
+        return [(p.pk, str(p)) for p in qs]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student__payer_id=self.value())
+        return queryset
+
+
+@admin.register(SchulAuswertung)
+class SchulAuswertungAdmin(BaseModelAdmin):
+    list_display = [
+        "display_school",
+        "display_student",
+        "display_payer",
+        "weekly_hours",
+        "display_school_total",
+    ]
+    list_filter = [
+        ("school", AutocompleteSelectFilter),
+        KostentraegerFilter,
+    ]
+    list_filter_submit = True
+    list_display_links = None
+    ordering = ["school__name", "student__last_name", "student__first_name"]
+    search_fields = ["student__first_name", "student__last_name", "school__name"]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("school", "student", "student__payer")
+            .annotate(
+                school_total=Window(
+                    expression=Sum("weekly_hours"),
+                    partition_by=[F("school_id")],
+                )
+            )
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def add_view(self, request, form_url="", extra_context=None):
+        return redirect(reverse("admin:pedagogy_supervision_add"))
+
+    @display(description="Schule", ordering="school__name")
+    def display_school(self, obj: SchulAuswertung) -> str:
+        return obj.school.name
+
+    @display(description="Schüler:in", ordering="student__last_name")
+    def display_student(self, obj: SchulAuswertung) -> str:
+        return obj.student.full_name
+
+    @display(description="Kostenträger", ordering="student__payer__identifier")
+    def display_payer(self, obj: SchulAuswertung) -> str:
+        return str(obj.student.payer)
+
+    @display(description="Summe Schule")
+    def display_school_total(self, obj: SchulAuswertung) -> str:
+        if not obj.school_total:
+            return "–"
+        return HourMinuteDurationField.format_std(obj.school_total)
