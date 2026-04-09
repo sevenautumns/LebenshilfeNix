@@ -29,6 +29,28 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
     def run_calculation(self, obj, overrides: dict):
         raise NotImplementedError
 
+    def parse_overrides(self, request_data) -> dict:
+        form_class = self.get_form_class()
+        overrides = {}
+        if form_class and request_data:
+            form = form_class(request_data)
+            if form.is_valid():
+                for key, val in form.cleaned_data.items():
+                    if val is not None:
+                        overrides[key] = val
+        return overrides
+
+    def overrides_to_params(self, overrides: dict) -> dict:
+        params = {}
+        for key, val in overrides.items():
+            if val is None:
+                continue
+            if hasattr(val, "pk"):
+                params[key] = str(val.pk)
+            else:
+                params[key] = str(val)
+        return params
+
     def get_source_fields(self, obj):
         return []
 
@@ -40,16 +62,6 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
 
     def get_warnings(self, result):
         return getattr(result, "warnings", [])
-
-    @classmethod
-    def parse_overrides(cls, data: dict) -> dict:
-        """Parst Override-Werte aus GET/POST-Daten. In Subklassen überschreiben."""
-        return {}
-
-    @classmethod
-    def overrides_to_params(cls, overrides: dict) -> dict:
-        """Serialisiert Override-Werte zu URL-Query-Params. In Subklassen überschreiben."""
-        return {}
 
     def build_apply_url(self, obj, url_name, override_params):
         url = reverse(url_name, args=[obj.pk])
@@ -122,13 +134,9 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
+        overrides = self.parse_overrides(request.POST)
         form_class = self.get_form_class()
         form = form_class(request.POST) if form_class else None
-        overrides = {}
-        if form and form.is_valid():
-            for key, val in form.cleaned_data.items():
-                if val is not None:
-                    overrides[key] = val
         return self._render_calculator(obj, form, overrides)
 
 
@@ -139,8 +147,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
       - title, calculator_url_name, calculator_view_class
 
     Subklassen müssen implementieren:
-      - run_calculation, get_value, save_value,
-        error_message, success_message
+      - get_value, save_value, error_message, success_message
     """
 
     title: str = ""
@@ -167,9 +174,6 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
     def get(self, request, *args, **kwargs):
         return redirect(self.get_redirect_url(self.kwargs["pk"]))
 
-    def run_calculation(self, obj, overrides: dict):
-        raise NotImplementedError
-
     def get_value(self, result):
         raise NotImplementedError
 
@@ -184,9 +188,10 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 
     def post(self, request, *args, **kwargs):
         pk = self.kwargs["pk"]
-        overrides = self.calculator_view_class.parse_overrides(request.GET)
+        calc_view = self.calculator_view_class(model_admin=self.model_admin)
+        overrides = calc_view.parse_overrides(request.GET)
         obj = self.get_object()
-        result = self.run_calculation(obj, overrides)
+        result = calc_view.run_calculation(obj, overrides)
         value = self.get_value(result)
         if value is None:
             messages.error(request, self.error_message())
@@ -194,5 +199,5 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
             self.save_value(obj, value)
             formatted = number_format(value, decimal_pos=2, use_l10n=True)
             messages.success(request, self.success_message(formatted))
-        params = self.calculator_view_class.overrides_to_params(overrides)
+        params = calc_view.overrides_to_params(overrides)
         return redirect(self.get_redirect_url(pk, params))

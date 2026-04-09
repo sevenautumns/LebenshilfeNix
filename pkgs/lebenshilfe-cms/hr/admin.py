@@ -51,35 +51,6 @@ class EmploymentCalculatorView(BaseCalculatorView):
 
         return CalculatorOverridesForm
 
-    @classmethod
-    def parse_overrides(cls, data: dict) -> dict:
-        from decimal import Decimal
-        from finance.models import SalaryAgreement
-
-        overrides = {}
-        if mo := data.get("months_override"):
-            try:
-                overrides["months_override"] = Decimal(mo)
-            except Exception:
-                pass
-        if sa_pk := data.get("salary_agreement_override"):
-            try:
-                overrides["salary_agreement_override"] = SalaryAgreement.objects.get(
-                    pk=int(sa_pk)
-                )
-            except Exception:
-                pass
-        return overrides
-
-    @classmethod
-    def overrides_to_params(cls, overrides: dict) -> dict:
-        params = {}
-        if mo := overrides.get("months_override"):
-            params["months_override"] = str(mo)
-        if sa := overrides.get("salary_agreement_override"):
-            params["salary_agreement_override"] = str(sa.pk)
-        return params
-
     def get_source_fields(self, obj: Employment):
         from base.fields import HourMinuteDurationField
 
@@ -173,19 +144,6 @@ class EmploymentApplySalaryView(BaseApplyView):
 
     def get_queryset(self):
         return Employment.objects.select_related("employee")
-
-    def run_calculation(self, obj: Employment, overrides: dict):
-        from .calculators import CalculatorInput, run_calculation as _run_calculation
-
-        return _run_calculation(
-            CalculatorInput(
-                start_date=obj.start_date,
-                end_date=obj.end_date,
-                weekly_hours=obj.weekly_hours,
-                contract_type=obj.contract_type,
-                **overrides,
-            )
-        )
 
     def get_value(self, result):
         return result.monthly_gross_salary

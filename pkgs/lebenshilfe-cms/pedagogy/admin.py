@@ -32,43 +32,6 @@ class SupervisionCalculatorView(BaseCalculatorView):
             "student", "student__payer", "caretaker", "school", "tandem"
         )
 
-    @classmethod
-    def parse_overrides(cls, data: dict) -> dict:
-        """Parst Override-Werte aus GET/POST-Daten."""
-        from decimal import Decimal
-        from finance.models import FeeAgreement
-
-        overrides = {}
-        if mo := data.get("months_override"):
-            try:
-                overrides["months_override"] = Decimal(mo)
-            except Exception:
-                pass
-        if sd := data.get("school_days_override"):
-            try:
-                overrides["school_days_override"] = int(sd)
-            except Exception:
-                pass
-        if fev_pk := data.get("fee_agreement_override"):
-            try:
-                overrides["fee_agreement_override"] = FeeAgreement.objects.get(
-                    pk=int(fev_pk)
-                )
-            except Exception:
-                pass
-        return overrides
-
-    @classmethod
-    def overrides_to_params(cls, overrides: dict) -> dict:
-        params = {}
-        if mo := overrides.get("months_override"):
-            params["months_override"] = str(mo)
-        if sd := overrides.get("school_days_override"):
-            params["school_days_override"] = str(sd)
-        if fa := overrides.get("fee_agreement_override"):
-            params["fee_agreement_override"] = str(fa.pk)
-        return params
-
     def get_source_fields(self, obj: Supervision):
         from base.fields import HourMinuteDurationField as HMField
 
@@ -183,13 +146,6 @@ class SupervisionBaseApplyView(BaseApplyView):
     def get_queryset(self):
         return Supervision.objects.select_related(
             "student", "student__payer", "caretaker", "school", "tandem"
-        )
-
-    def run_calculation(self, obj: Supervision, overrides: dict):
-        from .calculators import SupervisionCalculatorInput, run_supervision_calculation
-
-        return run_supervision_calculation(
-            SupervisionCalculatorInput(supervision=obj, **overrides)
         )
 
 
