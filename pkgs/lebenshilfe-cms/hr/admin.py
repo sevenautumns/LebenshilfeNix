@@ -142,9 +142,6 @@ class EmploymentApplySalaryView(BaseApplyView):
     calculator_url_name = "admin:hr_employment_calculator"
     calculator_view_class = EmploymentCalculatorView
 
-    def get_queryset(self):
-        return Employment.objects.select_related("employee")
-
     def get_value(self, result):
         return result.monthly_gross_salary
 

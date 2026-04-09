@@ -17,7 +17,7 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
     form_class = None
 
     def get_queryset(self):
-        return self.model_admin.model.objects.all()
+        return self.model_admin.get_queryset(self.request)
 
     def get_object(self):
         pk = self.kwargs.get("pk")
@@ -156,7 +156,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
     calculator_view_class: type[BaseCalculatorView]
 
     def get_queryset(self):
-        return self.model_admin.model.objects.all()
+        return self.model_admin.get_queryset(self.request)
 
     def get_object(self):
         pk = self.kwargs.get("pk")

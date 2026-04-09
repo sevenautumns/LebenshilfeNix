@@ -27,11 +27,6 @@ class SupervisionCalculatorView(BaseCalculatorView):
 
         return SupervisionCalculatorOverridesForm
 
-    def get_queryset(self):
-        return Supervision.objects.select_related(
-            "student", "student__payer", "caretaker", "school", "tandem"
-        )
-
     def get_source_fields(self, obj: Supervision):
         from base.fields import HourMinuteDurationField as HMField
 
@@ -142,11 +137,6 @@ class SupervisionBaseApplyView(BaseApplyView):
     title = "Betreuungsrechner"
     calculator_url_name = "admin:pedagogy_supervision_calculator"
     calculator_view_class = SupervisionCalculatorView
-
-    def get_queryset(self):
-        return Supervision.objects.select_related(
-            "student", "student__payer", "caretaker", "school", "tandem"
-        )
 
 
 class SupervisionApplyTotalView(SupervisionBaseApplyView):
