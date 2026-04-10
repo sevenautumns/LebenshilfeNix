@@ -135,9 +135,14 @@ class Supervision(models.Model):
 class Request(models.Model):
     class State(models.TextChoices):
         DRAFT = "draft", "Entwurf"
-        IN_COORDINATION = "in_coordination", "In Abstimmung"
+        IN_REVIEW = "in_review", "In Prüfung"
         REJECTED = "rejected", "Abgelehnt"
         APPROVED = "approved", "Genehmigt"
+
+    class ApprovalType(models.TextChoices):
+        PHONE = "phone", "Telefonisch"
+        EMAIL = "email", "Per Mail"
+        NOTICE = "notice", "Per Bescheid"
 
     student = models.ForeignKey(
         Student,
@@ -172,6 +177,18 @@ class Request(models.Model):
         choices=State.choices,
         default=State.DRAFT,
         verbose_name="Zustand",
+    )
+    decision_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Entscheidungsdatum",
+        help_text="Datum der Genehmigung oder Ablehnung.",
+    )
+    approval_type = models.CharField(
+        max_length=20,
+        choices=ApprovalType.choices,
+        blank=True,
+        verbose_name="Art der Genehmigung",
     )
     notes = models.TextField(blank=True, verbose_name="Notizen")
 

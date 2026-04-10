@@ -322,8 +322,16 @@ class SupervisionAdmin(BaseModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(BaseModelAdmin):
-    list_display = ("student", "state", "start_date", "demand", "review_date")
-    list_filter = ("state",)
+    list_display = (
+        "student",
+        "state",
+        "start_date",
+        "demand",
+        "review_date",
+        "decision_date",
+        "approval_type",
+    )
+    list_filter = ("state", "approval_type")
     search_fields = ("student__first_name", "student__last_name", "notes")
     autocomplete_fields = ("student", "school")
 
