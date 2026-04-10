@@ -32,6 +32,11 @@ class SupervisionCalculatorView(BaseCalculatorView):
 
     def get_source_fields(self, obj: Supervision):
         from base.fields import HourMinuteDurationField as HMField
+        from django.db.models import Q
+
+        is_tandem = TandemPairing.objects.filter(
+            Q(supervision_a=obj) | Q(supervision_b=obj)
+        ).exists()
 
         return [
             ("Schüler:in", str(obj.student)),
@@ -49,6 +54,10 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 HMField.format_std(obj.weekly_hours),
             ),
             ("Schultage (rechnerisch)", obj.calculated_school_days),
+            (
+                "Art der Betreuung",
+                "Tandembetreuung" if is_tandem else "Einzelbetreuung",
+            ),
         ]
 
     def get_primary_results(self, obj: Supervision, result):
@@ -108,6 +117,9 @@ class SupervisionCalculatorView(BaseCalculatorView):
             rows.append(
                 ("Abrechnungsart", "Stundensatz (Entgeltvereinbarung)", fee_forced)
             )
+
+        if not result.is_pool_rate and result.is_tandem:
+            rows.append(("Tandemabzug", "50 %", True))
 
         # Poolvereinbarung — immer anzeigen, hervorheben wenn vorhanden aber nicht verwendet
         pool_not_used = result.pool_agreement is not None and not result.is_pool_rate

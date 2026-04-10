@@ -21,6 +21,7 @@ class SupervisionCalculatorResult:
     calculated_total_amount: Decimal | None
     calculated_monthly_installment: Decimal | None
     is_pool_rate: bool
+    is_tandem: bool = False
     warnings: list[str] = field(default_factory=list)
 
 
@@ -70,6 +71,14 @@ def run_supervision_calculation(
         else sup.fee_agreement
     )
 
+    # Tandem-Status immer ermitteln (vor Pool/FEV-Split)
+    from pedagogy.models import TandemPairing
+    from django.db.models import Q
+
+    is_tandem = sup.pk is not None and TandemPairing.objects.filter(
+        Q(supervision_a=sup) | Q(supervision_b=sup)
+    ).exists()
+
     # Entscheidung: Pool verwenden wenn vorhanden und nicht explizit FEV erzwungen
     use_pool = pool is not None and not inp.use_fee_agreement
 
@@ -85,6 +94,7 @@ def run_supervision_calculation(
             calculated_total_amount=total_amount,
             calculated_monthly_installment=monthly_installment,
             is_pool_rate=True,
+            is_tandem=is_tandem,
             warnings=warnings,
         )
 
@@ -104,15 +114,11 @@ def run_supervision_calculation(
     monthly_installment = None
 
     if fee is not None and daily_hours is not None and school_days is not None:
-        from pedagogy.models import TandemPairing
-        from django.db.models import Q
-
         yearly_hours_dec = Decimal((daily_hours * school_days).total_seconds() / 3600)
-        is_tandem = TandemPairing.objects.filter(
-            Q(supervision_a=sup) | Q(supervision_b=sup)
-        ).exists()
         price = fee.price_tandem if is_tandem else fee.price_standard
         total_amount = price * yearly_hours_dec
+        if is_tandem:
+            total_amount = total_amount * Decimal("0.5")
         monthly_installment = total_amount / months
 
     return SupervisionCalculatorResult(
@@ -124,5 +130,6 @@ def run_supervision_calculation(
         calculated_total_amount=total_amount,
         calculated_monthly_installment=monthly_installment,
         is_pool_rate=False,
+        is_tandem=is_tandem,
         warnings=warnings,
     )

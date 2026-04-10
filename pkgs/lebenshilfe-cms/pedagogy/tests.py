@@ -172,13 +172,14 @@ class SupervisionCalculatorTests(TestCase):
         self.assertFalse(result.is_pool_rate)
 
     def test_fev_total_amount_tandem(self):
-        """Mit TandemPairing wird price_tandem verwendet."""
+        """Mit TandemPairing wird price_tandem verwendet und Endbetrag halbiert."""
         sup = self._make_supervision()
         tandem_sup = self._make_supervision(student=self.tandem_student)
         TandemPairing.objects.create(supervision_a=sup, supervision_b=tandem_sup)
         result = self._calc(sup, school_days_override=10)
-        # 15.00 * 10 = 150.00
-        self.assertEqual(result.calculated_total_amount, Decimal("150.00"))
+        # 15.00 * 10 * 0.5 = 75.00
+        self.assertEqual(result.calculated_total_amount, Decimal("75.00"))
+        self.assertTrue(result.is_tandem)
 
     def test_fev_monthly_installment_single_month(self):
         """Gesamtbetrag / 1 Monat = voller Betrag als Abschlag."""
