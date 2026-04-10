@@ -80,9 +80,13 @@ class SupervisionCalculatorView(BaseCalculatorView):
             override_params,
         )
 
+        is_fev_tandem = result.is_tandem and not result.is_pool_rate
+
         return [
             {
-                "label": "Gesamtbetrag (berechnet)",
+                "label": "Gesamtbetrag (nach Tandemabzug)"
+                if is_fev_tandem
+                else "Gesamtbetrag (berechnet)",
                 "value": result.calculated_total_amount,
                 "unit": "€",
                 "stored_label": "Gespeicherter Gesamtbetrag",
@@ -92,7 +96,9 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 else None,
             },
             {
-                "label": "Abschlag pro Monat (berechnet)",
+                "label": "Abschlag pro Monat (nach Tandemabzug)"
+                if is_fev_tandem
+                else "Abschlag pro Monat (berechnet)",
                 "value": result.calculated_monthly_installment,
                 "unit": "€",
                 "stored_label": "Gespeicherter Abschlag",
@@ -119,6 +125,14 @@ class SupervisionCalculatorView(BaseCalculatorView):
             )
 
         if not result.is_pool_rate and result.is_tandem:
+            gross_total = result.calculated_total_amount * 2
+            rows.append(
+                (
+                    "Bruttobetrag (100 %)",
+                    f"{number_format(gross_total, decimal_pos=2, use_l10n=True)} €",
+                    False,
+                )
+            )
             rows.append(("Tandemabzug", "50 %", True))
 
         # Poolvereinbarung — immer anzeigen, hervorheben wenn vorhanden aber nicht verwendet

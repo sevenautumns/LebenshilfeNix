@@ -75,9 +75,12 @@ def run_supervision_calculation(
     from pedagogy.models import TandemPairing
     from django.db.models import Q
 
-    is_tandem = sup.pk is not None and TandemPairing.objects.filter(
-        Q(supervision_a=sup) | Q(supervision_b=sup)
-    ).exists()
+    is_tandem = (
+        sup.pk is not None
+        and TandemPairing.objects.filter(
+            Q(supervision_a=sup) | Q(supervision_b=sup)
+        ).exists()
+    )
 
     # Entscheidung: Pool verwenden wenn vorhanden und nicht explizit FEV erzwungen
     use_pool = pool is not None and not inp.use_fee_agreement
