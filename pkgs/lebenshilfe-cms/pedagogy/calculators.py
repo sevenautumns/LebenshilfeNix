@@ -82,8 +82,13 @@ def run_supervision_calculation(
         ).exists()
     )
 
-    # Entscheidung: Pool verwenden wenn vorhanden und nicht explizit FEV erzwungen
-    use_pool = pool is not None and not inp.use_fee_agreement
+    # Entscheidung: Pool verwenden wenn vorhanden, nicht explizit FEV erzwungen,
+    # und kein spezifischer FEV-Override gesetzt (Override impliziert FEV)
+    use_pool = (
+        pool is not None
+        and not inp.use_fee_agreement
+        and inp.fee_agreement_override is None
+    )
 
     if use_pool:
         total_amount = pool.flat_rate * months

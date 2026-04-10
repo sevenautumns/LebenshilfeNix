@@ -119,13 +119,34 @@ class SupervisionCalculatorView(BaseCalculatorView):
         i = result.input
         rows = []
 
-        # Abrechnungsart — hervorheben wenn Pool vorhanden aber FEV erzwungen
+        # Abrechnungsgrundlage — kontextabhängig, eine oder zwei Zeilen
         fee_forced = i.use_fee_agreement and result.pool_agreement is not None
         if result.is_pool_rate:
-            rows.append(("Abrechnungsart", "Pauschale (Poolvereinbarung)", True))
+            rows.append(
+                (
+                    "Abrechnungsgrundlage (Poolvereinbarung)",
+                    str(result.pool_agreement),
+                    False,
+                )
+            )
+        elif fee_forced:
+            rows.append(
+                (
+                    "Abrechnungsgrundlage (Entgeltvereinbarung)",
+                    str(result.fee_agreement) if result.fee_agreement else "—",
+                    True,
+                )
+            )
+            rows.append(
+                ("Poolvereinbarung (nicht verwendet)", str(result.pool_agreement), True)
+            )
         else:
             rows.append(
-                ("Abrechnungsart", "Stundensatz (Entgeltvereinbarung)", fee_forced)
+                (
+                    "Abrechnungsgrundlage (Entgeltvereinbarung)",
+                    str(result.fee_agreement) if result.fee_agreement else "—",
+                    i.fee_agreement_override is not None,
+                )
             )
 
         if not result.is_pool_rate and result.is_tandem:
@@ -138,25 +159,6 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 )
             )
             rows.append(("Tandemabzug", "50 %", True))
-
-        # Poolvereinbarung — immer anzeigen, hervorheben wenn vorhanden aber nicht verwendet
-        pool_not_used = result.pool_agreement is not None and not result.is_pool_rate
-        rows.append(
-            (
-                "Poolvereinbarung",
-                str(result.pool_agreement) if result.pool_agreement else "—",
-                pool_not_used,
-            )
-        )
-
-        # Entgeltvereinbarung — immer anzeigen
-        rows.append(
-            (
-                "Entgeltvereinbarung",
-                str(result.fee_agreement) if result.fee_agreement else "—",
-                i.fee_agreement_override is not None,
-            )
-        )
 
         rows += [
             (

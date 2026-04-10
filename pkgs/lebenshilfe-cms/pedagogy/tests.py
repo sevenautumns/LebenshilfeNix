@@ -236,6 +236,34 @@ class SupervisionCalculatorTests(TestCase):
         self.assertEqual(result.calculated_total_amount, Decimal("200.00"))
         self.assertEqual(result.fee_agreement, other_fee)
 
+    def test_fev_override_ignores_pool(self):
+        """fee_agreement_override überstimmt einen vorhandenen Pool ohne use_fee_agreement."""
+        PoolAgreement.objects.create(
+            payer=self.payer,
+            school=self.school,
+            flat_rate=Decimal("500.00"),
+            approved_supervisions=5,
+            prophylactic_supervisions=2,
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+        )
+        other_fee = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("20.00"),
+            price_tandem=Decimal("25.00"),
+            price_coordination=Decimal("30.00"),
+            responsible_payer=CostPayer.objects.create(identifier="Anderer2"),
+        )
+        sup = self._make_supervision()
+        result = self._calc(
+            sup, school_days_override=10, fee_agreement_override=other_fee
+        )
+        self.assertFalse(result.is_pool_rate)
+        self.assertEqual(result.fee_agreement, other_fee)
+        # 20.00 * 10 = 200.00 (Pool ignoriert)
+        self.assertEqual(result.calculated_total_amount, Decimal("200.00"))
+
     def test_fev_none_when_no_fee_agreement(self):
         """Kein Betrag wenn keine Entgeltvereinbarung vorhanden ist."""
         sup = self._make_supervision(
