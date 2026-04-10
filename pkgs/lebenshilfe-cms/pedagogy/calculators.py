@@ -1,5 +1,28 @@
+import calendar
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
+
+
+def calculate_supervision_months(start_date: date, end_date: date) -> int:
+    """Berechnet Betreuungsmonate (ganze Zahlen) mit 7-Tage-Regel.
+
+    Start- und Endmonat zählen nur, wenn ≥7 Tage im jeweiligen Monat liegen.
+    Mittlere Monate zählen immer voll. Minimum ist immer 1.
+    """
+    if (start_date.year, start_date.month) == (end_date.year, end_date.month):
+        return 1
+
+    days_in_start_month = calendar.monthrange(start_date.year, start_date.month)[1]
+    days_remaining_in_start = days_in_start_month - start_date.day + 1
+    start_count = 1 if days_remaining_in_start >= 7 else 0
+    end_count = 1 if end_date.day >= 7 else 0
+
+    middle_months = (
+        (end_date.year - start_date.year) * 12 + end_date.month - start_date.month - 1
+    )
+
+    return max(1, start_count + middle_months + end_count)
 
 
 @dataclass

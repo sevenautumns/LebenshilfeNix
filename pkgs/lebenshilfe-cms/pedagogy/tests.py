@@ -7,7 +7,11 @@ from django.urls import reverse
 from base.models import SchoolDays
 from finance.models import CostPayer, FeeAgreement, PoolAgreement
 from hr.models import Employee
-from pedagogy.calculators import SupervisionCalculatorInput, run_supervision_calculation
+from pedagogy.calculators import (
+    SupervisionCalculatorInput,
+    calculate_supervision_months,
+    run_supervision_calculation,
+)
 from pedagogy.models import School, Student, Supervision, TandemPairing
 
 
@@ -109,12 +113,63 @@ class SupervisionModelTests(TestCase):
     # --- calculated_months ---
 
     def test_calculated_months(self):
-        """Berechnete Monate hängen von den Kalendermonaten ab."""
+        """7-Tage-Regel: Endmonat mit <7 Tagen zählt nicht."""
         sup = self._make_supervision(
             start_date=date(2024, 9, 15),
             end_date=date(2024, 11, 5),
         )
-        self.assertEqual(sup.calculated_months, 3)
+        # Sep: 16 Tage verbleibend → zählt; Okt: Mittelmonat → zählt; Nov: 5 Tage → zählt nicht
+        self.assertEqual(sup.calculated_months, 2)
+
+
+class CalculateSupervisionMonthsTests(TestCase):
+    """Tests für calculate_supervision_months() — 7-Tage-Regel."""
+
+    def test_full_months_both_sides(self):
+        """Start am 1., Ende am letzten: beide Monate zählen → 10."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 1), date(2026, 6, 30)), 10
+        )
+
+    def test_start_and_end_have_enough_days(self):
+        """Start am 15., Ende am 15.: je 16 bzw. 15 Tage → beide zählen → 10."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 15), date(2026, 6, 15)), 10
+        )
+
+    def test_both_months_too_short(self):
+        """Start am 25. Sep (6 Tage), Ende am 5. Jun (5 Tage): beide fallen raus → 8."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 25), date(2026, 6, 5)), 8
+        )
+
+    def test_only_end_month_counts(self):
+        """Start am 25. Sep (6 Tage → nein), Ende am 10. Jun (10 Tage → ja) → 9."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 25), date(2026, 6, 10)), 9
+        )
+
+    def test_only_start_month_counts(self):
+        """Start am 1. Sep (30 Tage → ja), Ende am 5. Jun (5 Tage → nein) → 9."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 1), date(2026, 6, 5)), 9
+        )
+
+    def test_same_month(self):
+        """Start und Ende im selben Monat → immer 1."""
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 1), date(2025, 9, 30)), 1
+        )
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 25), date(2025, 9, 27)), 1
+        )
+
+    def test_minimum_one_month(self):
+        """Auch wenn beide Monate < 7 Tage: mindestens 1 Monat."""
+        # Sep 26 → Okt 1: Sep=5 Tage, Okt=1 Tag, middle=0 → max(1, 0)=1
+        self.assertEqual(
+            calculate_supervision_months(date(2025, 9, 26), date(2025, 10, 1)), 1
+        )
 
 
 class SupervisionCalculatorTests(TestCase):

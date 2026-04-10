@@ -119,12 +119,9 @@ class Supervision(models.Model):
 
     @property
     def calculated_months(self) -> int:
-        return (
-            (self.end_date.year - self.start_date.year) * 12
-            + self.end_date.month
-            - self.start_date.month
-            + 1
-        )
+        from pedagogy.calculators import calculate_supervision_months
+
+        return calculate_supervision_months(self.start_date, self.end_date)
 
     calculated_months.fget.short_description = "Monate (rechnerisch)"  # type: ignore[attr-defined]
 
