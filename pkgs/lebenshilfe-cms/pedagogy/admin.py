@@ -80,13 +80,19 @@ class SupervisionCalculatorView(BaseCalculatorView):
             override_params,
         )
 
-        is_fev_tandem = result.is_tandem and not result.is_pool_rate
+        if result.is_pool_rate:
+            total_suffix = "Poolpauschale"
+            installment_suffix = "Poolpauschale"
+        elif result.is_tandem:
+            total_suffix = "nach Tandemabzug"
+            installment_suffix = "nach Tandemabzug"
+        else:
+            total_suffix = "berechnet"
+            installment_suffix = "berechnet"
 
         return [
             {
-                "label": "Gesamtbetrag (nach Tandemabzug)"
-                if is_fev_tandem
-                else "Gesamtbetrag (berechnet)",
+                "label": f"Gesamtbetrag ({total_suffix})",
                 "value": result.calculated_total_amount,
                 "unit": "€",
                 "stored_label": "Gespeicherter Gesamtbetrag",
@@ -96,9 +102,7 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 else None,
             },
             {
-                "label": "Abschlag pro Monat (nach Tandemabzug)"
-                if is_fev_tandem
-                else "Abschlag pro Monat (berechnet)",
+                "label": f"Abschlag pro Monat ({installment_suffix})",
                 "value": result.calculated_monthly_installment,
                 "unit": "€",
                 "stored_label": "Gespeicherter Abschlag",
