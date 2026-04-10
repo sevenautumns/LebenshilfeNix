@@ -336,7 +336,15 @@ class TandemPairingForm(forms.ModelForm):
 @admin.register(TandemPairing)
 class TandemPairingAdmin(BaseModelAdmin):
     form = TandemPairingForm
-    list_display = ["__str__", "display_school", "display_weekly_hours"]
+    list_display = [
+        "__str__",
+        "display_school",
+        "display_caretaker",
+        "display_weekly_hours",
+        "display_caretaker_matches",
+        "display_hours_match",
+    ]
+    readonly_fields = ["display_caretaker_matches", "display_hours_match"]
     autocomplete_fields = ["supervision_a", "supervision_b"]
     search_fields = [
         "supervision_a__student__first_name",
@@ -352,7 +360,9 @@ class TandemPairingAdmin(BaseModelAdmin):
             .select_related(
                 "supervision_a__student",
                 "supervision_a__school",
+                "supervision_a__caretaker",
                 "supervision_b__student",
+                "supervision_b__caretaker",
             )
         )
 
@@ -360,9 +370,21 @@ class TandemPairingAdmin(BaseModelAdmin):
     def display_school(self, obj: TandemPairing) -> str:
         return obj.supervision_a.school.name
 
+    @display(description="Betreuer:in")
+    def display_caretaker(self, obj: TandemPairing) -> str:
+        return obj.supervision_a.caretaker.full_name
+
     @display(description="Wochenstunden")
     def display_weekly_hours(self, obj: TandemPairing) -> str:
         return HourMinuteDurationField.format_std(obj.supervision_a.weekly_hours)
+
+    @display(description="Betreuer stimmt überein", boolean=True)
+    def display_caretaker_matches(self, obj: TandemPairing) -> bool:
+        return obj.caretaker_matches
+
+    @display(description="Stunden stimmen überein", boolean=True)
+    def display_hours_match(self, obj: TandemPairing) -> bool:
+        return obj.hours_match
 
 
 class CostPayerFilter(SimpleListFilter):

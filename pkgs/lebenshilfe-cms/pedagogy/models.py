@@ -215,6 +215,18 @@ class TandemPairing(models.Model):
     def __str__(self):
         return f"Tandem: {self.supervision_a.student} & {self.supervision_b.student}"
 
+    @property
+    def caretaker_matches(self) -> bool:
+        return self.supervision_a.caretaker_id == self.supervision_b.caretaker_id
+
+    caretaker_matches.fget.short_description = "Betreuer stimmt überein"  # type: ignore[attr-defined]
+
+    @property
+    def hours_match(self) -> bool:
+        return self.supervision_a.weekly_hours == self.supervision_b.weekly_hours
+
+    hours_match.fget.short_description = "Stunden stimmen überein"  # type: ignore[attr-defined]
+
 
 class SchoolReport(Supervision):
     class Meta:
