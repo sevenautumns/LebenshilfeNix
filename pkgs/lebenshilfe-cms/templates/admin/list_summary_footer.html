@@ -1,0 +1,21 @@
+{% load i18n unfold %}
+
+{% component "unfold/components/card.html" with title=summary_title class="mt-6" %}
+  {% for section in summary_sections %}
+    {% if not forloop.first %}
+      {% component "unfold/components/separator.html" with class="-mx-6 my-6" %}{% endcomponent %}
+    {% endif %}
+    <div class="grid gap-6" style="grid-template-columns: repeat({{ section|length }}, minmax(0, 1fr));">
+      {% for stat in section %}
+        <div>
+          {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+            {{ stat.label }}
+          {% endcomponent %}
+          <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+            {{ stat.value|default:"—" }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% endcomponent %}

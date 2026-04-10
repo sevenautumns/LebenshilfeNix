@@ -13,7 +13,13 @@ from unfold.contrib.filters.admin import AutocompleteSelectFilter, RangeDateFilt
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 
-from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
+from base.admin import (
+    BaseModelAdmin,
+    ListSummaryMixin,
+    AddressInline,
+    PhoneInline,
+    EmailInline,
+)
 from base.admin_views import BaseApplyView, BaseCalculatorView
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
@@ -448,7 +454,7 @@ class CostPayerFilter(SimpleListFilter):
 
 
 @admin.register(SchoolReport)
-class SchoolReportAdmin(BaseModelAdmin):
+class SchoolReportAdmin(ListSummaryMixin, BaseModelAdmin):
     list_display = [
         "display_school",
         "display_student",
@@ -464,7 +470,6 @@ class SchoolReportAdmin(BaseModelAdmin):
     ]
     list_filter_submit = True
     list_display_links = None
-    list_after_template = "admin/pedagogy/schulauswertung_footer.html"
     ordering = ["school__name", "student__last_name", "student__first_name"]
     search_fields = ["student__first_name", "student__last_name", "school__name"]
 
@@ -477,40 +482,45 @@ class SchoolReportAdmin(BaseModelAdmin):
             .annotate(is_tandem=tandem_filter)
         )
 
-    def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(request, extra_context=extra_context)
-        try:
-            qs = response.context_data["cl"].queryset
-            tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
-            agg = qs.aggregate(
-                total_hours=Sum("weekly_hours"),
-                hours_without_tandem=Sum("weekly_hours", filter=~tandem_filter),
-                hours_with_tandem=Sum("weekly_hours", filter=tandem_filter),
-                student_count=Count("student_id", distinct=True),
-                prophylactic_count=Count("id", filter=Q(is_prophylactic=True)),
-                tandem_count=Count("id", filter=tandem_filter),
-            )
-            fmt = HourMinuteDurationField.format_std
-            response.context_data["summary_total_hours"] = (
-                fmt(agg["total_hours"]) if agg["total_hours"] else "–"
-            )
-            response.context_data["summary_hours_without_tandem"] = (
-                fmt(agg["hours_without_tandem"]) if agg["hours_without_tandem"] else "–"
-            )
-            response.context_data["summary_hours_with_tandem"] = (
-                fmt(agg["hours_with_tandem"]) if agg["hours_with_tandem"] else "–"
-            )
-            response.context_data["summary_student_count"] = agg["student_count"] or 0
-            response.context_data["summary_prophylactic_count"] = (
-                agg["prophylactic_count"] or 0
-            )
-            response.context_data["summary_tandem_count"] = agg["tandem_count"] or 0
-            response.context_data["summary_school_count"] = (
-                qs.aggregate(s=Count("school_id", distinct=True))["s"] or 0
-            )
-        except (AttributeError, KeyError):
-            pass
-        return response
+    def get_summary_sections(self, cl) -> list[list[dict]]:
+        qs = cl.queryset
+        tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
+        agg = qs.aggregate(
+            total_hours=Sum("weekly_hours"),
+            hours_without_tandem=Sum("weekly_hours", filter=~tandem_filter),
+            hours_with_tandem=Sum("weekly_hours", filter=tandem_filter),
+            student_count=Count("student_id", distinct=True),
+            school_count=Count("school_id", distinct=True),
+            prophylactic_count=Count("id", filter=Q(is_prophylactic=True)),
+            tandem_count=Count("id", filter=tandem_filter),
+        )
+        fmt = HourMinuteDurationField.format_std
+        return [
+            [
+                {
+                    "label": "Gesamtstunden",
+                    "value": fmt(agg["total_hours"]) if agg["total_hours"] else "–",
+                },
+                {
+                    "label": "Std. ohne Tandem",
+                    "value": fmt(agg["hours_without_tandem"])
+                    if agg["hours_without_tandem"]
+                    else "–",
+                },
+                {
+                    "label": "Std. mit Tandem",
+                    "value": fmt(agg["hours_with_tandem"])
+                    if agg["hours_with_tandem"]
+                    else "–",
+                },
+            ],
+            [
+                {"label": "Schüler:innen", "value": agg["student_count"] or 0},
+                {"label": "Schulen", "value": agg["school_count"] or 0},
+                {"label": "Prophylaktisch", "value": agg["prophylactic_count"] or 0},
+                {"label": "Tandem", "value": agg["tandem_count"] or 0},
+            ],
+        ]
 
     def has_add_permission(self, request):
         return False
