@@ -104,8 +104,14 @@ def run_supervision_calculation(
     monthly_installment = None
 
     if fee is not None and daily_hours is not None and school_days is not None:
+        from pedagogy.models import TandemPairing
+        from django.db.models import Q
+
         yearly_hours_dec = Decimal((daily_hours * school_days).total_seconds() / 3600)
-        price = fee.price_tandem if sup.tandem_id else fee.price_standard
+        is_tandem = TandemPairing.objects.filter(
+            Q(supervision_a=sup) | Q(supervision_b=sup)
+        ).exists()
+        price = fee.price_tandem if is_tandem else fee.price_standard
         total_amount = price * yearly_hours_dec
         monthly_installment = total_amount / months
 

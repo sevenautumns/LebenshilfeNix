@@ -8,7 +8,7 @@ from base.models import SchoolDays
 from finance.models import CostPayer, FeeAgreement, PoolAgreement
 from hr.models import Employee
 from pedagogy.calculators import SupervisionCalculatorInput, run_supervision_calculation
-from pedagogy.models import School, Student, Supervision
+from pedagogy.models import School, Student, Supervision, TandemPairing
 
 
 class SupervisionModelTests(TestCase):
@@ -116,34 +116,6 @@ class SupervisionModelTests(TestCase):
         )
         self.assertEqual(sup.calculated_months, 3)
 
-    # --- save() ---
-
-    def test_save_resets_tandem_prophylactic_when_no_tandem(self):
-        """is_tandem_prophylactic wird auf False gesetzt, wenn kein Tandem gesetzt ist."""
-        sup = self._make_supervision(tandem=None, is_tandem_prophylactic=True)
-        sup.refresh_from_db()
-        self.assertFalse(sup.is_tandem_prophylactic)
-
-    def test_save_keeps_tandem_prophylactic_when_tandem_set(self):
-        """is_tandem_prophylactic bleibt erhalten, wenn ein Tandem gesetzt ist."""
-        sup = self._make_supervision(
-            tandem=self.tandem_student,
-            is_tandem_prophylactic=True,
-        )
-        sup.refresh_from_db()
-        self.assertTrue(sup.is_tandem_prophylactic)
-
-    def test_save_resets_tandem_prophylactic_on_tandem_removal(self):
-        """is_tandem_prophylactic wird auf False gesetzt, wenn das Tandem entfernt wird."""
-        sup = self._make_supervision(
-            tandem=self.tandem_student,
-            is_tandem_prophylactic=True,
-        )
-        sup.tandem = None
-        sup.save()
-        sup.refresh_from_db()
-        self.assertFalse(sup.is_tandem_prophylactic)
-
 
 class SupervisionCalculatorTests(TestCase):
     """Tests für run_supervision_calculation() in pedagogy/calculators.py."""
@@ -200,8 +172,10 @@ class SupervisionCalculatorTests(TestCase):
         self.assertFalse(result.is_pool_rate)
 
     def test_fev_total_amount_tandem(self):
-        """Mit Tandem wird price_tandem verwendet."""
-        sup = self._make_supervision(tandem=self.tandem_student)
+        """Mit TandemPairing wird price_tandem verwendet."""
+        sup = self._make_supervision()
+        tandem_sup = self._make_supervision(student=self.tandem_student)
+        TandemPairing.objects.create(supervision_a=sup, supervision_b=tandem_sup)
         result = self._calc(sup, school_days_override=10)
         # 15.00 * 10 = 150.00
         self.assertEqual(result.calculated_total_amount, Decimal("150.00"))

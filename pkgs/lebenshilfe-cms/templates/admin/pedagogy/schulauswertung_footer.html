@@ -14,6 +14,30 @@
 
     <div>
       {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+        Std. ohne Tandem
+      {% endcomponent %}
+      <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+        {{ summary_hours_without_tandem }}
+      </div>
+    </div>
+
+    <div>
+      {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+        Std. mit Tandem
+      {% endcomponent %}
+      <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+        {{ summary_hours_with_tandem }}
+      </div>
+    </div>
+
+  </div>
+
+  {% component "unfold/components/separator.html" with class="-mx-6 my-6" %}{% endcomponent %}
+
+  <div class="grid grid-cols-4 gap-6">
+
+    <div>
+      {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
         Schüler:innen
       {% endcomponent %}
       <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
@@ -27,6 +51,24 @@
       {% endcomponent %}
       <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
         {{ summary_school_count }}
+      </div>
+    </div>
+
+    <div>
+      {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+        Prophylaktisch
+      {% endcomponent %}
+      <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+        {{ summary_prophylactic_count }}
+      </div>
+    </div>
+
+    <div>
+      {% component "unfold/components/text.html" with class="text-font-subtle-light dark:text-font-subtle-dark" %}
+        Tandem
+      {% endcomponent %}
+      <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
+        {{ summary_tandem_count }}
       </div>
     </div>
 

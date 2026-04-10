@@ -45,18 +45,6 @@ class Supervision(models.Model):
         default=False,
         verbose_name="Prophylaktisch",
     )
-    tandem = models.ForeignKey(
-        Student,
-        related_name="tandem_supervisions",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="Tandem",
-    )
-    is_tandem_prophylactic = models.BooleanField(
-        default=False,
-        verbose_name="Tandem prophylaktisch",
-    )
     caretaker = models.ForeignKey(
         "hr.Employee",
         on_delete=models.PROTECT,
@@ -140,11 +128,6 @@ class Supervision(models.Model):
 
     calculated_months.fget.short_description = "Monate (rechnerisch)"  # type: ignore[attr-defined]
 
-    def save(self, *args: object, **kwargs: object) -> None:
-        if not self.tandem_id:
-            self.is_tandem_prophylactic = False
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
 
@@ -211,7 +194,29 @@ class Request(models.Model):
         return f"Antrag: {self.student.full_name} ({self.get_state_display()})"
 
 
-class SchulAuswertung(Supervision):
+class TandemPairing(models.Model):
+    supervision_a = models.OneToOneField(
+        Supervision,
+        on_delete=models.CASCADE,
+        related_name="tandem_as_a",
+        verbose_name="Betreuung A",
+    )
+    supervision_b = models.OneToOneField(
+        Supervision,
+        on_delete=models.CASCADE,
+        related_name="tandem_as_b",
+        verbose_name="Betreuung B",
+    )
+
+    class Meta:
+        verbose_name = "Tandembetreuung"
+        verbose_name_plural = "Tandembetreuungen"
+
+    def __str__(self):
+        return f"Tandem: {self.supervision_a.student} & {self.supervision_b.student}"
+
+
+class SchoolReport(Supervision):
     class Meta:
         proxy = True
         verbose_name = "Schulauswertung"

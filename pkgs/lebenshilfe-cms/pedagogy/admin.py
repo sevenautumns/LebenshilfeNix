@@ -1,8 +1,9 @@
 from urllib.parse import urlencode
 
+from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -16,7 +17,7 @@ from base.admin import BaseModelAdmin, AddressInline, PhoneInline, EmailInline
 from base.admin_views import BaseApplyView, BaseCalculatorView
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
-from .models import School, SchulAuswertung, Student, Supervision, Request
+from .models import School, SchoolReport, Student, Supervision, TandemPairing, Request
 
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
@@ -205,26 +206,22 @@ class StudentAdmin(BaseModelAdmin):
 class SupervisionAdmin(BaseModelAdmin):
     list_display = (
         "student",
-        "tandem",
         "caretaker",
         "school",
         "start_date",
         "end_date",
         "weekly_hours",
         "is_prophylactic",
-        "display_tandem_prophylactic",
         "display_total_amount",
     )
     actions_detail = ["edit_action", "calculator_action"]
     list_filter_submit = True
     list_filter = ("school", ("start_date", RangeDateFilter))
     search_fields = ("student__first_name", "student__last_name")
-    autocomplete_fields = ("student", "tandem", "caretaker", "school")
+    autocomplete_fields = ("student", "caretaker", "school")
     readonly_fields = ()
-    conditional_fields = {"is_tandem_prophylactic": "!!tandem"}
     fieldsets = [
         ("Schüler:in", {"fields": [("student", "is_prophylactic")]}),
-        ("Tandem", {"fields": [("tandem", "is_tandem_prophylactic")]}),
         ("Betreuung", {"fields": ["caretaker", ("school", "class_name")]}),
         ("Zeitraum", {"fields": [("start_date", "end_date"), "weekly_hours"]}),
         ("Abrechnung", {"fields": [("total_amount", "monthly_installment")]}),
@@ -249,12 +246,6 @@ class SupervisionAdmin(BaseModelAdmin):
     def has_calculator_action_permission(self, request, obj=None):
         return True
 
-    @display(description="Tandem prophylaktisch", boolean=True)
-    def display_tandem_prophylactic(self, obj: Supervision) -> bool | None:
-        if not obj.tandem_id:
-            return None
-        return obj.is_tandem_prophylactic
-
     @display(description="Gesamtbetrag", ordering="total_amount")
     def display_total_amount(self, obj: Supervision) -> str:
         if obj.total_amount is not None:
@@ -267,9 +258,7 @@ class SupervisionAdmin(BaseModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .select_related(
-                "student", "student__payer", "caretaker", "school", "tandem"
-            )
+            .select_related("student", "student__payer", "caretaker", "school")
         )
 
     def get_urls(self):
@@ -315,7 +304,68 @@ class SchoolAdmin(BaseModelAdmin):
     search_fields = ("name",)
 
 
-class KostentraegerFilter(SimpleListFilter):
+class TandemPairingForm(forms.ModelForm):
+    class Meta:
+        model = TandemPairing
+        fields = "__all__"
+
+    def clean(self):
+        cleaned = super().clean()
+        a = cleaned.get("supervision_a")
+        b = cleaned.get("supervision_b")
+        if a and b:
+            if a == b:
+                raise forms.ValidationError(
+                    "Eine Betreuung kann nicht mit sich selbst verbunden werden."
+                )
+            if a.caretaker_id != b.caretaker_id:
+                raise forms.ValidationError(
+                    "Beide Betreuungen müssen denselben Betreuer haben."
+                )
+            if a.school_id != b.school_id:
+                raise forms.ValidationError(
+                    "Beide Betreuungen müssen dieselbe Schule haben."
+                )
+            if a.weekly_hours != b.weekly_hours:
+                raise forms.ValidationError(
+                    "Beide Betreuungen müssen dieselbe Wochenstundenzahl haben."
+                )
+        return cleaned
+
+
+@admin.register(TandemPairing)
+class TandemPairingAdmin(BaseModelAdmin):
+    form = TandemPairingForm
+    list_display = ["__str__", "display_school", "display_weekly_hours"]
+    autocomplete_fields = ["supervision_a", "supervision_b"]
+    search_fields = [
+        "supervision_a__student__first_name",
+        "supervision_a__student__last_name",
+        "supervision_b__student__first_name",
+        "supervision_b__student__last_name",
+    ]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related(
+                "supervision_a__student",
+                "supervision_a__school",
+                "supervision_b__student",
+            )
+        )
+
+    @display(description="Schule")
+    def display_school(self, obj: TandemPairing) -> str:
+        return obj.supervision_a.school.name
+
+    @display(description="Wochenstunden")
+    def display_weekly_hours(self, obj: TandemPairing) -> str:
+        return HourMinuteDurationField.format_std(obj.supervision_a.weekly_hours)
+
+
+class CostPayerFilter(SimpleListFilter):
     title = "Kostenträger"
     parameter_name = "kostentraeger"
 
@@ -335,17 +385,19 @@ class KostentraegerFilter(SimpleListFilter):
         return queryset
 
 
-@admin.register(SchulAuswertung)
-class SchulAuswertungAdmin(BaseModelAdmin):
+@admin.register(SchoolReport)
+class SchoolReportAdmin(BaseModelAdmin):
     list_display = [
         "display_school",
         "display_student",
         "display_payer",
         "weekly_hours",
+        "is_prophylactic",
+        "display_is_tandem",
     ]
     list_filter = [
         ("school", AutocompleteSelectFilter),
-        KostentraegerFilter,
+        CostPayerFilter,
         ("start_date", RangeDateFilter),
     ]
     list_filter_submit = True
@@ -355,28 +407,45 @@ class SchulAuswertungAdmin(BaseModelAdmin):
     search_fields = ["student__first_name", "student__last_name", "school__name"]
 
     def get_queryset(self, request):
+        tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
         return (
             super()
             .get_queryset(request)
             .select_related("school", "student", "student__payer")
+            .annotate(is_tandem=tandem_filter)
         )
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
         try:
             qs = response.context_data["cl"].queryset
+            tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
             agg = qs.aggregate(
                 total_hours=Sum("weekly_hours"),
+                hours_without_tandem=Sum("weekly_hours", filter=~tandem_filter),
+                hours_with_tandem=Sum("weekly_hours", filter=tandem_filter),
                 student_count=Count("student_id", distinct=True),
-                school_count=Count("school_id", distinct=True),
+                prophylactic_count=Count("id", filter=Q(is_prophylactic=True)),
+                tandem_count=Count("id", filter=tandem_filter),
             )
+            fmt = HourMinuteDurationField.format_std
             response.context_data["summary_total_hours"] = (
-                HourMinuteDurationField.format_std(agg["total_hours"])
-                if agg["total_hours"]
-                else "–"
+                fmt(agg["total_hours"]) if agg["total_hours"] else "–"
+            )
+            response.context_data["summary_hours_without_tandem"] = (
+                fmt(agg["hours_without_tandem"]) if agg["hours_without_tandem"] else "–"
+            )
+            response.context_data["summary_hours_with_tandem"] = (
+                fmt(agg["hours_with_tandem"]) if agg["hours_with_tandem"] else "–"
             )
             response.context_data["summary_student_count"] = agg["student_count"] or 0
-            response.context_data["summary_school_count"] = agg["school_count"] or 0
+            response.context_data["summary_prophylactic_count"] = (
+                agg["prophylactic_count"] or 0
+            )
+            response.context_data["summary_tandem_count"] = agg["tandem_count"] or 0
+            response.context_data["summary_school_count"] = (
+                qs.aggregate(s=Count("school_id", distinct=True))["s"] or 0
+            )
         except (AttributeError, KeyError):
             pass
         return response
@@ -391,13 +460,22 @@ class SchulAuswertungAdmin(BaseModelAdmin):
         return False
 
     @display(description="Schule", ordering="school__name")
-    def display_school(self, obj: SchulAuswertung) -> str:
+    def display_school(self, obj: SchoolReport) -> str:
         return obj.school.name
 
     @display(description="Schüler:in", ordering="student__last_name")
-    def display_student(self, obj: SchulAuswertung) -> str:
+    def display_student(self, obj: SchoolReport) -> str:
         return obj.student.full_name
 
     @display(description="Kostenträger", ordering="student__payer__identifier")
-    def display_payer(self, obj: SchulAuswertung) -> str:
+    def display_payer(self, obj: SchoolReport) -> str:
         return str(obj.student.payer)
+
+    @display(description="Tandem", boolean=True)
+    def display_is_tandem(self, obj: SchoolReport) -> bool:
+        return bool(
+            hasattr(obj, "tandem_as_a")
+            and obj.tandem_as_a is not None
+            or hasattr(obj, "tandem_as_b")
+            and obj.tandem_as_b is not None
+        )
