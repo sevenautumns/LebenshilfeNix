@@ -4,9 +4,9 @@ from django import forms
 from django.db.models import QuerySet
 from unfold.widgets import (
     INPUT_CLASSES,
+    UnfoldAdminDateWidget,
     UnfoldAdminSelect2Widget,
     UnfoldAdminSelectWidget,
-    UnfoldAdminSingleDateWidget,
 )
 
 
@@ -68,12 +68,12 @@ class SupervisionRequestFilterForm(forms.Form):
     start_date_from = forms.DateField(
         required=False,
         label="Von",
-        widget=UnfoldAdminSingleDateWidget(),
+        widget=UnfoldAdminDateWidget(),
     )
     start_date_to = forms.DateField(
         required=False,
         label="Bis",
-        widget=UnfoldAdminSingleDateWidget(),
+        widget=UnfoldAdminDateWidget(),
     )
 
     def __init__(self, *args, **kwargs):
