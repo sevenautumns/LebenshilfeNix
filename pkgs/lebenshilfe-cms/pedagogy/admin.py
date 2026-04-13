@@ -20,7 +20,7 @@ from base.admin import (
     PhoneInline,
     EmailInline,
 )
-from base.admin_views import BaseApplyView, BaseCalculatorView
+from base.admin_views import BaseApplyView, BaseCalculatorView, BaseUnionListView
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
 from .models import School, SchoolReport, Student, Supervision, TandemPairing, Request
@@ -240,6 +240,53 @@ class StudentAdmin(BaseModelAdmin):
         return super().get_queryset(request).select_related("payer")
 
 
+_LABEL_INFO = (
+    "inline-block font-semibold rounded-default text-[11px] uppercase "
+    "whitespace-nowrap h-5 leading-5 px-1.5 "
+    "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+)
+_LABEL_SUCCESS = (
+    "inline-block font-semibold rounded-default text-[11px] uppercase "
+    "whitespace-nowrap h-5 leading-5 px-1.5 "
+    "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+)
+
+
+class SupervisionRequestListView(BaseUnionListView):
+    """Kombinierte Übersichtsliste aus Betreuungen und Anträgen."""
+
+    title = "Betreuungen & Anträge"
+    union_list_filter = [
+        ("school", AutocompleteSelectFilter),
+        ("start_date", RangeDateFilter),
+    ]
+
+    def get_filter_model(self):
+        return Supervision
+
+    def get_queryset_a(self, request):
+        return Supervision.objects.select_related("student", "school")
+
+    def get_queryset_b(self, request):
+        return Request.objects.select_related("student", "school")
+
+    def get_columns(self) -> list[str]:
+        return ["Typ", "Schüler:in", "Schule", "Von", "Bis"]
+
+    def get_row(self, obj) -> list:
+        if isinstance(obj, Supervision):
+            typ = format_html('<span class="{}">{}</span>', _LABEL_INFO, "Betreuung")
+        else:
+            typ = format_html('<span class="{}">{}</span>', _LABEL_SUCCESS, "Antrag")
+        return [
+            typ,
+            str(obj.student),
+            str(obj.school),
+            obj.start_date,
+            obj.end_date if obj.end_date else "–",
+        ]
+
+
 @admin.register(Supervision)
 class SupervisionAdmin(BaseModelAdmin):
     list_display = (
@@ -301,6 +348,13 @@ class SupervisionAdmin(BaseModelAdmin):
 
     def get_urls(self):
         custom = [
+            path(
+                "supervision-request-list/",
+                self.admin_site.admin_view(
+                    SupervisionRequestListView.as_view(model_admin=self)
+                ),
+                name="pedagogy_supervision_request_list",
+            ),
             path(
                 "<int:pk>/calculator/",
                 self.admin_site.admin_view(

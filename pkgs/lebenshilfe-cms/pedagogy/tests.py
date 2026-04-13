@@ -12,7 +12,7 @@ from pedagogy.calculators import (
     calculate_supervision_months,
     run_supervision_calculation,
 )
-from pedagogy.models import School, Student, Supervision, TandemPairing
+from pedagogy.models import Request, School, Student, Supervision, TandemPairing
 
 
 class SupervisionModelTests(TestCase):
@@ -540,3 +540,102 @@ class SupervisionCalculatorViewTests(TestCase):
             ),
             response["Location"],
         )
+
+
+class SupervisionRequestListViewTests(TestCase):
+    """Smoke-Tests für die SupervisionRequestListView."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from django.test import Client
+
+        User = get_user_model()
+        self.user = User.objects.create_superuser(
+            username="union_admin", email="union@example.com", password="password"
+        )
+        self.client = Client()
+        self.client.login(username="union_admin", password="password")
+
+        self.payer = CostPayer.objects.create(identifier="Bezirk Union-Test")
+        self.school = School.objects.create(name="Union-Testschule")
+        self.caretaker = Employee.objects.create(
+            first_name="Max", last_name="Mustermann"
+        )
+        self.student = Student.objects.create(
+            first_name="Lisa", last_name="Listenkind", payer=self.payer
+        )
+
+    @property
+    def url(self):
+        return reverse("admin:pedagogy_supervision_request_list")
+
+    def test_empty_list_returns_200(self):
+        """Leere Datenbank: View liefert HTTP 200 ohne Fehler."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_list_with_supervision_returns_200(self):
+        """View zeigt eine Betreuung korrekt an."""
+        Supervision.objects.create(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2025, 6, 30),
+            weekly_hours=timedelta(hours=5),
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_list_with_request_returns_200(self):
+        """View zeigt einen Antrag korrekt an."""
+        Request.objects.create(
+            student=self.student,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            demand=timedelta(hours=5),
+            state=Request.State.DRAFT,
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_list_with_mixed_data_returns_200(self):
+        """View zeigt Betreuungen und Anträge gemischt an."""
+        Supervision.objects.create(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2025, 6, 30),
+            weekly_hours=timedelta(hours=5),
+        )
+        Request.objects.create(
+            student=self.student,
+            school=self.school,
+            start_date=date(2024, 10, 1),
+            demand=timedelta(hours=3),
+            state=Request.State.APPROVED,
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_filter_by_school_returns_200(self):
+        """GET mit school-Filter liefert HTTP 200."""
+        response = self.client.get(self.url, {"school": str(self.school.pk)})
+        self.assertEqual(response.status_code, 200)
+
+    def test_filter_by_date_range_returns_200(self):
+        """GET mit Datumsbereich-Filter liefert HTTP 200."""
+        response = self.client.get(
+            self.url, {"start_date_from": "2024-01-01", "start_date_to": "2025-12-31"}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_unauthenticated_redirects(self):
+        """Nicht eingeloggter Zugriff wird auf Login weitergeleitet."""
+        from django.test import Client
+
+        anon = Client()
+        response = anon.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response["Location"])
