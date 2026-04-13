@@ -1,8 +1,11 @@
+from datetime import date
 from urllib.parse import urlencode
 
 from django.contrib import messages
 from django import forms
-from django.http import Http404
+from django.core.paginator import EmptyPage, InvalidPage, Paginator
+from django.db.models import QuerySet
+from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.formats import number_format
@@ -201,3 +204,207 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
             messages.success(request, self.success_message(formatted))
         params = calc_view.overrides_to_params(overrides)
         return redirect(self.get_redirect_url(pk, params))
+
+
+# ---------------------------------------------------------------------------
+# Union-Listen-Views
+# ---------------------------------------------------------------------------
+
+
+class _UnionChangeList:
+    """Leichtgewichtiger ChangeList-Ersatz für Unfolds Filter- und Paginierungs-Templates.
+
+    Implementiert das Mindest-Interface, das change_list_filter.html und
+    pagination.html von Unfold/Django erwarten. Keine echte DB-Abfrage —
+    alle Daten kommen bereits gefiltert und paginiert aus UnionListMixin.
+    """
+
+    is_facets_optional: bool = False
+    search_fields: tuple = ()
+    formset = None
+
+    def __init__(
+        self,
+        request: HttpRequest,
+        filter_specs: list,
+        model_admin,
+        paginator: Paginator,
+        page_num: int,
+        result_count: int,
+    ) -> None:
+        self.params = dict(request.GET.items())
+        self.filter_specs = filter_specs
+        self.model_admin = model_admin
+        self.model = model_admin.model
+        self.opts = model_admin.model._meta
+        self.paginator = paginator
+        self.page_num = page_num
+        self.result_count = result_count
+        self.has_filters = bool(filter_specs)
+
+        # Aktive Filter ermitteln für "Alle löschen"-Button
+        filter_param_names: set[str] = set()
+        for spec in filter_specs:
+            filter_param_names.update(spec.expected_parameters())
+        self.has_active_filters = any(k in self.params for k in filter_param_names)
+        self.clear_all_filters_qs = self.get_query_string(
+            remove=list(filter_param_names)
+        )
+
+    def get_query_string(
+        self,
+        new_params: dict | None = None,
+        remove: list | None = None,
+    ) -> str:
+        """Baut einen URL-Query-String — analog zu Django's ChangeList.get_query_string()."""
+        p = dict(self.params)
+        for r in remove or []:
+            p.pop(r, None)
+        for k, v in (new_params or {}).items():
+            if v is None:
+                p.pop(k, None)
+            else:
+                p[k] = v
+        return "?" + urlencode(sorted(p.items()))
+
+
+class UnionListMixin:
+    """Mixin für Union-Listen-Views aus zwei QuerySets mit Unfold-Filtern und Paginierung.
+
+    Filter werden separat auf beide QuerySets angewendet (vor dem Merge),
+    da Django keine Filter auf QuerySet.union() unterstützt.
+
+    Subklassen müssen implementieren:
+      - get_queryset_a(request) -> QuerySet
+      - get_queryset_b(request) -> QuerySet
+      - get_columns() -> list[str]
+      - get_row(obj) -> list
+    """
+
+    union_list_filter: list[tuple[str, type]] = []
+    union_ordering: str = "-start_date"
+    per_page: int = 50
+
+    def get_queryset_a(self, request: HttpRequest) -> QuerySet:
+        raise NotImplementedError
+
+    def get_queryset_b(self, request: HttpRequest) -> QuerySet:
+        raise NotImplementedError
+
+    def get_columns(self) -> list[str]:
+        raise NotImplementedError
+
+    def get_row(self, obj) -> list:
+        raise NotImplementedError
+
+    def get_filter_model(self):
+        """Modell, dessen Felder für die Filter-Instantiierung genutzt werden."""
+        return self.model_admin.model
+
+    def get_breadcrumb_items(self) -> list[dict]:
+        opts = self.model_admin.model._meta
+        return [
+            {
+                "label": opts.app_config.verbose_name,
+                "url": reverse("admin:app_list", kwargs={"app_label": opts.app_label}),
+            },
+            {"label": self.title, "url": None},
+        ]
+
+    def _build_filter_specs(self, request: HttpRequest) -> list:
+        model = self.get_filter_model()
+        specs = []
+        for field_path, filter_class in self.union_list_filter:
+            field = model._meta.get_field(field_path)
+            spec = filter_class(
+                field,
+                request,
+                dict(request.GET.items()),
+                model,
+                self.model_admin,
+                field_path,
+            )
+            specs.append(spec)
+        return specs
+
+    def _apply_filters(
+        self, qs: QuerySet, specs: list, request: HttpRequest
+    ) -> QuerySet:
+        for spec in specs:
+            filtered = spec.queryset(request, qs)
+            if filtered is not None:
+                qs = filtered
+        return qs
+
+    def _sort_key(self, obj):
+        field = self.union_ordering.lstrip("-")
+        return getattr(obj, field, None) or date.min
+
+    def _merged_and_filtered(self, request: HttpRequest, specs: list) -> list:
+        qs_a = self._apply_filters(self.get_queryset_a(request), specs, request)
+        qs_b = self._apply_filters(self.get_queryset_b(request), specs, request)
+        merged = list(qs_a) + list(qs_b)
+        merged.sort(key=self._sort_key, reverse=self.union_ordering.startswith("-"))
+        return merged
+
+    def _build_table(self, page_objects) -> dict:
+        return {
+            "headers": self.get_columns(),
+            "rows": [{"cols": self.get_row(obj)} for obj in page_objects],
+            "striped": 1,
+        }
+
+    def get_context_data(self, **kwargs) -> dict:
+        ctx = super().get_context_data(**kwargs)
+        request = self.request
+        specs = self._build_filter_specs(request)
+        merged = self._merged_and_filtered(request, specs)
+        result_count = len(merged)
+
+        paginator = Paginator(merged, self.per_page)
+        try:
+            page_num = int(request.GET.get("p", 1))
+        except (ValueError, TypeError):
+            page_num = 1
+        try:
+            page_obj = paginator.page(page_num)
+        except (EmptyPage, InvalidPage):
+            page_obj = paginator.page(paginator.num_pages)
+
+        cl = _UnionChangeList(
+            request=request,
+            filter_specs=specs,
+            model_admin=self.model_admin,
+            paginator=paginator,
+            page_num=page_obj.number,
+            result_count=result_count,
+        )
+
+        ctx.update(
+            {
+                "title": self.title,
+                "cl": cl,
+                "table": self._build_table(page_obj.object_list),
+                "breadcrumb_items": self.get_breadcrumb_items(),
+                "opts": self.model_admin.model._meta,
+                "media": self.model_admin.media,
+                "page_range": paginator.get_elided_page_range(page_obj.number),
+                "pagination_required": paginator.num_pages > 1,
+            }
+        )
+        return ctx
+
+
+class BaseUnionListView(UnionListMixin, UnfoldModelAdminViewMixin, TemplateView):
+    """Basisklasse für Union-Listen-Views aus zwei QuerySets.
+
+    Analog zu BaseCalculatorView — wird mit model_admin als View-Parameter
+    instantiiert und in get_urls() einer ModelAdmin-Klasse registriert.
+    """
+
+    template_name = "admin/union_list_base.html"
+    permission_required = []
+    title = "Übersicht"
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_context_data())

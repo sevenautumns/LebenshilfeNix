@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% load i18n unfold %}
+
+{% block breadcrumbs %}
+<nav aria-label="{% translate 'Breadcrumbs' %}">
+  <ul class="mb-4 flex gap-x-3 text-sm font-medium text-base-400 dark:text-base-500">
+    {% url 'admin:index' as admin_index_url %}
+    {% include "unfold/helpers/breadcrumb_item.html" with name=_("Home") link=admin_index_url %}
+    {% for item in breadcrumb_items %}
+      {% include "unfold/helpers/breadcrumb_item.html" with name=item.label link=item.url %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endblock %}
+
+{% block content %}
+{{ media }}
+
+<div x-data="{ filterOpen: false }">
+
+  {% component "unfold/components/flex.html" with class="mb-6 items-center justify-between" %}
+    {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
+    {# Filter-Schaltfläche für kleine Bildschirme (2xl: immer sichtbar per CSS) #}
+    <button
+      class="2xl:hidden bg-white border border-base-200 cursor-pointer flex gap-1.5 items-center px-3 py-1.5 rounded-default shadow-xs text-sm font-medium text-font-important-light dark:bg-base-900 dark:border-base-700 dark:text-font-important-dark"
+      x-on:click="filterOpen = !filterOpen"
+      type="button">
+      <span class="material-symbols-outlined text-sm">filter_list</span>
+      {% trans "Filter" %}
+    </button>
+  {% endcomponent %}
+
+  <div class="flex gap-6 items-start">
+
+    {# Filter-Sidebar — Unfold-Template, responsive (sticky auf 2xl, Modal auf kleinen Screens) #}
+    {% include "unfold/helpers/change_list_filter.html" %}
+
+    {# Hauptinhalt #}
+    <div class="grow min-w-0">
+      {% component "unfold/components/card.html" with card_included=1 %}
+        {% component "unfold/components/table.html" with table=table card_included=1 %}{% endcomponent %}
+      {% endcomponent %}
+
+      {% if pagination_required %}
+        <div class="border-t border-base-200 dark:border-base-700">
+          {% include "admin/pagination.html" %}
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
