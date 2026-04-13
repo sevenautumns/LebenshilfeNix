@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django import forms
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Value, CharField
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -272,16 +272,55 @@ class UnionListMixin:
             return form.filter_queryset(qs)
         return qs
 
-    def _sort_key(self, obj):
-        field = self.union_ordering.lstrip("-")
-        return getattr(obj, field, None) or date.min
+    def _get_id_union_queryset(self, request: HttpRequest, form) -> QuerySet:
+        """Baut ein kombiniertes QuerySet aus (id, type, sort_field) für die Paginierung."""
+        sort_field = self.union_ordering.lstrip("-")
 
-    def _merged_and_filtered(self, request: HttpRequest, form) -> list:
-        qs_a = self._apply_filter_form(self.get_queryset_a(request), form)
-        qs_b = self._apply_filter_form(self.get_queryset_b(request), form)
-        merged = list(qs_a) + list(qs_b)
-        merged.sort(key=self._sort_key, reverse=self.union_ordering.startswith("-"))
-        return merged
+        qs_a = self._apply_filter_form(self.get_queryset_a(request), form).annotate(
+            _row_type=Value("A", output_field=CharField())
+        )
+
+        qs_b = self._apply_filter_form(self.get_queryset_b(request), form).annotate(
+            _row_type=Value("B", output_field=CharField())
+        )
+
+        # Wir brauchen nur ID, Typ und das Sortierfeld für den Union.
+        # Wichtig: Wir müssen die Sortierung der Teil-Querysets löschen (.order_by()),
+        # da ORDER BY in UNION-Subqueries bei vielen DBs (z.B. SQLite) nicht erlaubt ist.
+        combined = (
+            qs_a.values("pk", "_row_type", sort_field)
+            .order_by()
+            .union(qs_b.values("pk", "_row_type", sort_field).order_by())
+        )
+
+        return combined.order_by(self.union_ordering)
+
+    def _fetch_full_page_objects(self, request, id_type_list) -> list:
+        """Lädt die vollständigen Modellinstanzen für eine Liste von (id, type) Paaren."""
+        ids_a = [item["pk"] for item in id_type_list if item["_row_type"] == "A"]
+        ids_b = [item["pk"] for item in id_type_list if item["_row_type"] == "B"]
+
+        objs_a = (
+            {obj.pk: obj for obj in self.get_queryset_a(request).filter(pk__in=ids_a)}
+            if ids_a
+            else {}
+        )
+        objs_b = (
+            {obj.pk: obj for obj in self.get_queryset_b(request).filter(pk__in=ids_b)}
+            if ids_b
+            else {}
+        )
+
+        # In der ursprünglichen Reihenfolge der Paginierung zusammensetzen
+        final_list = []
+        for item in id_type_list:
+            pk, row_type = item["pk"], item["_row_type"]
+            if row_type == "A" and pk in objs_a:
+                final_list.append(objs_a[pk])
+            elif row_type == "B" and pk in objs_b:
+                final_list.append(objs_b[pk])
+
+        return final_list
 
     def _build_table(self, page_objects) -> dict:
         return {
@@ -305,19 +344,24 @@ class UnionListMixin:
             filter_form_class(request.GET or None) if filter_form_class else None
         )
 
-        merged = self._merged_and_filtered(request, filter_form)
+        # 1. Paginierung auf ID-Ebene (DB-seitig)
+        id_union_qs = self._get_id_union_queryset(request, filter_form)
+        paginator = Paginator(id_union_qs, self.per_page)
 
-        paginator = Paginator(merged, self.per_page)
         try:
             page_num = int(request.GET.get("p", 1))
         except (ValueError, TypeError):
             page_num = 1
+
         try:
             page_obj = paginator.page(page_num)
         except (EmptyPage, InvalidPage):
             page_obj = paginator.page(paginator.num_pages)
 
-        # Build query string base (all current GET params except 'p')
+        # 2. Nur die 50 Objekte der aktuellen Seite voll auflösen (DB-seitig)
+        full_objects = self._fetch_full_page_objects(request, page_obj.object_list)
+
+        # 3. Query-String-Helfer für Pagination-Links
         params = request.GET.copy()
         params.pop("p", None)
         query_string_base = params.urlencode()
@@ -330,7 +374,7 @@ class UnionListMixin:
                 "query_string_base": query_string_base,
                 "filter_form": filter_form,
                 "has_active_filters": self._has_active_filters(filter_form),
-                "table": self._build_table(page_obj.object_list),
+                "table": self._build_table(full_objects),
                 "breadcrumb_items": self.get_breadcrumb_items(),
                 "opts": self.model_admin.model._meta,
                 "media": self.model_admin.media
