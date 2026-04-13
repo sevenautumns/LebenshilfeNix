@@ -256,13 +256,11 @@ class SupervisionRequestListView(BaseUnionListView):
     """Kombinierte Übersichtsliste aus Betreuungen und Anträgen."""
 
     title = "Betreuungen & Anträge"
-    union_list_filter = [
-        ("school", AutocompleteSelectFilter),
-        ("start_date", RangeDateFilter),
-    ]
 
-    def get_filter_model(self):
-        return Supervision
+    def get_filter_form_class(self):
+        from .forms import SupervisionRequestFilterForm
+
+        return SupervisionRequestFilterForm
 
     def get_queryset_a(self, request):
         return Supervision.objects.select_related("student", "school")

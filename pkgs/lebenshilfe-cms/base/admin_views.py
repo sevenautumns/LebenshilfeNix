@@ -212,44 +212,30 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 
 
 class _UnionChangeList:
-    """Leichtgewichtiger ChangeList-Ersatz für Unfolds Filter- und Paginierungs-Templates.
+    """Leichtgewichtiger ChangeList-Ersatz für Unfolds Paginierungs-Template.
 
-    Implementiert das Mindest-Interface, das change_list_filter.html und
-    pagination.html von Unfold/Django erwarten. Keine echte DB-Abfrage —
-    alle Daten kommen bereits gefiltert und paginiert aus UnionListMixin.
+    Implementiert das Mindest-Interface, das pagination.html von Django erwartet.
+    Keine echte DB-Abfrage — alle Daten kommen bereits paginiert aus UnionListMixin.
     """
 
-    is_facets_optional: bool = False
     search_fields: tuple = ()
     formset = None
 
     def __init__(
         self,
         request: HttpRequest,
-        filter_specs: list,
         model_admin,
         paginator: Paginator,
         page_num: int,
         result_count: int,
     ) -> None:
         self.params = dict(request.GET.items())
-        self.filter_specs = filter_specs
         self.model_admin = model_admin
         self.model = model_admin.model
         self.opts = model_admin.model._meta
         self.paginator = paginator
         self.page_num = page_num
         self.result_count = result_count
-        self.has_filters = bool(filter_specs)
-
-        # Aktive Filter ermitteln für "Alle löschen"-Button
-        filter_param_names: set[str] = set()
-        for spec in filter_specs:
-            filter_param_names.update(spec.expected_parameters())
-        self.has_active_filters = any(k in self.params for k in filter_param_names)
-        self.clear_all_filters_qs = self.get_query_string(
-            remove=list(filter_param_names)
-        )
 
     def get_query_string(
         self,
@@ -269,19 +255,21 @@ class _UnionChangeList:
 
 
 class UnionListMixin:
-    """Mixin für Union-Listen-Views aus zwei QuerySets mit Unfold-Filtern und Paginierung.
+    """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
 
-    Filter werden separat auf beide QuerySets angewendet (vor dem Merge),
-    da Django keine Filter auf QuerySet.union() unterstützt.
+    Filter werden über eine Django Form auf beide QuerySets separat angewendet
+    (vor dem Merge), da Django keine Filter auf QuerySet.union() unterstützt.
 
     Subklassen müssen implementieren:
       - get_queryset_a(request) -> QuerySet
       - get_queryset_b(request) -> QuerySet
       - get_columns() -> list[str]
       - get_row(obj) -> list
+
+    Optional:
+      - get_filter_form_class() -> Form-Klasse mit filter_queryset(qs)-Methode
     """
 
-    union_list_filter: list[tuple[str, type]] = []
     union_ordering: str = "-start_date"
     per_page: int = 50
 
@@ -297,9 +285,9 @@ class UnionListMixin:
     def get_row(self, obj) -> list:
         raise NotImplementedError
 
-    def get_filter_model(self):
-        """Modell, dessen Felder für die Filter-Instantiierung genutzt werden."""
-        return self.model_admin.model
+    def get_filter_form_class(self):
+        """Gibt die Filter-Formularklasse zurück. Optional — Subklassen überschreiben."""
+        return None
 
     def get_breadcrumb_items(self) -> list[dict]:
         opts = self.model_admin.model._meta
@@ -311,38 +299,19 @@ class UnionListMixin:
             {"label": self.title, "url": None},
         ]
 
-    def _build_filter_specs(self, request: HttpRequest) -> list:
-        model = self.get_filter_model()
-        specs = []
-        for field_path, filter_class in self.union_list_filter:
-            field = model._meta.get_field(field_path)
-            spec = filter_class(
-                field,
-                request,
-                dict(request.GET.items()),
-                model,
-                self.model_admin,
-                field_path,
-            )
-            specs.append(spec)
-        return specs
-
-    def _apply_filters(
-        self, qs: QuerySet, specs: list, request: HttpRequest
-    ) -> QuerySet:
-        for spec in specs:
-            filtered = spec.queryset(request, qs)
-            if filtered is not None:
-                qs = filtered
+    def _apply_filter_form(self, qs: QuerySet, form) -> QuerySet:
+        """Wendet das Filter-Formular auf ein QuerySet an."""
+        if form is not None:
+            return form.filter_queryset(qs)
         return qs
 
     def _sort_key(self, obj):
         field = self.union_ordering.lstrip("-")
         return getattr(obj, field, None) or date.min
 
-    def _merged_and_filtered(self, request: HttpRequest, specs: list) -> list:
-        qs_a = self._apply_filters(self.get_queryset_a(request), specs, request)
-        qs_b = self._apply_filters(self.get_queryset_b(request), specs, request)
+    def _merged_and_filtered(self, request: HttpRequest, form) -> list:
+        qs_a = self._apply_filter_form(self.get_queryset_a(request), form)
+        qs_b = self._apply_filter_form(self.get_queryset_b(request), form)
         merged = list(qs_a) + list(qs_b)
         merged.sort(key=self._sort_key, reverse=self.union_ordering.startswith("-"))
         return merged
@@ -354,11 +323,22 @@ class UnionListMixin:
             "striped": 1,
         }
 
+    def _has_active_filters(self, form) -> bool:
+        """Prüft ob der Nutzer aktive Filterparameter gesetzt hat."""
+        if form is None:
+            return False
+        return any(self.request.GET.get(field_name) for field_name in form.fields)
+
     def get_context_data(self, **kwargs) -> dict:
         ctx = super().get_context_data(**kwargs)
         request = self.request
-        specs = self._build_filter_specs(request)
-        merged = self._merged_and_filtered(request, specs)
+
+        filter_form_class = self.get_filter_form_class()
+        filter_form = (
+            filter_form_class(request.GET or None) if filter_form_class else None
+        )
+
+        merged = self._merged_and_filtered(request, filter_form)
         result_count = len(merged)
 
         paginator = Paginator(merged, self.per_page)
@@ -371,9 +351,8 @@ class UnionListMixin:
         except (EmptyPage, InvalidPage):
             page_obj = paginator.page(paginator.num_pages)
 
-        cl = _UnionChangeList(
+        pagination_cl = _UnionChangeList(
             request=request,
-            filter_specs=specs,
             model_admin=self.model_admin,
             paginator=paginator,
             page_num=page_obj.number,
@@ -383,11 +362,14 @@ class UnionListMixin:
         ctx.update(
             {
                 "title": self.title,
-                "cl": cl,
+                "pagination_cl": pagination_cl,
+                "filter_form": filter_form,
+                "has_active_filters": self._has_active_filters(filter_form),
                 "table": self._build_table(page_obj.object_list),
                 "breadcrumb_items": self.get_breadcrumb_items(),
                 "opts": self.model_admin.model._meta,
-                "media": self.model_admin.media,
+                "media": self.model_admin.media
+                + (filter_form.media if filter_form else forms.Media()),
                 "page_range": paginator.get_elided_page_range(page_obj.number),
                 "pagination_required": paginator.num_pages > 1,
             }

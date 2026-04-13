@@ -1,7 +1,13 @@
 from decimal import Decimal
 
 from django import forms
-from unfold.widgets import INPUT_CLASSES, UnfoldAdminSelect2Widget
+from django.db.models import QuerySet
+from unfold.widgets import (
+    INPUT_CLASSES,
+    UnfoldAdminSelect2Widget,
+    UnfoldAdminSelectWidget,
+    UnfoldAdminSingleDateWidget,
+)
 
 
 class SupervisionCalculatorOverridesForm(forms.Form):
@@ -49,3 +55,40 @@ class SupervisionCalculatorOverridesForm(forms.Form):
         self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(
             "-valid_from"
         )
+
+
+class SupervisionRequestFilterForm(forms.Form):
+    school = forms.ModelChoiceField(
+        queryset=None,  # gesetzt in __init__
+        required=False,
+        label="Schule",
+        empty_label="— Alle Schulen —",
+        widget=UnfoldAdminSelectWidget(),
+    )
+    start_date_from = forms.DateField(
+        required=False,
+        label="Von",
+        widget=UnfoldAdminSingleDateWidget(),
+    )
+    start_date_to = forms.DateField(
+        required=False,
+        label="Bis",
+        widget=UnfoldAdminSingleDateWidget(),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from pedagogy.models import School
+
+        self.fields["school"].queryset = School.objects.order_by("name")
+
+    def filter_queryset(self, qs: QuerySet) -> QuerySet:
+        if not self.is_valid():
+            return qs
+        if school := self.cleaned_data.get("school"):
+            qs = qs.filter(school=school)
+        if from_date := self.cleaned_data.get("start_date_from"):
+            qs = qs.filter(start_date__gte=from_date)
+        if to_date := self.cleaned_data.get("start_date_to"):
+            qs = qs.filter(start_date__lte=to_date)
+        return qs
