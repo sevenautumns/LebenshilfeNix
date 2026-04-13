@@ -13,9 +13,11 @@
 </nav>
 {% endblock %}
 
-{% block content %}
+{% block extrahead %}
 {{ media }}
+{% endblock %}
 
+{% block content %}
 {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
 
 <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-4">

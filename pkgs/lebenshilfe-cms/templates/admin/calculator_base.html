@@ -13,9 +13,11 @@
 </nav>
 {% endblock %}
 
-{% block content %}
+{% block extrahead %}
 {{ media }}
+{% endblock %}
 
+{% block content %}
 {% component "unfold/components/flex.html" with class="mb-4 items-center justify-between" %}
   {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
   
