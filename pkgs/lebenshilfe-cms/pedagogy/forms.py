@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django import forms
 from django.db.models import QuerySet
-from django.urls import reverse
 from unfold.widgets import (
     INPUT_CLASSES,
     UnfoldAdminDateWidget,
@@ -57,10 +56,6 @@ class SupervisionCalculatorOverridesForm(forms.Form):
             "-valid_from"
         )
 
-    @property
-    def media(self):
-        return super().media + forms.Media(js=[reverse("javascript-catalog")])
-
 
 class SupervisionRequestFilterForm(forms.Form):
     school = forms.ModelChoiceField(
@@ -86,10 +81,6 @@ class SupervisionRequestFilterForm(forms.Form):
         from pedagogy.models import School
 
         self.fields["school"].queryset = School.objects.order_by("name")
-
-    @property
-    def media(self):
-        return super().media + forms.Media(js=[reverse("javascript-catalog")])
 
     def filter_queryset(self, qs: QuerySet) -> QuerySet:
         if not self.is_valid():

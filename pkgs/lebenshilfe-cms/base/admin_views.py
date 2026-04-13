@@ -111,7 +111,8 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
                 "opts": opts,
                 "form": form,
                 "media": self.model_admin.media
-                + (form.media if form else forms.Media()),
+                + (form.media if form else forms.Media())
+                + forms.Media(js=[reverse("javascript-catalog")]),
                 "change_url": reverse(
                     f"admin:{opts.app_label}_{opts.model_name}_change", args=[obj.pk]
                 ),
@@ -325,7 +326,8 @@ class UnionListMixin:
                 "breadcrumb_items": self.get_breadcrumb_items(),
                 "opts": self.model_admin.model._meta,
                 "media": self.model_admin.media
-                + (filter_form.media if filter_form else forms.Media()),
+                + (filter_form.media if filter_form else forms.Media())
+                + forms.Media(js=[reverse("javascript-catalog")]),
                 "page_range": paginator.get_elided_page_range(page_obj.number),
                 "pagination_required": paginator.num_pages > 1,
             }
