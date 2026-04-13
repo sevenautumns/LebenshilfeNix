@@ -213,23 +213,32 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 
 
 class UnionListMixin:
-    """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
-
-    Filter werden über eine Django Form auf beide QuerySets separat angewendet
-    (vor dem Merge), da Django keine Filter auf QuerySet.union() unterstützt.
-
-    Subklassen müssen implementieren:
-      - get_queryset_a(request) -> QuerySet
-      - get_queryset_b(request) -> QuerySet
-      - get_columns() -> list[str]
-      - get_row(obj) -> list
-
-    Optional:
-      - get_filter_form_class() -> Form-Klasse mit filter_queryset(qs)-Methode
-    """
+    """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung."""
 
     union_ordering: str = "-start_date"
     per_page: int = 50
+
+    # Standard Unfold Badge Styles
+    LABEL_INFO = (
+        "inline-block font-semibold rounded-default text-[11px] uppercase "
+        "whitespace-nowrap h-5 leading-5 px-1.5 "
+        "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+    )
+    LABEL_SUCCESS = (
+        "inline-block font-semibold rounded-default text-[11px] uppercase "
+        "whitespace-nowrap h-5 leading-5 px-1.5 "
+        "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+    )
+    LABEL_WARNING = (
+        "inline-block font-semibold rounded-default text-[11px] uppercase "
+        "whitespace-nowrap h-5 leading-5 px-1.5 "
+        "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
+    )
+    LABEL_DANGER = (
+        "inline-block font-semibold rounded-default text-[11px] uppercase "
+        "whitespace-nowrap h-5 leading-5 px-1.5 "
+        "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+    )
 
     def get_queryset_a(self, request: HttpRequest) -> QuerySet:
         raise NotImplementedError
@@ -297,7 +306,6 @@ class UnionListMixin:
         )
 
         merged = self._merged_and_filtered(request, filter_form)
-        result_count = len(merged)
 
         paginator = Paginator(merged, self.per_page)
         try:

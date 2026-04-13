@@ -240,18 +240,6 @@ class StudentAdmin(BaseModelAdmin):
         return super().get_queryset(request).select_related("payer")
 
 
-_LABEL_INFO = (
-    "inline-block font-semibold rounded-default text-[11px] uppercase "
-    "whitespace-nowrap h-5 leading-5 px-1.5 "
-    "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-)
-_LABEL_SUCCESS = (
-    "inline-block font-semibold rounded-default text-[11px] uppercase "
-    "whitespace-nowrap h-5 leading-5 px-1.5 "
-    "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-)
-
-
 class SupervisionRequestListView(BaseUnionListView):
     """Kombinierte Übersichtsliste aus Betreuungen und Anträgen."""
 
@@ -273,9 +261,13 @@ class SupervisionRequestListView(BaseUnionListView):
 
     def get_row(self, obj) -> list:
         if isinstance(obj, Supervision):
-            typ = format_html('<span class="{}">{}</span>', _LABEL_INFO, "Betreuung")
+            typ = format_html(
+                '<span class="{}">{}</span>', self.LABEL_INFO, "Betreuung"
+            )
         else:
-            typ = format_html('<span class="{}">{}</span>', _LABEL_SUCCESS, "Antrag")
+            typ = format_html(
+                '<span class="{}">{}</span>', self.LABEL_SUCCESS, "Antrag"
+            )
         return [
             typ,
             str(obj.student),
