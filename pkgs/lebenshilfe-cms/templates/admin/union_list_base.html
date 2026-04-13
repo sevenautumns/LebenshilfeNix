@@ -50,8 +50,44 @@
     {% endcomponent %}
 
     {% if pagination_required %}
-      <div class="mt-2 border-t border-base-200 dark:border-base-700">
-        {% include "admin/pagination.html" with cl=pagination_cl %}
+      <div class="mt-4 flex flex-col items-center justify-between gap-4 border-t border-base-200 pt-4 dark:border-base-700 sm:flex-row">
+        <div class="text-sm text-base-500 dark:text-base-400">
+          {% blocktranslate with start=page_obj.start_index end=page_obj.end_index count counter=paginator.count %}
+            Showing {{ start }} to {{ end }} of {{ counter }} result
+          {% plural %}
+            Showing {{ start }} to {{ end }} of {{ counter }} results
+          {% endblocktranslate %}
+        </div>
+
+        <nav class="flex items-center gap-1" aria-label="{% trans 'Pagination' %}">
+          {% if page_obj.has_previous %}
+            <a href="?{{ query_string_base }}&p={{ page_obj.previous_page_number }}" class="flex h-9 items-center justify-center rounded-md border border-base-200 bg-white px-3 text-sm font-medium text-base-700 hover:bg-base-50 dark:border-base-700 dark:bg-base-900 dark:text-base-200 dark:hover:bg-base-800">
+              {% trans "Previous" %}
+            </a>
+          {% endif %}
+
+          <div class="flex items-center gap-1">
+            {% for i in page_range %}
+              {% if i == paginator.ELLIPSIS %}
+                <span class="flex h-9 w-9 items-center justify-center text-base-400">...</span>
+              {% elif i == page_obj.number %}
+                <span class="flex h-9 w-9 items-center justify-center rounded-md bg-primary-600 text-sm font-semibold text-white">
+                  {{ i }}
+                </span>
+              {% else %}
+                <a href="?{{ query_string_base }}&p={{ i }}" class="flex h-9 w-9 items-center justify-center rounded-md border border-base-200 bg-white text-sm font-medium text-base-700 hover:bg-base-50 dark:border-base-700 dark:bg-base-900 dark:text-base-200 dark:hover:bg-base-800">
+                  {{ i }}
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {% if page_obj.has_next %}
+            <a href="?{{ query_string_base }}&p={{ page_obj.next_page_number }}" class="flex h-9 items-center justify-center rounded-md border border-base-200 bg-white px-3 text-sm font-medium text-base-700 hover:bg-base-50 dark:border-base-700 dark:bg-base-900 dark:text-base-200 dark:hover:bg-base-800">
+              {% trans "Next" %}
+            </a>
+          {% endif %}
+        </nav>
       </div>
     {% endif %}
   </div>

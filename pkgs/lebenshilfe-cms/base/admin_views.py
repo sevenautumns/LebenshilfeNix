@@ -211,49 +211,6 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 # ---------------------------------------------------------------------------
 
 
-class _UnionChangeList:
-    """Leichtgewichtiger ChangeList-Ersatz für Unfolds Paginierungs-Template.
-
-    Implementiert das Mindest-Interface, das pagination.html von Django erwartet.
-    Keine echte DB-Abfrage — alle Daten kommen bereits paginiert aus UnionListMixin.
-    """
-
-    search_fields: tuple = ()
-    formset = None
-
-    def __init__(
-        self,
-        request: HttpRequest,
-        model_admin,
-        paginator: Paginator,
-        page_num: int,
-        result_count: int,
-    ) -> None:
-        self.params = dict(request.GET.items())
-        self.model_admin = model_admin
-        self.model = model_admin.model
-        self.opts = model_admin.model._meta
-        self.paginator = paginator
-        self.page_num = page_num
-        self.result_count = result_count
-
-    def get_query_string(
-        self,
-        new_params: dict | None = None,
-        remove: list | None = None,
-    ) -> str:
-        """Baut einen URL-Query-String — analog zu Django's ChangeList.get_query_string()."""
-        p = dict(self.params)
-        for r in remove or []:
-            p.pop(r, None)
-        for k, v in (new_params or {}).items():
-            if v is None:
-                p.pop(k, None)
-            else:
-                p[k] = v
-        return "?" + urlencode(sorted(p.items()))
-
-
 class UnionListMixin:
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
 
@@ -351,18 +308,17 @@ class UnionListMixin:
         except (EmptyPage, InvalidPage):
             page_obj = paginator.page(paginator.num_pages)
 
-        pagination_cl = _UnionChangeList(
-            request=request,
-            model_admin=self.model_admin,
-            paginator=paginator,
-            page_num=page_obj.number,
-            result_count=result_count,
-        )
+        # Build query string base (all current GET params except 'p')
+        params = request.GET.copy()
+        params.pop("p", None)
+        query_string_base = params.urlencode()
 
         ctx.update(
             {
                 "title": self.title,
-                "pagination_cl": pagination_cl,
+                "page_obj": page_obj,
+                "paginator": paginator,
+                "query_string_base": query_string_base,
                 "filter_form": filter_form,
                 "has_active_filters": self._has_active_filters(filter_form),
                 "table": self._build_table(page_obj.object_list),
