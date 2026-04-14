@@ -303,9 +303,8 @@ class UnionListMixin(AdminViewMixin):
             _row_type=Value("B", output_field=CharField())
         )
 
-        # Wir brauchen nur ID, Typ und das Sortierfeld für den Union.
-        # Wichtig: Wir müssen die Sortierung der Teil-Querysets löschen (.order_by()),
-        # da ORDER BY in UNION-Subqueries bei vielen DBs (z.B. SQLite) nicht erlaubt ist.
+        # Sortierung der Teilabfragen löschen — ORDER BY in UNION-Subqueries ist
+        # im SQL-Standard nicht erlaubt. Die Gesamtsortierung kommt danach.
         combined = (
             qs_a.values("pk", "_row_type", sort_field)
             .order_by()
