@@ -44,9 +44,12 @@ class Address(models.Model):
     district = models.CharField(max_length=255, blank=True, verbose_name="Ortsteil")
 
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="+"
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name="Inhaltstyp",
     )
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(verbose_name="Objekt-ID")
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
@@ -66,9 +69,12 @@ class Phone(models.Model):
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="+"
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name="Inhaltstyp",
     )
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(verbose_name="Objekt-ID")
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
@@ -85,9 +91,12 @@ class Email(models.Model):
     primary = models.BooleanField(default=False, verbose_name="Primär")
 
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="+"
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name="Inhaltstyp",
     )
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(verbose_name="Objekt-ID")
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
@@ -105,9 +114,12 @@ class BankAccount(models.Model):
     iban = models.CharField(max_length=50, verbose_name="IBAN")
 
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="+"
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name="Inhaltstyp",
     )
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(verbose_name="Objekt-ID")
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
