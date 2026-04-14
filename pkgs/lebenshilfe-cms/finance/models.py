@@ -85,8 +85,8 @@ class CostPayerContact(models.Model):
 
 
 class FeeAgreement(models.Model):
-    valid_from = models.DateField(verbose_name="Gültig von")
-    valid_to = models.DateField(verbose_name="Gültig bis")
+    valid_from = models.DateField(verbose_name="Gültig von", db_index=True)
+    valid_to = models.DateField(verbose_name="Gültig bis", db_index=True)
     price_standard = EuroDecimalField(
         max_digits=10, decimal_places=2, verbose_name="Schulbegleitung (allgemein)"
     )
@@ -151,8 +151,8 @@ class PoolAgreement(models.Model):
         verbose_name="Prophylaktische Betreuungen",
         help_text="Anzahl der prophylaktischen Betreuungen laut Vereinbarung",
     )
-    valid_from = models.DateField(verbose_name="Gültig von")
-    valid_to = models.DateField(verbose_name="Gültig bis")
+    valid_from = models.DateField(verbose_name="Gültig von", db_index=True)
+    valid_to = models.DateField(verbose_name="Gültig bis", db_index=True)
 
     class Meta:
         verbose_name = "Poolvereinbarung"
