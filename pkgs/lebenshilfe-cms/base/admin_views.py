@@ -257,7 +257,8 @@ class UnionListMixin(AdminViewMixin):
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
 
     Sortierung: URL-Parameter ?sort=-field1,field2 (kommasepariert, "-" = absteigend).
-    Shift+Klick auf einen Spaltenheader addiert die Spalte zur Multi-Sort-Liste.
+    Klick auf inaktive Spalte fügt sie vorne ein (ASC). Klick auf aktive Spalte bringt
+    sie nach vorne und togglet die Richtung. Der Pfeil-Icon togglet die Richtung in-place.
     """
 
     default_sort_field: str = "start_date"
@@ -414,9 +415,10 @@ class UnionListMixin(AdminViewMixin):
         """Baut Column-Header-Metadaten für sortierbare Tabellenköpfe.
 
         Jeder Header enthält:
-        - url: Single-Sort-URL (Klick ohne Shift) — ersetzt aktuelle Sortierung
-        - remove_url: Entfernt diese Spalte aus Multi-Sort (nur bei Multi-Sort-Aktivität)
-        - sort_field: Feldname für JS-gestütztes Shift+Klick
+        - url_primary: Klick auf Label — inaktive Spalte vorne einfügen (ASC),
+                       aktive Spalte vorne einfügen mit getoggelter Richtung
+        - url_toggle: Klick auf Pfeil — Richtung in-place togglen (nur wenn aktiv)
+        - remove_url: Klick auf × — Spalte aus Sort entfernen (nur wenn aktiv)
         - sort_priority: Position in der Sortierliste (1-basiert, 0 = inaktiv)
         - ascending: True/False wenn aktiv, None wenn inaktiv
         """
@@ -432,14 +434,29 @@ class UnionListMixin(AdminViewMixin):
             priority, is_asc = sort_map.get(sort_field, (0, None))
             is_active = priority > 0
 
-            # Single-Sort-URL: aktiv+asc → nächster Klick desc; sonst asc
-            new_single = f"{'' if (is_active and is_asc) else ''}{'-' if (is_active and is_asc) else ''}{sort_field}"
-            single_specs = [(sort_field, not (is_active and is_asc))]
-            params_single = request.GET.copy()
-            params_single["sort"] = self._sort_specs_to_param(single_specs)
-            params_single.pop("p", None)
+            # url_primary: an erste Stelle setzen — inaktiv mit ASC, aktiv mit getoggelter Richtung
+            if not is_active:
+                primary_specs = [(sort_field, True)] + sort_specs
+            else:
+                other = [(f, asc) for f, asc in sort_specs if f != sort_field]
+                primary_specs = [(sort_field, not is_asc)] + other
+            params_primary = request.GET.copy()
+            params_primary["sort"] = self._sort_specs_to_param(primary_specs)
+            params_primary.pop("p", None)
 
-            # Remove-URL: Feld aus Multi-Sort entfernen (nur relevant wenn Multi-Sort aktiv)
+            # url_toggle: Richtung in-place togglen, Position beibehalten (nur wenn aktiv)
+            if is_active:
+                toggle_specs = [
+                    (f, not asc if f == sort_field else asc) for f, asc in sort_specs
+                ]
+                params_toggle = request.GET.copy()
+                params_toggle["sort"] = self._sort_specs_to_param(toggle_specs)
+                params_toggle.pop("p", None)
+                url_toggle = f"?{params_toggle.urlencode()}"
+            else:
+                url_toggle = None
+
+            # url_remove: Spalte aus Sort entfernen (immer zeigen wenn aktiv)
             remaining = [(f, asc) for f, asc in sort_specs if f != sort_field]
             params_remove = request.GET.copy()
             if remaining:
@@ -453,9 +470,10 @@ class UnionListMixin(AdminViewMixin):
                     "label": label,
                     "sortable": True,
                     "sort_field": sort_field,
-                    "url": f"?{params_single.urlencode()}",
+                    "url_primary": f"?{params_primary.urlencode()}",
+                    "url_toggle": url_toggle,
                     "remove_url": f"?{params_remove.urlencode()}"
-                    if is_active and len(sort_specs) > 1
+                    if is_active
                     else None,
                     "active": is_active,
                     "ascending": is_asc if is_active else None,

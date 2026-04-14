@@ -61,30 +61,36 @@
                   <th class="align-middle border-b border-base-200 font-semibold py-2 text-left whitespace-nowrap hidden px-3 lg:table-cell dark:border-base-800 dark:bg-white/[.02] first:pl-6 last:pr-6">
                     {% if col.sortable %}
                       <div class="flex items-center gap-1">
-                        {# Haupt-Sort-Link (Klick ohne Shift = Single-Sort) #}
-                        <a href="{{ col.url }}"
-                           class="flex items-center gap-1 hover:text-base-700 dark:hover:text-base-200 union-sort-link"
-                           data-sort-field="{{ col.sort_field }}">
+                        {# Label-Link: inaktive Spalte vorne einfügen (ASC); aktive nach vorne + Richtung togglen #}
+                        <a href="{{ col.url_primary }}"
+                           class="flex items-center gap-1 hover:text-base-700 dark:hover:text-base-200">
                           {{ col.label }}
-                          {% if col.active %}
-                            <span class="material-symbols-outlined" style="font-size: 16px;">
-                              {% if col.ascending %}arrow_upward{% else %}arrow_downward{% endif %}
-                            </span>
-                            {# Prioritätszahl bei Multi-Sort #}
-                            {% if col.multi_sort_active %}
-                              <span class="text-xs font-medium text-primary-600 dark:text-primary-400">{{ col.sort_priority }}</span>
-                            {% endif %}
-                          {% else %}
+                          {% if not col.active %}
                             <span class="material-symbols-outlined opacity-30" style="font-size: 16px;">unfold_more</span>
                           {% endif %}
                         </a>
-                        {# ×-Button: Feld aus Multi-Sort entfernen #}
-                        {% if col.remove_url %}
-                          <a href="{{ col.remove_url }}"
-                             class="flex items-center leading-none text-base-400 hover:text-red-600 dark:text-base-500 dark:hover:text-red-400 ml-0.5"
-                             title="{% trans 'Sortierung entfernen' %}">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">cancel</span>
-                          </a>
+                        {% if col.active %}
+                          {# sortoptions: Pfeil-Toggle + ×-Entfernen #}
+                          <div class="flex items-center ml-2">
+                            <a href="{{ col.url_toggle }}"
+                               class="flex items-center leading-none text-base-400 hover:text-base-500 dark:text-base-500 dark:hover:text-base-400"
+                               title="{% trans 'Sortierung umkehren' %}">
+                              <span class="material-symbols-outlined" style="font-size: 16px;">
+                                {% if col.ascending %}arrow_circle_down{% else %}arrow_circle_up{% endif %}
+                              </span>
+                            </a>
+                            {% if col.remove_url %}
+                              <a href="{{ col.remove_url }}"
+                                 class="flex items-center leading-none text-base-400 hover:text-red-600 dark:text-base-500 dark:hover:text-red-400 ml-0.5"
+                                 title="{% trans 'Sortierung entfernen' %}">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">cancel</span>
+                              </a>
+                            {% endif %}
+                          </div>
+                          {# Prioritätszahl bei Multi-Sort — rechts neben den Buttons #}
+                          {% if col.multi_sort_active %}
+                            <span class="text-xs font-medium text-primary-600 dark:text-primary-400 ml-0.5">{{ col.sort_priority }}</span>
+                          {% endif %}
                         {% endif %}
                       </div>
                     {% else %}
@@ -127,33 +133,6 @@
 
 </div>
 
-{# Shift+Klick: Spalte zur Multi-Sort-Liste addieren #}
-<script>
-document.querySelectorAll(".union-sort-link").forEach(function(link) {
-  link.addEventListener("click", function(e) {
-    if (!e.shiftKey) return;
-    e.preventDefault();
-    var field = this.dataset.sortField;
-    var params = new URLSearchParams(window.location.search);
-    var current = (params.get("sort") || "").split(",").filter(Boolean);
-    var idx = current.findIndex(function(s) { return s.replace(/^-/, "") === field; });
-    if (idx === -1) {
-      current.push(field);
-    } else if (current[idx].startsWith("-")) {
-      current.splice(idx, 1);
-    } else {
-      current[idx] = "-" + field;
-    }
-    if (current.length > 0) {
-      params.set("sort", current.join(","));
-    } else {
-      params.delete("sort");
-    }
-    params.delete("p");
-    window.location.search = params.toString();
-  });
-});
-</script>
 
 {{ media.js }}
 {% endblock %}
