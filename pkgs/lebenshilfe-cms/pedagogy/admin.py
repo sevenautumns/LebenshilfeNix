@@ -15,6 +15,7 @@ from unfold.enums import ActionVariant
 
 from base.admin import (
     BaseModelAdmin,
+    ReadOnlyAdminMixin,
     AddressInline,
     PhoneInline,
     EmailInline,
@@ -39,18 +40,9 @@ from .models import (
 
 
 @admin.register(NewRequest)
-class NewRequestAdmin(BaseModelAdmin):
+class NewRequestAdmin(ReadOnlyAdminMixin, BaseModelAdmin):
     def changelist_view(self, request, extra_context=None):
         return NewRequestListView.as_view(model_admin=self)(request)
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
@@ -500,6 +492,9 @@ class TandemPairingAdmin(BaseModelAdmin):
         return obj.hours_match
 
 
+_TANDEM_FILTER = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
+
+
 class CostPayerFilter(SimpleListFilter):
     title = "Kostenträger"
     parameter_name = "kostentraeger"
@@ -521,7 +516,7 @@ class CostPayerFilter(SimpleListFilter):
 
 
 @admin.register(SchoolReport)
-class SchoolReportAdmin(ListSummaryMixin, BaseModelAdmin):
+class SchoolReportAdmin(ReadOnlyAdminMixin, ListSummaryMixin, BaseModelAdmin):
     list_display = [
         "display_school",
         "display_student",
@@ -541,25 +536,23 @@ class SchoolReportAdmin(ListSummaryMixin, BaseModelAdmin):
     search_fields = ["student__first_name", "student__last_name", "school__name"]
 
     def get_queryset(self, request):
-        tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
         return (
             super()
             .get_queryset(request)
             .select_related("school", "student", "student__payer")
-            .annotate(is_tandem=tandem_filter)
+            .annotate(is_tandem=_TANDEM_FILTER)
         )
 
     def get_summary_sections(self, cl) -> list[list[dict]]:
         qs = cl.queryset
-        tandem_filter = Q(tandem_as_a__isnull=False) | Q(tandem_as_b__isnull=False)
         agg = qs.aggregate(
             total_hours=Sum("weekly_hours"),
-            hours_without_tandem=Sum("weekly_hours", filter=~tandem_filter),
-            hours_with_tandem=Sum("weekly_hours", filter=tandem_filter),
+            hours_without_tandem=Sum("weekly_hours", filter=~_TANDEM_FILTER),
+            hours_with_tandem=Sum("weekly_hours", filter=_TANDEM_FILTER),
             student_count=Count("student_id", distinct=True),
             school_count=Count("school_id", distinct=True),
             prophylactic_count=Count("id", filter=Q(is_prophylactic=True)),
-            tandem_count=Count("id", filter=tandem_filter),
+            tandem_count=Count("id", filter=_TANDEM_FILTER),
         )
         fmt = HourMinuteDurationField.format_std
         return [
@@ -589,15 +582,6 @@ class SchoolReportAdmin(ListSummaryMixin, BaseModelAdmin):
             ],
         ]
 
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
     @display(description="Schule", ordering="school__name")
     def display_school(self, obj: SchoolReport) -> str:
         return obj.school.name
@@ -612,9 +596,4 @@ class SchoolReportAdmin(ListSummaryMixin, BaseModelAdmin):
 
     @display(description="Tandem", boolean=True)
     def display_is_tandem(self, obj: SchoolReport) -> bool:
-        return bool(
-            hasattr(obj, "tandem_as_a")
-            and obj.tandem_as_a is not None
-            or hasattr(obj, "tandem_as_b")
-            and obj.tandem_as_b is not None
-        )
+        return bool(obj.is_tandem)

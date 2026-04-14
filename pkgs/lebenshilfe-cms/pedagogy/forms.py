@@ -9,6 +9,9 @@ from unfold.widgets import (
     UnfoldAdminSelect2Widget,
 )
 
+from finance.models import FeeAgreement
+from pedagogy.models import Request, School
+
 
 class SupervisionCalculatorOverridesForm(forms.Form):
     fee_agreement_override = forms.ModelChoiceField(
@@ -50,8 +53,6 @@ class SupervisionCalculatorOverridesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from finance.models import FeeAgreement
-
         self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(
             "-valid_from"
         )
@@ -65,8 +66,6 @@ def _school_year_bounds() -> tuple[date, date]:
 
 
 class NewRequestFilterForm(forms.Form):
-    from pedagogy.models import Request
-
     school = forms.ModelChoiceField(
         queryset=None,  # gesetzt in __init__
         required=False,
@@ -93,34 +92,34 @@ class NewRequestFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from pedagogy.models import School, Request
-
         self.fields["school"].queryset = School.objects.order_by("name")
         start, end = _school_year_bounds()
         self.fields["start_date_from"].initial = start
         self.fields["start_date_to"].initial = end
         self.fields["state"].initial = Request.State.IN_REVIEW
 
-    def filter_queryset(self, qs: QuerySet) -> QuerySet:
-        from pedagogy.models import Request
-
-        is_request_qs = qs.model is Request
-
+    def _filter_common(self, qs: QuerySet) -> QuerySet:
+        """Gemeinsame Filter die für beide Modelle gelten (Schule, Datumsspanne)."""
         if not self.is_valid():
-            # Ungebunden (erster Aufruf / nach "Zurücksetzen") → Schuljahr- und Zustandsdefault
             start, end = _school_year_bounds()
-            qs = qs.filter(start_date__gte=start, start_date__lte=end)
-            if is_request_qs:
-                qs = qs.filter(state=Request.State.IN_REVIEW)
-            return qs
-
+            return qs.filter(start_date__gte=start, start_date__lte=end)
         if school := self.cleaned_data.get("school"):
             qs = qs.filter(school=school)
         if from_date := self.cleaned_data.get("start_date_from"):
             qs = qs.filter(start_date__gte=from_date)
         if to_date := self.cleaned_data.get("start_date_to"):
             qs = qs.filter(start_date__lte=to_date)
-        if is_request_qs:
-            if state := self.cleaned_data.get("state"):
-                qs = qs.filter(state=state)
+        return qs
+
+    def filter_queryset_a(self, qs: QuerySet) -> QuerySet:
+        """Filter für Betreuungen — kein Zustandsfilter."""
+        return self._filter_common(qs)
+
+    def filter_queryset_b(self, qs: QuerySet) -> QuerySet:
+        """Filter für Anträge — inkl. Zustandsfilter."""
+        qs = self._filter_common(qs)
+        if not self.is_valid():
+            return qs.filter(state=Request.State.IN_REVIEW)
+        if state := self.cleaned_data.get("state"):
+            qs = qs.filter(state=state)
         return qs
