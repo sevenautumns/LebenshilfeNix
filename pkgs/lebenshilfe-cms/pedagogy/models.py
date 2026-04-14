@@ -211,13 +211,13 @@ class Request(models.Model):
 class TandemPairing(models.Model):
     supervision_a = models.OneToOneField(
         Supervision,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="tandem_as_a",
         verbose_name="Betreuung A",
     )
     supervision_b = models.OneToOneField(
         Supervision,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="tandem_as_b",
         verbose_name="Betreuung B",
     )
