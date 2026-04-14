@@ -31,11 +31,12 @@ def render_label(text: str, variant: str = "default", size: str = "md") -> str:
     )
 
 
-class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
-    title = "Rechner"
-    template_name = "admin/calculator_base.html"
-    permission_required = []
-    form_class = None
+class AdminViewMixin:
+    """Gemeinsamer Mixin für alle Custom Admin Views.
+
+    Stellt get_media() bereit, das korrekt jsi18n + Widget-Media lädt.
+    Muss vor UnfoldModelAdminViewMixin in der MRO stehen.
+    """
 
     def get_media(self, form=None) -> forms.Media:
         return (
@@ -43,6 +44,13 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
             + (form.media if form else forms.Media())
             + forms.Media(js=[reverse("javascript-catalog")])
         )
+
+
+class BaseCalculatorView(AdminViewMixin, UnfoldModelAdminViewMixin, TemplateView):
+    title = "Rechner"
+    template_name = "admin/calculator_base.html"
+    permission_required = []
+    form_class = None
 
     def get_queryset(self):
         return self.model_admin.get_queryset(self.request)
@@ -235,7 +243,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 # ---------------------------------------------------------------------------
 
 
-class UnionListMixin:
+class UnionListMixin(AdminViewMixin):
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung."""
 
     union_ordering: str = "-start_date"
@@ -256,13 +264,6 @@ class UnionListMixin:
     def get_filter_form_class(self):
         """Gibt die Filter-Formularklasse zurück. Optional — Subklassen überschreiben."""
         return None
-
-    def get_media(self, form=None) -> forms.Media:
-        return (
-            self.model_admin.media
-            + (form.media if form else forms.Media())
-            + forms.Media(js=[reverse("javascript-catalog")])
-        )
 
     def get_breadcrumb_items(self) -> list[dict]:
         opts = self.model_admin.model._meta

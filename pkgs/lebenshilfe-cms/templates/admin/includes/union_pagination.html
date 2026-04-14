@@ -1,0 +1,25 @@
+{% load i18n unfold %}
+{% if pagination_required %}
+<div class="mt-4 flex flex-col items-center justify-between gap-4 border-t border-base-200 pt-4 dark:border-base-700 sm:flex-row">
+  <p class="text-sm text-base-500 dark:text-base-400">
+    {{ page_obj.start_index }}–{{ page_obj.end_index }} von {{ paginator.count }} Einträgen
+  </p>
+  <nav class="flex items-center gap-1" aria-label="{% trans 'Seitennavigation' %}">
+    {% if page_obj.has_previous %}
+      {% component "unfold/components/button.html" with href="?{{ query_string_base }}&p={{ page_obj.previous_page_number }}" variant="default" %}{% trans "Zurück" %}{% endcomponent %}
+    {% endif %}
+    {% for i in page_range %}
+      {% if i == paginator.ELLIPSIS %}
+        <span class="px-2 text-base-400">…</span>
+      {% elif i == page_obj.number %}
+        {% component "unfold/components/button.html" %}{{ i }}{% endcomponent %}
+      {% else %}
+        {% component "unfold/components/button.html" with href="?{{ query_string_base }}&p={{ i }}" variant="default" %}{{ i }}{% endcomponent %}
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      {% component "unfold/components/button.html" with href="?{{ query_string_base }}&p={{ page_obj.next_page_number }}" variant="default" %}{% trans "Weiter" %}{% endcomponent %}
+    {% endif %}
+  </nav>
+</div>
+{% endif %}
