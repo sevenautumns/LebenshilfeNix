@@ -75,17 +75,13 @@ def run_supervision_calculation(
     # Poolvereinbarung immer suchen
     pool = None
     if sup.student_id and sup.school_id:
-        try:
-            payer = sup.student.payer
-        except Exception:
-            payer = None
-        if payer is not None:
-            pool = PoolAgreement.objects.filter(
-                payer=payer,
-                school=sup.school,
-                valid_from__lte=sup.start_date,
-                valid_to__gte=sup.start_date,
-            ).first()
+        payer = sup.student.payer
+        pool = PoolAgreement.objects.filter(
+            payer=payer,
+            school=sup.school,
+            valid_from__lte=sup.start_date,
+            valid_to__gte=sup.start_date,
+        ).first()
 
     # Entgeltvereinbarung immer suchen (auch wenn Pool gefunden)
     fee = (
