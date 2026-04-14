@@ -1,4 +1,3 @@
-
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
@@ -326,6 +325,12 @@ class SupervisionAdmin(BaseModelAdmin):
         if obj is None:
             return ()
         return super().get_readonly_fields(request, obj)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        return queryset.select_related("student", "caretaker"), use_distinct
 
     @action(
         description="Betreuungsrechner",

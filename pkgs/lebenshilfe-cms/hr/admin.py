@@ -211,6 +211,12 @@ class EmploymentAdmin(BaseModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("employee")
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        return queryset.select_related("employee"), use_distinct
+
     @action(
         description="Vergütungsrechner",
         url_path="calculator-action",
