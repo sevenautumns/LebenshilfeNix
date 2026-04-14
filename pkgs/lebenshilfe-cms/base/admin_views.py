@@ -254,11 +254,18 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 
 
 class UnionListMixin(AdminViewMixin):
-    """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung."""
+    """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
+
+    Sortierung: URL-Parameter ?sort=-field1,field2 (kommasepariert, "-" = absteigend).
+    Shift+Klick auf einen Spaltenheader addiert die Spalte zur Multi-Sort-Liste.
+    """
 
     default_sort_field: str = "start_date"
     default_sort_dir: str = "desc"
     per_page: int = 50
+
+    # Interne Konstante: GET-Parameter die nicht zur Filterform gehören
+    _SORT_PARAMS: frozenset[str] = frozenset({"sort", "p"})
 
     def get_queryset_a(self, request: HttpRequest) -> QuerySet:
         raise NotImplementedError
@@ -300,17 +307,42 @@ class UnionListMixin(AdminViewMixin):
             return form.filter_queryset(qs)
         return qs
 
-    def _resolve_sort(self, request: HttpRequest) -> tuple[str, bool]:
-        """Gibt (sort_field, ascending) zurück, validiert gegen get_columns()."""
+    def _resolve_sort(self, request: HttpRequest) -> list[tuple[str, bool]]:
+        """Parst ?sort=-field1,field2 und gibt eine geordnete Liste von (field, ascending) zurück.
+
+        Validiert jeden Eintrag gegen die erlaubten sort_fields aus get_columns().
+        Fällt auf den konfigurierten Default zurück wenn keine gültigen Felder angegeben.
+        """
         allowed = {sf for _, sf in self.get_columns() if sf}
-        raw = request.GET.get("sort", self.default_sort_field)
-        ascending = request.GET.get("dir", self.default_sort_dir) == "asc"
-        sort_field = raw if raw in allowed else self.default_sort_field
-        return sort_field, ascending
+        raw = request.GET.get("sort", "")
+        specs: list[tuple[str, bool]] = []
+        seen: set[str] = set()
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            ascending = not part.startswith("-")
+            field = part.lstrip("-")
+            if field in allowed and field not in seen:
+                specs.append((field, ascending))
+                seen.add(field)
+        if not specs:
+            specs = [(self.default_sort_field, self.default_sort_dir == "asc")]
+        return specs
+
+    @staticmethod
+    def _actual_field(sort_field: str) -> str:
+        """Gibt den tatsächlichen Feldnamen nach Annotation-Transformation zurück.
+
+        Relationale Felder (student__last_name) werden als student_last_name_sort annotiert.
+        """
+        if "__" in sort_field:
+            return sort_field.replace("__", "_") + "_sort"
+        return sort_field
 
     def _get_id_union_queryset(self, request: HttpRequest, form) -> QuerySet:
-        """Baut ein kombiniertes QuerySet aus (id, type, sort_field) für die Paginierung."""
-        sort_field, ascending = self._resolve_sort(request)
+        """Baut ein kombiniertes QuerySet aus (pk, _row_type, ...sort_fields) für die Paginierung."""
+        sort_specs = self._resolve_sort(request)
 
         qs_a = self._apply_filter_form(self.get_queryset_a(request), form).annotate(
             _row_type=Value("A", output_field=CharField())
@@ -319,31 +351,33 @@ class UnionListMixin(AdminViewMixin):
             _row_type=Value("B", output_field=CharField())
         )
 
-        # Relationale Felder (mit "__") müssen vor der Union annotiert werden,
-        # da UNION-Subqueries keine JOINs über Spaltenaliase hinweg erlauben.
-        if "__" in sort_field:
-            annotation_name = sort_field.replace("__", "_") + "_sort"
-            qs_a = qs_a.annotate(**{annotation_name: F(sort_field)})
-            qs_b = qs_b.annotate(**{annotation_name: F(sort_field)})
-            actual_field = annotation_name
-        else:
-            actual_field = sort_field
-
-        ordering_expr = (
-            F(actual_field).asc(nulls_last=True)
-            if ascending
-            else F(actual_field).desc(nulls_last=True)
-        )
+        # Alle Sort-Felder annotieren und in den SELECT aufnehmen.
+        # Relationale Felder (mit "__") werden als Annotation materialisiert,
+        # da UNION-Subqueries keine Spaltenaliase über JOINs hinweg erlauben.
+        select_fields = ["pk", "_row_type"]
+        ordering_exprs = []
+        for sort_field, ascending in sort_specs:
+            actual = self._actual_field(sort_field)
+            if "__" in sort_field:
+                qs_a = qs_a.annotate(**{actual: F(sort_field)})
+                qs_b = qs_b.annotate(**{actual: F(sort_field)})
+            if actual not in select_fields:
+                select_fields.append(actual)
+            expr = (
+                F(actual).asc(nulls_last=True)
+                if ascending
+                else F(actual).desc(nulls_last=True)
+            )
+            ordering_exprs.append(expr)
 
         # Sortierung der Teilabfragen löschen — ORDER BY in UNION-Subqueries ist
         # im SQL-Standard nicht erlaubt. Die Gesamtsortierung kommt danach.
         combined = (
-            qs_a.values("pk", "_row_type", actual_field)
+            qs_a.values(*select_fields)
             .order_by()
-            .union(qs_b.values("pk", "_row_type", actual_field).order_by())
+            .union(qs_b.values(*select_fields).order_by())
         )
-
-        return combined.order_by(ordering_expr)
+        return combined.order_by(*ordering_exprs)
 
     def _fetch_full_page_objects(self, request, id_type_list) -> list:
         """Lädt die vollständigen Modellinstanzen für eine Liste von (id, type) Paaren."""
@@ -372,28 +406,61 @@ class UnionListMixin(AdminViewMixin):
 
         return final_list
 
+    def _sort_specs_to_param(self, specs: list[tuple[str, bool]]) -> str:
+        """Serialisiert Sort-Specs als URL-Parameter-Wert: "-field1,field2"."""
+        return ",".join(f"{'' if asc else '-'}{f}" for f, asc in specs)
+
     def _build_column_headers(self, request: HttpRequest) -> list[dict]:
-        """Baut die Column-Header-Metadaten für sortierbare Tabellenköpfe."""
-        current_sort, ascending = self._resolve_sort(request)
+        """Baut Column-Header-Metadaten für sortierbare Tabellenköpfe.
+
+        Jeder Header enthält:
+        - url: Single-Sort-URL (Klick ohne Shift) — ersetzt aktuelle Sortierung
+        - remove_url: Entfernt diese Spalte aus Multi-Sort (nur bei Multi-Sort-Aktivität)
+        - sort_field: Feldname für JS-gestütztes Shift+Klick
+        - sort_priority: Position in der Sortierliste (1-basiert, 0 = inaktiv)
+        - ascending: True/False wenn aktiv, None wenn inaktiv
+        """
+        sort_specs = self._resolve_sort(request)
+        sort_map = {field: (i + 1, asc) for i, (field, asc) in enumerate(sort_specs)}
+
         result = []
         for label, sort_field in self.get_columns():
             if sort_field is None:
                 result.append({"label": label, "sortable": False})
                 continue
-            is_active = sort_field == current_sort
-            # Aktiv + aufsteigend → nächster Klick = absteigend; sonst aufsteigend
-            next_dir = "desc" if (is_active and ascending) else "asc"
-            params = request.GET.copy()
-            params["sort"] = sort_field
-            params["dir"] = next_dir
-            params.pop("p", None)
+
+            priority, is_asc = sort_map.get(sort_field, (0, None))
+            is_active = priority > 0
+
+            # Single-Sort-URL: aktiv+asc → nächster Klick desc; sonst asc
+            new_single = f"{'' if (is_active and is_asc) else ''}{'-' if (is_active and is_asc) else ''}{sort_field}"
+            single_specs = [(sort_field, not (is_active and is_asc))]
+            params_single = request.GET.copy()
+            params_single["sort"] = self._sort_specs_to_param(single_specs)
+            params_single.pop("p", None)
+
+            # Remove-URL: Feld aus Multi-Sort entfernen (nur relevant wenn Multi-Sort aktiv)
+            remaining = [(f, asc) for f, asc in sort_specs if f != sort_field]
+            params_remove = request.GET.copy()
+            if remaining:
+                params_remove["sort"] = self._sort_specs_to_param(remaining)
+            else:
+                params_remove.pop("sort", None)
+            params_remove.pop("p", None)
+
             result.append(
                 {
                     "label": label,
                     "sortable": True,
-                    "url": f"?{params.urlencode()}",
+                    "sort_field": sort_field,
+                    "url": f"?{params_single.urlencode()}",
+                    "remove_url": f"?{params_remove.urlencode()}"
+                    if is_active and len(sort_specs) > 1
+                    else None,
                     "active": is_active,
-                    "ascending": ascending if is_active else None,
+                    "ascending": is_asc if is_active else None,
+                    "sort_priority": priority,
+                    "multi_sort_active": len(sort_specs) > 1,
                 }
             )
         return result
@@ -414,9 +481,16 @@ class UnionListMixin(AdminViewMixin):
         request = self.request
 
         filter_form_class = self.get_filter_form_class()
-        filter_form = (
-            filter_form_class(request.GET or None) if filter_form_class else None
-        )
+        if filter_form_class:
+            # Sort- und Paginierungs-Parameter von den Filter-Params trennen,
+            # damit die Form bei ausschließlich aktiven Sort-Params als "ungebunden"
+            # gilt und ihre Defaults (z.B. Schuljahres-Filter) korrekt anwendet.
+            filter_data = {
+                k: v for k, v in request.GET.items() if k not in self._SORT_PARAMS
+            }
+            filter_form = filter_form_class(filter_data or None)
+        else:
+            filter_form = None
 
         # 1. Paginierung auf ID-Ebene (DB-seitig)
         id_union_qs = self._get_id_union_queryset(request, filter_form)
