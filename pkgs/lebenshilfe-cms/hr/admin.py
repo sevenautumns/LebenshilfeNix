@@ -1,8 +1,6 @@
-from django.contrib import admin, messages
-from django.http import Http404
+from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path, reverse
-from django.utils.formats import number_format
 from django.utils.html import format_html
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,

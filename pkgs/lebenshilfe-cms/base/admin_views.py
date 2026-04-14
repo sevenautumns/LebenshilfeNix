@@ -1,4 +1,3 @@
-from datetime import date
 from urllib.parse import urlencode
 
 from django.contrib import messages

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from datetime import timedelta, date
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.test import TestCase, RequestFactory
 from django.db import models
@@ -11,7 +11,6 @@ from django.utils import translation
 from .models import Person, SchoolDays
 from .widgets import EuroDecimalWidget, HourMinuteDurationWidget, MonthWidget
 from .fields import EuroDecimalField, HourMinuteDurationField, MonthField
-from .mixins import EditModeMixin, AdminDisplayMixin
 from .admin import BaseModelAdmin
 
 

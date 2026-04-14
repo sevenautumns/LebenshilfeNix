@@ -1,6 +1,5 @@
 from django.contrib import admin
 from unfold.admin import TabularInline
-from django.utils.translation import gettext_lazy as _
 from unfold.contrib.filters.admin import RangeDateFilter
 from base.admin import BaseModelAdmin
 from .models import (

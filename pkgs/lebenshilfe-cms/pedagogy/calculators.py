@@ -52,7 +52,7 @@ def run_supervision_calculation(
     inp: SupervisionCalculatorInput,
 ) -> SupervisionCalculatorResult:
     """Berechnet Gesamtbetrag und Abschlag für eine Betreuung. Einzige Funktion mit DB-Zugriff."""
-    from finance.models import FeeAgreement, PoolAgreement
+    from finance.models import PoolAgreement
 
     warnings: list[str] = []
     sup = inp.supervision
