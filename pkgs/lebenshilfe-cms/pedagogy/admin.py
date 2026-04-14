@@ -27,8 +27,31 @@ from base.admin_views import (
     render_label,
 )
 from base.fields import EuroDecimalField, HourMinuteDurationField
+from .models import (
+    School,
+    SchoolReport,
+    NewRequest,
+    Student,
+    Supervision,
+    TandemPairing,
+    Request,
+)
 
-from .models import School, SchoolReport, Student, Supervision, TandemPairing, Request
+
+@admin.register(NewRequest)
+class NewRequestAdmin(BaseModelAdmin):
+    def changelist_view(self, request, extra_context=None):
+        return NewRequestListView.as_view(model_admin=self)(request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 _euro_fmt = EuroDecimalField(max_digits=10, decimal_places=2)
 
@@ -245,15 +268,15 @@ class StudentAdmin(BaseModelAdmin):
         return super().get_queryset(request).select_related("payer")
 
 
-class SupervisionRequestListView(BaseUnionListView):
+class NewRequestListView(BaseUnionListView):
     """Kombinierte Übersichtsliste aus Betreuungen und Anträgen."""
 
-    title = "Betreuungen & Anträge"
+    title = "Neuanträge"
 
     def get_filter_form_class(self):
-        from .forms import SupervisionRequestFilterForm
+        from .forms import NewRequestFilterForm
 
-        return SupervisionRequestFilterForm
+        return NewRequestFilterForm
 
     def get_queryset_a(self, request):
         return Supervision.objects.select_related("student", "school")
@@ -296,7 +319,6 @@ class SupervisionAdmin(BaseModelAdmin):
         "is_prophylactic",
         "display_total_amount",
     )
-    actions_list = ["supervision_request_list_action"]
     actions_detail = ["edit_action", "calculator_action"]
     list_filter_submit = True
     list_filter = ("school", ("start_date", RangeDateFilter))
@@ -329,13 +351,6 @@ class SupervisionAdmin(BaseModelAdmin):
     def has_calculator_action_permission(self, request, obj=None):
         return True
 
-    @action(
-        description="Betreuungen & Anträge",
-        url_path="supervision-request-list-link",
-    )
-    def supervision_request_list_action(self, request):
-        return redirect(reverse("admin:pedagogy_supervision_request_list"))
-
     @display(description="Gesamtbetrag", ordering="total_amount")
     def display_total_amount(self, obj: Supervision) -> str:
         if obj.total_amount is not None:
@@ -353,13 +368,6 @@ class SupervisionAdmin(BaseModelAdmin):
 
     def get_urls(self):
         custom = [
-            path(
-                "supervision-request-list/",
-                self.admin_site.admin_view(
-                    SupervisionRequestListView.as_view(model_admin=self)
-                ),
-                name="pedagogy_supervision_request_list",
-            ),
             path(
                 "<int:pk>/calculator/",
                 self.admin_site.admin_view(

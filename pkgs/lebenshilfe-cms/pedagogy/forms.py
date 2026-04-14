@@ -64,7 +64,7 @@ def _school_year_bounds() -> tuple[date, date]:
     return date(today.year - 1, 8, 1), date(today.year, 7, 31)
 
 
-class SupervisionRequestFilterForm(forms.Form):
+class NewRequestFilterForm(forms.Form):
     from pedagogy.models import Request
 
     school = forms.ModelChoiceField(

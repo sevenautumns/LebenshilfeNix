@@ -542,8 +542,8 @@ class SupervisionCalculatorViewTests(TestCase):
         )
 
 
-class SupervisionRequestListViewTests(TestCase):
-    """Smoke-Tests für die SupervisionRequestListView."""
+class NewRequestListViewTests(TestCase):
+    """Smoke-Tests für die NewRequestListView."""
 
     def setUp(self):
         from django.contrib.auth import get_user_model
@@ -567,7 +567,7 @@ class SupervisionRequestListViewTests(TestCase):
 
     @property
     def url(self):
-        return reverse("admin:pedagogy_supervision_request_list")
+        return reverse("admin:pedagogy_newrequest_changelist")
 
     def test_empty_list_returns_200(self):
         """Leere Datenbank: View liefert HTTP 200 ohne Fehler."""

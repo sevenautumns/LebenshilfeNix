@@ -247,3 +247,10 @@ class SchoolReport(Supervision):
         proxy = True
         verbose_name = "Schulauswertung"
         verbose_name_plural = "Schulauswertungen"
+
+
+class NewRequest(Supervision):
+    class Meta:
+        proxy = True
+        verbose_name = "Neuantrag"
+        verbose_name_plural = "Neuanträge"
