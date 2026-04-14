@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django import forms
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-from django.db.models import QuerySet, Value, CharField
+from django.db.models import F, QuerySet, Value, CharField
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
@@ -256,7 +256,8 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 class UnionListMixin(AdminViewMixin):
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung."""
 
-    union_ordering: str = "-start_date"
+    default_sort_field: str = "start_date"
+    default_sort_dir: str = "desc"
     per_page: int = 50
 
     def get_queryset_a(self, request: HttpRequest) -> QuerySet:
@@ -265,7 +266,15 @@ class UnionListMixin(AdminViewMixin):
     def get_queryset_b(self, request: HttpRequest) -> QuerySet:
         raise NotImplementedError
 
-    def get_columns(self) -> list[str]:
+    def get_columns(self) -> list[tuple[str, str | None]]:
+        """Gibt Spaltendefinitionen zurück: Liste von (Label, sort_field_or_None).
+
+        sort_field kann sein:
+        - Direktes Feld: "start_date", "end_date"
+        - Annotation: "_row_type" (bereits im UNION-SELECT vorhanden)
+        - Relationales Feld: "student__last_name" (wird automatisch annotiert)
+        - None: Spalte ist nicht sortierbar
+        """
         raise NotImplementedError
 
     def get_row(self, obj) -> list:
@@ -291,27 +300,50 @@ class UnionListMixin(AdminViewMixin):
             return form.filter_queryset(qs)
         return qs
 
+    def _resolve_sort(self, request: HttpRequest) -> tuple[str, bool]:
+        """Gibt (sort_field, ascending) zurück, validiert gegen get_columns()."""
+        allowed = {sf for _, sf in self.get_columns() if sf}
+        raw = request.GET.get("sort", self.default_sort_field)
+        ascending = request.GET.get("dir", self.default_sort_dir) == "asc"
+        sort_field = raw if raw in allowed else self.default_sort_field
+        return sort_field, ascending
+
     def _get_id_union_queryset(self, request: HttpRequest, form) -> QuerySet:
         """Baut ein kombiniertes QuerySet aus (id, type, sort_field) für die Paginierung."""
-        sort_field = self.union_ordering.lstrip("-")
+        sort_field, ascending = self._resolve_sort(request)
 
         qs_a = self._apply_filter_form(self.get_queryset_a(request), form).annotate(
             _row_type=Value("A", output_field=CharField())
         )
-
         qs_b = self._apply_filter_form(self.get_queryset_b(request), form).annotate(
             _row_type=Value("B", output_field=CharField())
+        )
+
+        # Relationale Felder (mit "__") müssen vor der Union annotiert werden,
+        # da UNION-Subqueries keine JOINs über Spaltenaliase hinweg erlauben.
+        if "__" in sort_field:
+            annotation_name = sort_field.replace("__", "_") + "_sort"
+            qs_a = qs_a.annotate(**{annotation_name: F(sort_field)})
+            qs_b = qs_b.annotate(**{annotation_name: F(sort_field)})
+            actual_field = annotation_name
+        else:
+            actual_field = sort_field
+
+        ordering_expr = (
+            F(actual_field).asc(nulls_last=True)
+            if ascending
+            else F(actual_field).desc(nulls_last=True)
         )
 
         # Sortierung der Teilabfragen löschen — ORDER BY in UNION-Subqueries ist
         # im SQL-Standard nicht erlaubt. Die Gesamtsortierung kommt danach.
         combined = (
-            qs_a.values("pk", "_row_type", sort_field)
+            qs_a.values("pk", "_row_type", actual_field)
             .order_by()
-            .union(qs_b.values("pk", "_row_type", sort_field).order_by())
+            .union(qs_b.values("pk", "_row_type", actual_field).order_by())
         )
 
-        return combined.order_by(self.union_ordering)
+        return combined.order_by(ordering_expr)
 
     def _fetch_full_page_objects(self, request, id_type_list) -> list:
         """Lädt die vollständigen Modellinstanzen für eine Liste von (id, type) Paaren."""
@@ -340,11 +372,35 @@ class UnionListMixin(AdminViewMixin):
 
         return final_list
 
+    def _build_column_headers(self, request: HttpRequest) -> list[dict]:
+        """Baut die Column-Header-Metadaten für sortierbare Tabellenköpfe."""
+        current_sort, ascending = self._resolve_sort(request)
+        result = []
+        for label, sort_field in self.get_columns():
+            if sort_field is None:
+                result.append({"label": label, "sortable": False})
+                continue
+            is_active = sort_field == current_sort
+            # Aktiv + aufsteigend → nächster Klick = absteigend; sonst aufsteigend
+            next_dir = "desc" if (is_active and ascending) else "asc"
+            params = request.GET.copy()
+            params["sort"] = sort_field
+            params["dir"] = next_dir
+            params.pop("p", None)
+            result.append(
+                {
+                    "label": label,
+                    "sortable": True,
+                    "url": f"?{params.urlencode()}",
+                    "active": is_active,
+                    "ascending": ascending if is_active else None,
+                }
+            )
+        return result
+
     def _build_table(self, page_objects) -> dict:
         return {
-            "headers": self.get_columns(),
             "rows": [{"cols": self.get_row(obj)} for obj in page_objects],
-            "striped": 1,
         }
 
     def _has_active_filters(self, form) -> bool:
@@ -384,6 +440,8 @@ class UnionListMixin(AdminViewMixin):
         params.pop("p", None)
         query_string_base = params.urlencode()
 
+        column_headers = self._build_column_headers(request)
+
         ctx.update(
             {
                 "title": self.title,
@@ -393,6 +451,8 @@ class UnionListMixin(AdminViewMixin):
                 "filter_form": filter_form,
                 "has_active_filters": self._has_active_filters(filter_form),
                 "table": self._build_table(full_objects),
+                "column_headers": column_headers,
+                "column_labels": [col["label"] for col in column_headers],
                 "breadcrumb_items": self.get_breadcrumb_items(),
                 "opts": self.model_admin.model._meta,
                 "media": self.get_media(filter_form),

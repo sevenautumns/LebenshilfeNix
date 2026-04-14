@@ -46,7 +46,59 @@
   {# Tabelle #}
   <div class="{% if filter_form %}lg:col-span-3{% else %}lg:col-span-4{% endif %}">
     {% component "unfold/components/card.html" with card_included=1 %}
-      {% component "unfold/components/table.html" with table=table card_included=1 %}{% endcomponent %}
+      <div class="-m-6">
+        <div>
+          <table class="block border-spacing-none border-separate w-full lg:table">
+
+            {# Sortierbare Header #}
+            <thead class="text-font-important-light dark:text-font-important-dark">
+              <tr class="bg-base-50 dark:bg-base-900">
+                {% for col in column_headers %}
+                  <th class="align-middle border-b border-base-200 font-semibold py-2 text-left whitespace-nowrap hidden px-3 lg:table-cell dark:border-base-800 dark:bg-white/[.02] first:pl-6 last:pr-6">
+                    {% if col.sortable %}
+                      <a href="{{ col.url }}" class="flex items-center gap-1 hover:text-base-700 dark:hover:text-base-200">
+                        {{ col.label }}
+                        {% if col.active %}
+                          <span class="material-symbols-outlined" style="font-size: 16px;">
+                            {% if col.ascending %}arrow_upward{% else %}arrow_downward{% endif %}
+                          </span>
+                        {% else %}
+                          <span class="material-symbols-outlined opacity-30" style="font-size: 16px;">unfold_more</span>
+                        {% endif %}
+                      </a>
+                    {% else %}
+                      {{ col.label }}
+                    {% endif %}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            {# Zeilen #}
+            {% if table.rows %}
+              {% for row in table.rows %}
+                <tbody class="block relative lg:table-row-group">
+                  <tr class="data-row {% cycle '' 'bg-base-50 dark:bg-white/[.02]' %} block group {% if forloop.first %}first-row{% endif %} border-b border-base-200 {% if forloop.last %}last:border-b-0{% endif %} lg:table-row lg:border-none lg:mb-0 lg:shadow-none dark:border-base-800 relative">
+                    {% for cell in row.cols %}
+                      <td class="px-3 py-2 align-middle flex border-t border-base-200 font-normal gap-4 min-w-0 overflow-hidden text-left before:flex before:capitalize before:content-[attr(data-label)] before:font-semibold before:text-font-important-light dark:before:text-font-important-dark before:items-center before:mr-auto first:border-t-0 lg:group-[.first-row]:border-t-0 lg:before:hidden {% if not forloop.parentloop.first %}lg:first:border-t{% endif %} lg:py-3 lg:table-cell dark:border-base-800 lg:first:pl-6 lg:last:pr-6"
+                        data-label="{{ column_labels|index:forloop.counter0 }}">
+                        {{ cell }}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                </tbody>
+              {% endfor %}
+            {% endif %}
+
+          </table>
+        </div>
+
+        {% if not table.rows %}
+          <p class="bg-white flex grow items-center justify-center py-4 dark:bg-base-900">
+            {% trans "Keine Einträge gefunden." %}
+          </p>
+        {% endif %}
+      </div>
     {% endcomponent %}
 
     {% include "admin/includes/union_pagination.html" %}

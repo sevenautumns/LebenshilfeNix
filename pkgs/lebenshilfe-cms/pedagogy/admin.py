@@ -261,8 +261,14 @@ class SupervisionRequestListView(BaseUnionListView):
     def get_queryset_b(self, request):
         return Request.objects.select_related("student", "school")
 
-    def get_columns(self) -> list[str]:
-        return ["Typ", "Schüler:in", "Schule", "Von", "Bis"]
+    def get_columns(self) -> list[tuple[str, str | None]]:
+        return [
+            ("Typ", "_row_type"),
+            ("Schüler:in", "student__last_name"),
+            ("Schule", "school__name"),
+            ("Von", "start_date"),
+            ("Bis", "end_date"),
+        ]
 
     def get_row(self, obj) -> list:
         if isinstance(obj, Supervision):
