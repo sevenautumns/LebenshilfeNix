@@ -290,6 +290,7 @@ class SupervisionAdmin(BaseModelAdmin):
         "is_prophylactic",
         "display_total_amount",
     )
+    actions_list = ["supervision_request_list_action"]
     actions_detail = ["edit_action", "calculator_action"]
     list_filter_submit = True
     list_filter = ("school", ("start_date", RangeDateFilter))
@@ -321,6 +322,13 @@ class SupervisionAdmin(BaseModelAdmin):
 
     def has_calculator_action_permission(self, request, obj=None):
         return True
+
+    @action(
+        description="Betreuungen & Anträge",
+        url_path="supervision-request-list-link",
+    )
+    def supervision_request_list_action(self, request):
+        return redirect(reverse("admin:pedagogy_supervision_request_list"))
 
     @display(description="Gesamtbetrag", ordering="total_amount")
     def display_total_amount(self, obj: Supervision) -> str:
