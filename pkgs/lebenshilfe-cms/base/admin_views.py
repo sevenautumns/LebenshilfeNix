@@ -19,6 +19,13 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
     permission_required = []
     form_class = None
 
+    def get_media(self, form=None) -> forms.Media:
+        return (
+            self.model_admin.media
+            + (form.media if form else forms.Media())
+            + forms.Media(js=[reverse("javascript-catalog")])
+        )
+
     def get_queryset(self):
         return self.model_admin.get_queryset(self.request)
 
@@ -110,9 +117,7 @@ class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
                 "breadcrumb_items": self.get_breadcrumb_items(obj),
                 "opts": opts,
                 "form": form,
-                "media": self.model_admin.media
-                + (form.media if form else forms.Media())
-                + forms.Media(js=[reverse("javascript-catalog")]),
+                "media": self.get_media(form),
                 "change_url": reverse(
                     f"admin:{opts.app_label}_{opts.model_name}_change", args=[obj.pk]
                 ),
@@ -256,6 +261,13 @@ class UnionListMixin:
         """Gibt die Filter-Formularklasse zurück. Optional — Subklassen überschreiben."""
         return None
 
+    def get_media(self, form=None) -> forms.Media:
+        return (
+            self.model_admin.media
+            + (form.media if form else forms.Media())
+            + forms.Media(js=[reverse("javascript-catalog")])
+        )
+
     def get_breadcrumb_items(self) -> list[dict]:
         opts = self.model_admin.model._meta
         return [
@@ -377,9 +389,7 @@ class UnionListMixin:
                 "table": self._build_table(full_objects),
                 "breadcrumb_items": self.get_breadcrumb_items(),
                 "opts": self.model_admin.model._meta,
-                "media": self.model_admin.media
-                + (filter_form.media if filter_form else forms.Media())
-                + forms.Media(js=[reverse("javascript-catalog")]),
+                "media": self.get_media(filter_form),
                 "page_range": paginator.get_elided_page_range(page_obj.number),
                 "pagination_required": paginator.num_pages > 1,
             }
