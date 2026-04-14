@@ -253,9 +253,7 @@ class OtherEmployment(models.Model):
         ordering = ["employee__last_name", "employee__first_name", "employer"]
 
     def __str__(self):
-        hours_str = OtherEmployment.weekly_hours.field.get_admin_format(
-            self.weekly_hours
-        )
+        hours_str = HourMinuteDurationField.format_std(self.weekly_hours)
         return f"{self.employer or 'Unbekannter Arbeitgeber'} ({hours_str}) - {self.employee.full_name}"
 
 
