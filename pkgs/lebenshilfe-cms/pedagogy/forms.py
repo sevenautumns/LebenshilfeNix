@@ -65,6 +65,8 @@ def _school_year_bounds() -> tuple[date, date]:
 
 
 class SupervisionRequestFilterForm(forms.Form):
+    from pedagogy.models import Request
+
     school = forms.ModelChoiceField(
         queryset=None,  # gesetzt in __init__
         required=False,
@@ -82,6 +84,12 @@ class SupervisionRequestFilterForm(forms.Form):
         label="Startdatum bis",
         widget=UnfoldAdminDateWidget(),
     )
+    state = forms.ChoiceField(
+        choices=[("", "— Alle Zustände —")] + Request.State.choices,
+        required=False,
+        label="Zustand (Anträge)",
+        widget=UnfoldAdminSelect2Widget(),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,14 +101,25 @@ class SupervisionRequestFilterForm(forms.Form):
         self.fields["start_date_to"].initial = end
 
     def filter_queryset(self, qs: QuerySet) -> QuerySet:
+        from pedagogy.models import Request
+
+        is_request_qs = qs.model is Request
+
         if not self.is_valid():
-            # Ungebunden (erster Aufruf / nach "Zurücksetzen") → Schuljahr-Default
+            # Ungebunden (erster Aufruf / nach "Zurücksetzen") → Schuljahr- und Zustandsdefault
             start, end = _school_year_bounds()
-            return qs.filter(start_date__gte=start, start_date__lte=end)
+            qs = qs.filter(start_date__gte=start, start_date__lte=end)
+            if is_request_qs:
+                qs = qs.filter(state=Request.State.IN_REVIEW)
+            return qs
+
         if school := self.cleaned_data.get("school"):
             qs = qs.filter(school=school)
         if from_date := self.cleaned_data.get("start_date_from"):
             qs = qs.filter(start_date__gte=from_date)
         if to_date := self.cleaned_data.get("start_date_to"):
             qs = qs.filter(start_date__lte=to_date)
+        if is_request_qs:
+            if state := self.cleaned_data.get("state"):
+                qs = qs.filter(state=state)
         return qs
