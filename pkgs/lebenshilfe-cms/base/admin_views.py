@@ -320,7 +320,7 @@ class UnionListMixin(AdminViewMixin):
         raw = request.GET.get("sort", "")
         specs: list[tuple[str, bool]] = []
         seen: set[str] = set()
-        for part in raw.split(","):
+        for part in raw.split("."):
             part = part.strip()
             if not part:
                 continue
@@ -418,7 +418,7 @@ class UnionListMixin(AdminViewMixin):
         self, specs: list[tuple[str, bool]], field_to_idx: dict[str, int]
     ) -> str:
         """Serialisiert Sort-Specs als URL-Parameter-Wert: "-0,2" (Spaltenindices)."""
-        return ",".join(f"{'' if asc else '-'}{field_to_idx[f]}" for f, asc in specs)
+        return ".".join(f"{'' if asc else '-'}{field_to_idx[f]}" for f, asc in specs)
 
     def _build_column_headers(self, request: HttpRequest) -> list[dict]:
         """Baut Column-Header-Metadaten für sortierbare Tabellenköpfe.

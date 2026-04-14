@@ -93,12 +93,13 @@ class SupervisionRequestFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from pedagogy.models import School
+        from pedagogy.models import School, Request
 
         self.fields["school"].queryset = School.objects.order_by("name")
         start, end = _school_year_bounds()
         self.fields["start_date_from"].initial = start
         self.fields["start_date_to"].initial = end
+        self.fields["state"].initial = Request.State.IN_REVIEW
 
     def filter_queryset(self, qs: QuerySet) -> QuerySet:
         from pedagogy.models import Request
