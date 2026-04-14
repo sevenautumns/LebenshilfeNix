@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from django import forms
@@ -6,7 +7,6 @@ from unfold.widgets import (
     INPUT_CLASSES,
     UnfoldAdminDateWidget,
     UnfoldAdminSelect2Widget,
-    UnfoldAdminSelectWidget,
 )
 
 
@@ -57,22 +57,29 @@ class SupervisionCalculatorOverridesForm(forms.Form):
         )
 
 
+def _school_year_bounds() -> tuple[date, date]:
+    today = date.today()
+    if today.month >= 8:
+        return date(today.year, 8, 1), date(today.year + 1, 7, 31)
+    return date(today.year - 1, 8, 1), date(today.year, 7, 31)
+
+
 class SupervisionRequestFilterForm(forms.Form):
     school = forms.ModelChoiceField(
         queryset=None,  # gesetzt in __init__
         required=False,
         label="Schule",
         empty_label="— Alle Schulen —",
-        widget=UnfoldAdminSelectWidget(),
+        widget=UnfoldAdminSelect2Widget(),
     )
     start_date_from = forms.DateField(
         required=False,
-        label="Von",
+        label="Startdatum von",
         widget=UnfoldAdminDateWidget(),
     )
     start_date_to = forms.DateField(
         required=False,
-        label="Bis",
+        label="Startdatum bis",
         widget=UnfoldAdminDateWidget(),
     )
 
@@ -81,10 +88,15 @@ class SupervisionRequestFilterForm(forms.Form):
         from pedagogy.models import School
 
         self.fields["school"].queryset = School.objects.order_by("name")
+        start, end = _school_year_bounds()
+        self.fields["start_date_from"].initial = start
+        self.fields["start_date_to"].initial = end
 
     def filter_queryset(self, qs: QuerySet) -> QuerySet:
         if not self.is_valid():
-            return qs
+            # Ungebunden (erster Aufruf / nach "Zurücksetzen") → Schuljahr-Default
+            start, end = _school_year_bounds()
+            return qs.filter(start_date__gte=start, start_date__lte=end)
         if school := self.cleaned_data.get("school"):
             qs = qs.filter(school=school)
         if from_date := self.cleaned_data.get("start_date_from"):
