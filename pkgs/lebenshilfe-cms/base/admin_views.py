@@ -7,10 +7,28 @@ from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db.models import QuerySet, Value, CharField
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.formats import number_format
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView, View
 from unfold.views import UnfoldModelAdminViewMixin
+
+
+def render_label(text: str, variant: str = "default", size: str = "md") -> str:
+    """Renders an Unfold badge using Unfold's own label template.
+
+    Args:
+        text: The label text to display.
+        variant: One of 'info', 'success', 'warning', 'danger', 'primary', or 'default'.
+        size: 'md' (h-5) or larger (h-6). Defaults to 'md'.
+    """
+    return mark_safe(
+        render_to_string(
+            "unfold/helpers/label.html",
+            {"type": variant, "text": text, "size": size},
+        )
+    )
 
 
 class BaseCalculatorView(UnfoldModelAdminViewMixin, TemplateView):
@@ -222,28 +240,6 @@ class UnionListMixin:
 
     union_ordering: str = "-start_date"
     per_page: int = 50
-
-    # Standard Unfold Badge Styles
-    LABEL_INFO = (
-        "inline-block font-semibold rounded-default text-[11px] uppercase "
-        "whitespace-nowrap h-5 leading-5 px-1.5 "
-        "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-    )
-    LABEL_SUCCESS = (
-        "inline-block font-semibold rounded-default text-[11px] uppercase "
-        "whitespace-nowrap h-5 leading-5 px-1.5 "
-        "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-    )
-    LABEL_WARNING = (
-        "inline-block font-semibold rounded-default text-[11px] uppercase "
-        "whitespace-nowrap h-5 leading-5 px-1.5 "
-        "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
-    )
-    LABEL_DANGER = (
-        "inline-block font-semibold rounded-default text-[11px] uppercase "
-        "whitespace-nowrap h-5 leading-5 px-1.5 "
-        "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-    )
 
     def get_queryset_a(self, request: HttpRequest) -> QuerySet:
         raise NotImplementedError

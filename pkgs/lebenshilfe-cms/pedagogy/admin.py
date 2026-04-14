@@ -20,7 +20,12 @@ from base.admin import (
     PhoneInline,
     EmailInline,
 )
-from base.admin_views import BaseApplyView, BaseCalculatorView, BaseUnionListView
+from base.admin_views import (
+    BaseApplyView,
+    BaseCalculatorView,
+    BaseUnionListView,
+    render_label,
+)
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
 from .models import School, SchoolReport, Student, Supervision, TandemPairing, Request
@@ -261,13 +266,9 @@ class SupervisionRequestListView(BaseUnionListView):
 
     def get_row(self, obj) -> list:
         if isinstance(obj, Supervision):
-            typ = format_html(
-                '<span class="{}">{}</span>', self.LABEL_INFO, "Betreuung"
-            )
+            typ = render_label("Betreuung", "info")
         else:
-            typ = format_html(
-                '<span class="{}">{}</span>', self.LABEL_SUCCESS, "Antrag"
-            )
+            typ = render_label("Antrag", "success")
         return [
             typ,
             str(obj.student),
