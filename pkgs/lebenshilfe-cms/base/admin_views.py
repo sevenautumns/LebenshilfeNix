@@ -256,7 +256,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 class UnionListMixin(AdminViewMixin):
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
 
-    Sortierung: URL-Parameter ?sort=-field1,field2 (kommasepariert, "-" = absteigend).
+    Sortierung: URL-Parameter ?sort=-0,2 (Spaltenindices aus get_columns(), "-" = absteigend).
     Klick auf inaktive Spalte fügt sie vorne ein (ASC). Klick auf aktive Spalte bringt
     sie nach vorne und togglet die Richtung. Der Pfeil-Icon togglet die Richtung in-place.
     """
@@ -309,12 +309,14 @@ class UnionListMixin(AdminViewMixin):
         return qs
 
     def _resolve_sort(self, request: HttpRequest) -> list[tuple[str, bool]]:
-        """Parst ?sort=-field1,field2 und gibt eine geordnete Liste von (field, ascending) zurück.
+        """Parst ?sort=-0,2 (Spaltenindices) und gibt eine geordnete Liste von (field, ascending) zurück.
 
-        Validiert jeden Eintrag gegen die erlaubten sort_fields aus get_columns().
-        Fällt auf den konfigurierten Default zurück wenn keine gültigen Felder angegeben.
+        Validiert jeden Index gegen die sortierbaren Spalten aus get_columns().
+        Fällt auf den konfigurierten Default zurück wenn keine gültigen Indices angegeben.
         """
-        allowed = {sf for _, sf in self.get_columns() if sf}
+        idx_to_field = {
+            i: sf for i, (_, sf) in enumerate(self.get_columns()) if sf is not None
+        }
         raw = request.GET.get("sort", "")
         specs: list[tuple[str, bool]] = []
         seen: set[str] = set()
@@ -323,10 +325,15 @@ class UnionListMixin(AdminViewMixin):
             if not part:
                 continue
             ascending = not part.startswith("-")
-            field = part.lstrip("-")
-            if field in allowed and field not in seen:
-                specs.append((field, ascending))
-                seen.add(field)
+            try:
+                idx = int(part.lstrip("-"))
+            except ValueError:
+                continue
+            if idx in idx_to_field:
+                field = idx_to_field[idx]
+                if field not in seen:
+                    specs.append((field, ascending))
+                    seen.add(field)
         if not specs:
             specs = [(self.default_sort_field, self.default_sort_dir == "asc")]
         return specs
@@ -407,9 +414,11 @@ class UnionListMixin(AdminViewMixin):
 
         return final_list
 
-    def _sort_specs_to_param(self, specs: list[tuple[str, bool]]) -> str:
-        """Serialisiert Sort-Specs als URL-Parameter-Wert: "-field1,field2"."""
-        return ",".join(f"{'' if asc else '-'}{f}" for f, asc in specs)
+    def _sort_specs_to_param(
+        self, specs: list[tuple[str, bool]], field_to_idx: dict[str, int]
+    ) -> str:
+        """Serialisiert Sort-Specs als URL-Parameter-Wert: "-0,2" (Spaltenindices)."""
+        return ",".join(f"{'' if asc else '-'}{field_to_idx[f]}" for f, asc in specs)
 
     def _build_column_headers(self, request: HttpRequest) -> list[dict]:
         """Baut Column-Header-Metadaten für sortierbare Tabellenköpfe.
@@ -424,6 +433,9 @@ class UnionListMixin(AdminViewMixin):
         """
         sort_specs = self._resolve_sort(request)
         sort_map = {field: (i + 1, asc) for i, (field, asc) in enumerate(sort_specs)}
+        field_to_idx = {
+            sf: i for i, (_, sf) in enumerate(self.get_columns()) if sf is not None
+        }
 
         result = []
         for label, sort_field in self.get_columns():
@@ -441,7 +453,9 @@ class UnionListMixin(AdminViewMixin):
                 other = [(f, asc) for f, asc in sort_specs if f != sort_field]
                 primary_specs = [(sort_field, not is_asc)] + other
             params_primary = request.GET.copy()
-            params_primary["sort"] = self._sort_specs_to_param(primary_specs)
+            params_primary["sort"] = self._sort_specs_to_param(
+                primary_specs, field_to_idx
+            )
             params_primary.pop("p", None)
 
             # url_toggle: Richtung in-place togglen, Position beibehalten (nur wenn aktiv)
@@ -450,7 +464,9 @@ class UnionListMixin(AdminViewMixin):
                     (f, not asc if f == sort_field else asc) for f, asc in sort_specs
                 ]
                 params_toggle = request.GET.copy()
-                params_toggle["sort"] = self._sort_specs_to_param(toggle_specs)
+                params_toggle["sort"] = self._sort_specs_to_param(
+                    toggle_specs, field_to_idx
+                )
                 params_toggle.pop("p", None)
                 url_toggle = f"?{params_toggle.urlencode()}"
             else:
@@ -460,7 +476,9 @@ class UnionListMixin(AdminViewMixin):
             remaining = [(f, asc) for f, asc in sort_specs if f != sort_field]
             params_remove = request.GET.copy()
             if remaining:
-                params_remove["sort"] = self._sort_specs_to_param(remaining)
+                params_remove["sort"] = self._sort_specs_to_param(
+                    remaining, field_to_idx
+                )
             else:
                 params_remove.pop("sort", None)
             params_remove.pop("p", None)
