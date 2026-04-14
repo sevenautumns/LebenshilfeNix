@@ -1,5 +1,6 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, GenericTabularInline
+from unfold.contrib.filters.admin import RangeDateFilter
 from .models import (
     Address,
     Phone,
@@ -85,6 +86,17 @@ class SchoolDaysAdmin(BaseModelAdmin):
 
 @admin.register(Member)
 class MemberAdmin(BaseModelAdmin):
-    list_display = ("full_name", "entrance_date", "membership_fee")
+    list_display = (
+        "full_name",
+        "entrance_date",
+        "leaving_date",
+        "membership_fee",
+        "authorization_id",
+    )
     search_fields = ("first_name", "last_name")
+    list_filter_submit = True
+    list_filter = (
+        ("entrance_date", RangeDateFilter),
+        ("leaving_date", RangeDateFilter),
+    )
     inlines = [AddressInline, PhoneInline, EmailInline, BankAccountInline]
