@@ -15,6 +15,11 @@ from django.views.generic import TemplateView, View
 from unfold.views import UnfoldModelAdminViewMixin
 
 
+# ---------------------------------------------------------------------------
+# Shared utilities
+# ---------------------------------------------------------------------------
+
+
 def render_label(text: str, variant: str = "default", size: str = "md") -> str:
     """Renders an Unfold badge using Unfold's own label template.
 
@@ -44,6 +49,11 @@ class AdminViewMixin:
             + (form.media if form else forms.Media())
             + forms.Media(js=[reverse("javascript-catalog")])
         )
+
+
+# ---------------------------------------------------------------------------
+# Calculator views
+# ---------------------------------------------------------------------------
 
 
 class BaseCalculatorView(AdminViewMixin, UnfoldModelAdminViewMixin, TemplateView):

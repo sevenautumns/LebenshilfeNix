@@ -131,3 +131,33 @@ class AdminDisplayMixin:
             else:
                 new_list_display.append(item)
         return new_list_display
+
+
+# ---------------------------------------------------------------------------
+# Changelist mixins
+# ---------------------------------------------------------------------------
+
+
+class ListSummaryMixin:
+    """Mixin für ModelAdmin-Klassen mit generischer Zusammenfassungs-Footer-Karte.
+
+    Subklassen implementieren get_summary_sections(cl) und geben eine Liste von
+    Sektionen zurück. Jede Sektion ist eine Liste von {'label': str, 'value': str|int}-Dicts.
+    Die Spaltenanzahl pro Sektion ergibt sich automatisch aus der Länge der Liste.
+    """
+
+    list_after_template = "admin/list_summary_footer.html"
+    summary_title: str = "Zusammenfassung (aktuelle Filterung)"
+
+    def get_summary_sections(self, cl) -> list[list[dict]]:
+        return []
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            cl = response.context_data["cl"]
+            response.context_data["summary_title"] = self.summary_title
+            response.context_data["summary_sections"] = self.get_summary_sections(cl)
+        except (AttributeError, KeyError):
+            pass
+        return response

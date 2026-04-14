@@ -15,11 +15,11 @@ from unfold.enums import ActionVariant
 
 from base.admin import (
     BaseModelAdmin,
-    ListSummaryMixin,
     AddressInline,
     PhoneInline,
     EmailInline,
 )
+from base.mixins import ListSummaryMixin
 from base.admin_views import (
     BaseApplyView,
     BaseCalculatorView,
