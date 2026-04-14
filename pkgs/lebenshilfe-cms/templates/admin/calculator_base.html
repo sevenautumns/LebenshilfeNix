@@ -1,21 +1,5 @@
-{% extends "admin/base.html" %}
+{% extends "admin/custom_admin_base.html" %}
 {% load i18n unfold %}
-
-{% block breadcrumbs %}
-<nav aria-label="{% translate 'Breadcrumbs' %}">
-  <ul class="mb-4 flex gap-x-3 text-sm font-medium text-base-400 dark:text-base-500">
-    {% url 'admin:index' as admin_index_url %}
-    {% include "unfold/helpers/breadcrumb_item.html" with name=_("Home") link=admin_index_url %}
-    {% for item in breadcrumb_items %}
-      {% include "unfold/helpers/breadcrumb_item.html" with name=item.label link=item.url %}
-    {% endfor %}
-  </ul>
-</nav>
-{% endblock %}
-
-{% block extrahead %}
-{{ media.css }}
-{% endblock %}
 
 {% block content %}
 {% component "unfold/components/flex.html" with class="mb-4 items-center justify-between" %}
