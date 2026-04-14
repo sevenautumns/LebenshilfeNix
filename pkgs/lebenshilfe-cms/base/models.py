@@ -120,11 +120,11 @@ class BankAccount(models.Model):
 
 
 class Person(models.Model):
-    first_name = models.CharField(max_length=255, verbose_name="Vorname")
+    first_name = models.CharField(max_length=255, verbose_name="Vorname", db_index=True)
     middle_name = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Mittlerer Name"
     )
-    last_name = models.CharField(max_length=255, verbose_name="Nachname")
+    last_name = models.CharField(max_length=255, verbose_name="Nachname", db_index=True)
 
     full_name = models.GeneratedField(
         expression=Concat(
