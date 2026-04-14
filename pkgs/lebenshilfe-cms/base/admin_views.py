@@ -302,11 +302,29 @@ class UnionListMixin(AdminViewMixin):
             {"label": self.title, "url": None},
         ]
 
-    def _apply_filter_form(self, qs: QuerySet, form) -> QuerySet:
-        """Wendet das Filter-Formular auf ein QuerySet an."""
-        if form is not None:
-            return form.filter_queryset(qs)
-        return qs
+    def _apply_filter_form_a(self, qs: QuerySet, form) -> QuerySet:
+        """Wendet das Filter-Formular auf QuerySet A an.
+
+        Prüft ob die Form eine queryset-A-spezifische Methode hat,
+        sonst fällt sie auf filter_queryset zurück.
+        """
+        if form is None:
+            return qs
+        if hasattr(form, "filter_queryset_a"):
+            return form.filter_queryset_a(qs)
+        return form.filter_queryset(qs)
+
+    def _apply_filter_form_b(self, qs: QuerySet, form) -> QuerySet:
+        """Wendet das Filter-Formular auf QuerySet B an.
+
+        Prüft ob die Form eine queryset-B-spezifische Methode hat,
+        sonst fällt sie auf filter_queryset zurück.
+        """
+        if form is None:
+            return qs
+        if hasattr(form, "filter_queryset_b"):
+            return form.filter_queryset_b(qs)
+        return form.filter_queryset(qs)
 
     def _resolve_sort(self, request: HttpRequest) -> list[tuple[str, bool]]:
         """Parst ?sort=-0,2 (Spaltenindices) und gibt eine geordnete Liste von (field, ascending) zurück.
@@ -352,10 +370,10 @@ class UnionListMixin(AdminViewMixin):
         """Baut ein kombiniertes QuerySet aus (pk, _row_type, ...sort_fields) für die Paginierung."""
         sort_specs = self._resolve_sort(request)
 
-        qs_a = self._apply_filter_form(self.get_queryset_a(request), form).annotate(
+        qs_a = self._apply_filter_form_a(self.get_queryset_a(request), form).annotate(
             _row_type=Value("A", output_field=CharField())
         )
-        qs_b = self._apply_filter_form(self.get_queryset_b(request), form).annotate(
+        qs_b = self._apply_filter_form_b(self.get_queryset_b(request), form).annotate(
             _row_type=Value("B", output_field=CharField())
         )
 

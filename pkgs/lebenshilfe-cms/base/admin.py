@@ -22,6 +22,19 @@ admin.site.unregister(SocialToken)
 admin.site.unregister(EmailAddress)
 
 
+class ReadOnlyAdminMixin:
+    """Mixin für Modelle die nur als Leseansicht existieren (kein Hinzufügen, Ändern, Löschen)."""
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class BaseModelAdmin(EditModeMixin, AdminDisplayMixin, ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
