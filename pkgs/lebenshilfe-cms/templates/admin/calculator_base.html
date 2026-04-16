@@ -6,12 +6,6 @@
   {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
 
   {% component "unfold/components/flex.html" with class="gap-2" %}
-    {% if pdf_url %}
-      {% component "unfold/components/button.html" with href=pdf_url icon="picture_as_pdf" %}
-        PDF generieren
-      {% endcomponent %}
-    {% endif %}
-
     {% if change_url %}
       {% component "unfold/components/button.html" with href=change_url icon="arrow_back" %}
         Zurück zur Bearbeitung
@@ -127,6 +121,15 @@
         </div>
       {% endfor %}
     {% endcomponent %}
+
+    {% if pdf_url %}
+      {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
+      {% component "unfold/components/flex.html" with class="justify-end" %}
+        {% component "unfold/components/button.html" with href=pdf_url icon="picture_as_pdf" %}
+          PDF generieren
+        {% endcomponent %}
+      {% endcomponent %}
+    {% endif %}
 
   {% endcomponent %}
 </div>
