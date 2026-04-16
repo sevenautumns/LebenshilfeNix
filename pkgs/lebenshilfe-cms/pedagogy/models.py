@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
-from base.models import Person, SchoolDays
+from base.models import AbstractContact, Person, SchoolDays
 from base.fields import EuroDecimalField, HourMinuteDurationField
 
 
@@ -254,3 +254,16 @@ class NewRequest(Supervision):
         proxy = True
         verbose_name = "Neuantrag"
         verbose_name_plural = "Neuanträge"
+
+
+class SchoolContact(AbstractContact):
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name="contacts",
+        verbose_name="Schule",
+    )
+
+    class Meta(AbstractContact.Meta):
+        verbose_name = "Ansprechperson"
+        verbose_name_plural = "Ansprechpersonen"

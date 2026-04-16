@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('finance', '0018_phone_to_charfield'),
+        ("finance", "0018_phone_to_charfield"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='feeagreement',
-            name='valid_from',
-            field=models.DateField(db_index=True, verbose_name='Gültig von'),
+            model_name="feeagreement",
+            name="valid_from",
+            field=models.DateField(db_index=True, verbose_name="Gültig von"),
         ),
         migrations.AlterField(
-            model_name='feeagreement',
-            name='valid_to',
-            field=models.DateField(db_index=True, verbose_name='Gültig bis'),
+            model_name="feeagreement",
+            name="valid_to",
+            field=models.DateField(db_index=True, verbose_name="Gültig bis"),
         ),
         migrations.AlterField(
-            model_name='poolagreement',
-            name='valid_from',
-            field=models.DateField(db_index=True, verbose_name='Gültig von'),
+            model_name="poolagreement",
+            name="valid_from",
+            field=models.DateField(db_index=True, verbose_name="Gültig von"),
         ),
         migrations.AlterField(
-            model_name='poolagreement',
-            name='valid_to',
-            field=models.DateField(db_index=True, verbose_name='Gültig bis'),
+            model_name="poolagreement",
+            name="valid_to",
+            field=models.DateField(db_index=True, verbose_name="Gültig bis"),
         ),
     ]

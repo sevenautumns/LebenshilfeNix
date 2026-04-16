@@ -5,51 +5,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0008_alter_person_first_name_alter_person_last_name'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("base", "0008_alter_person_first_name_alter_person_last_name"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='address',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype', verbose_name='Inhaltstyp'),
+            model_name="address",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="+",
+                to="contenttypes.contenttype",
+                verbose_name="Inhaltstyp",
+            ),
         ),
         migrations.AlterField(
-            model_name='address',
-            name='object_id',
-            field=models.PositiveIntegerField(verbose_name='Objekt-ID'),
+            model_name="address",
+            name="object_id",
+            field=models.PositiveIntegerField(verbose_name="Objekt-ID"),
         ),
         migrations.AlterField(
-            model_name='bankaccount',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype', verbose_name='Inhaltstyp'),
+            model_name="bankaccount",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="+",
+                to="contenttypes.contenttype",
+                verbose_name="Inhaltstyp",
+            ),
         ),
         migrations.AlterField(
-            model_name='bankaccount',
-            name='object_id',
-            field=models.PositiveIntegerField(verbose_name='Objekt-ID'),
+            model_name="bankaccount",
+            name="object_id",
+            field=models.PositiveIntegerField(verbose_name="Objekt-ID"),
         ),
         migrations.AlterField(
-            model_name='email',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype', verbose_name='Inhaltstyp'),
+            model_name="email",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="+",
+                to="contenttypes.contenttype",
+                verbose_name="Inhaltstyp",
+            ),
         ),
         migrations.AlterField(
-            model_name='email',
-            name='object_id',
-            field=models.PositiveIntegerField(verbose_name='Objekt-ID'),
+            model_name="email",
+            name="object_id",
+            field=models.PositiveIntegerField(verbose_name="Objekt-ID"),
         ),
         migrations.AlterField(
-            model_name='phone',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype', verbose_name='Inhaltstyp'),
+            model_name="phone",
+            name="content_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="+",
+                to="contenttypes.contenttype",
+                verbose_name="Inhaltstyp",
+            ),
         ),
         migrations.AlterField(
-            model_name='phone',
-            name='object_id',
-            field=models.PositiveIntegerField(verbose_name='Objekt-ID'),
+            model_name="phone",
+            name="object_id",
+            field=models.PositiveIntegerField(verbose_name="Objekt-ID"),
         ),
     ]

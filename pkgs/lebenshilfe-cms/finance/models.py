@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q, F, CheckConstraint
 from base.fields import EuroDecimalField, MonthField
+from base.models import AbstractContact
 
 
 class SalaryAgreement(models.Model):
@@ -63,25 +64,17 @@ class CostPayer(models.Model):
         return self.identifier
 
 
-class CostPayerContact(models.Model):
+class CostPayerContact(AbstractContact):
     cost_payer = models.ForeignKey(
         CostPayer,
         on_delete=models.CASCADE,
         related_name="contacts",
         verbose_name="Kostenträger",
     )
-    name = models.CharField(max_length=255, verbose_name="Name")
-    phone = models.CharField(max_length=20, blank=True, verbose_name="Telefonnummer")
-    email = models.EmailField(blank=True, verbose_name="E-Mail")
-    notes = models.CharField(max_length=100, blank=True, verbose_name="Notizen")
 
-    class Meta:
+    class Meta(AbstractContact.Meta):
         verbose_name = "Zuständige"
         verbose_name_plural = "Zuständige"
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
 
 
 class FeeAgreement(models.Model):

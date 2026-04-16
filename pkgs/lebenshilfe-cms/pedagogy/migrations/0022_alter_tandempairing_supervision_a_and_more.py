@@ -5,20 +5,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0021_newrequest'),
+        ("pedagogy", "0021_newrequest"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tandempairing',
-            name='supervision_a',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='tandem_as_a', to='pedagogy.supervision', verbose_name='Betreuung A'),
+            model_name="tandempairing",
+            name="supervision_a",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="tandem_as_a",
+                to="pedagogy.supervision",
+                verbose_name="Betreuung A",
+            ),
         ),
         migrations.AlterField(
-            model_name='tandempairing',
-            name='supervision_b',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='tandem_as_b', to='pedagogy.supervision', verbose_name='Betreuung B'),
+            model_name="tandempairing",
+            name="supervision_b",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="tandem_as_b",
+                to="pedagogy.supervision",
+                verbose_name="Betreuung B",
+            ),
         ),
     ]

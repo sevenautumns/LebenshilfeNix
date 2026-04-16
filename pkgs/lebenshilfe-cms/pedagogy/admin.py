@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.formats import number_format
 from django.utils.html import format_html
+from unfold.admin import TabularInline
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RangeDateFilter
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
@@ -27,6 +28,7 @@ from base.admin_views import (
 from base.fields import EuroDecimalField, HourMinuteDurationField
 from .models import (
     School,
+    SchoolContact,
     SchoolReport,
     NewRequest,
     Student,
@@ -407,9 +409,16 @@ class RequestAdmin(BaseModelAdmin):
         return super().get_queryset(request).select_related("student", "school")
 
 
+class SchoolContactInline(TabularInline):
+    model = SchoolContact
+    extra = 0
+    hide_title = True
+
+
 @admin.register(School)
 class SchoolAdmin(BaseModelAdmin):
     search_fields = ("name",)
+    inlines = [SchoolContactInline]
 
 
 class TandemPairingForm(forms.ModelForm):
