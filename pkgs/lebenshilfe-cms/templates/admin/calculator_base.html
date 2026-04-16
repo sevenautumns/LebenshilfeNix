@@ -4,12 +4,20 @@
 {% block content %}
 {% component "unfold/components/flex.html" with class="mb-4 items-center justify-between" %}
   {% component "unfold/components/title.html" %}{{ title }}{% endcomponent %}
-  
-  {% if change_url %}
-    {% component "unfold/components/button.html" with href=change_url icon="arrow_back" %}
-      Zurück zur Bearbeitung
-    {% endcomponent %}
-  {% endif %}
+
+  {% component "unfold/components/flex.html" with class="gap-2" %}
+    {% if pdf_url %}
+      {% component "unfold/components/button.html" with href=pdf_url icon="picture_as_pdf" %}
+        PDF generieren
+      {% endcomponent %}
+    {% endif %}
+
+    {% if change_url %}
+      {% component "unfold/components/button.html" with href=change_url icon="arrow_back" %}
+        Zurück zur Bearbeitung
+      {% endcomponent %}
+    {% endif %}
+  {% endcomponent %}
 {% endcomponent %}
 
 {# Quelldaten #}

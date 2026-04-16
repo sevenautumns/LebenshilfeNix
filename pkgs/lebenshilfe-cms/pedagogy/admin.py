@@ -242,6 +242,92 @@ class SupervisionCalculatorView(BaseCalculatorView):
             SupervisionCalculatorInput(supervision=obj, **overrides)
         )
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        result = kwargs.get("result")
+        obj = kwargs.get("obj") or self.get_object()
+        if result is not None:
+            i = result.input
+            override_params = self.overrides_to_params(
+                {
+                    "months_override": i.months_override,
+                    "school_days_override": i.school_days_override,
+                    "vacation_days_override": i.vacation_days_override,
+                    "public_holidays_override": i.public_holidays_override,
+                    "fee_agreement_override": i.fee_agreement_override,
+                    "use_fee_agreement": True if i.use_fee_agreement else None,
+                }
+            )
+            ctx["pdf_url"] = self.build_apply_url(
+                obj, "admin:pedagogy_supervision_calculator_pdf", override_params
+            )
+        return ctx
+
+
+class SupervisionPdfView(BaseCalculatorView):
+    title = "Betreuungsrechner"
+
+    def get_form_class(self):
+        from .forms import SupervisionCalculatorOverridesForm
+
+        return SupervisionCalculatorOverridesForm
+
+    def get(self, request, *args, **kwargs):
+        from decimal import Decimal
+
+        from django.http import HttpResponse
+        from django.template.loader import render_to_string
+        from weasyprint import HTML
+
+        from .calculators import SupervisionCalculatorInput, run_supervision_calculation
+
+        obj = self.get_object()
+        overrides = self.parse_overrides(request.GET)
+        result = run_supervision_calculation(
+            SupervisionCalculatorInput(supervision=obj, **overrides)
+        )
+
+        # Vorberechnete Minutenwerte für das Template
+        weekly_seconds = obj.weekly_hours.total_seconds() if obj.weekly_hours else 0
+        weekly_hours_h = int(weekly_seconds // 3600)
+        weekly_hours_min = int((weekly_seconds % 3600) // 60)
+        weekly_minutes = int(weekly_seconds // 60)
+        daily_minutes = weekly_minutes // 5
+        total_school_days = result.school_days_breakdown["total"]
+        total_minutes = daily_minutes * total_school_days
+        total_hours = Decimal(total_minutes) / Decimal(60)
+
+        if result.fee_agreement is not None:
+            hourly_rate = (
+                result.fee_agreement.price_tandem
+                if result.is_tandem
+                else result.fee_agreement.price_standard
+            )
+        else:
+            hourly_rate = None
+
+        context = {
+            "supervision": obj,
+            "result": result,
+            "weekly_hours_h": weekly_hours_h,
+            "weekly_hours_min": weekly_hours_min,
+            "weekly_minutes": weekly_minutes,
+            "daily_minutes": daily_minutes,
+            "total_minutes": total_minutes,
+            "total_hours": total_hours,
+            "hourly_rate": hourly_rate,
+        }
+        html_string = render_to_string(
+            "admin/supervision_pdf.html", context, request=request
+        )
+        pdf = HTML(
+            string=html_string, base_url=request.build_absolute_uri("/")
+        ).write_pdf()
+        filename = f"kalkulation_{obj.student.last_name}_{obj.student.first_name}.pdf"
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
 
 class SupervisionBaseApplyView(BaseApplyView):
     title = "Betreuungsrechner"
@@ -437,6 +523,13 @@ class SupervisionAdmin(BaseModelAdmin):
                     SupervisionApplyInstallmentView.as_view(model_admin=self)
                 ),
                 name="pedagogy_supervision_calculator_apply_installment",
+            ),
+            path(
+                "<int:pk>/calculator/pdf/",
+                self.admin_site.admin_view(
+                    SupervisionPdfView.as_view(model_admin=self)
+                ),
+                name="pedagogy_supervision_calculator_pdf",
             ),
         ]
         return custom + super().get_urls()

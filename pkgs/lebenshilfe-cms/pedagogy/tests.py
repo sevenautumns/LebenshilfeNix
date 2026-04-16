@@ -761,3 +761,118 @@ class SchoolDaysBreakdownTests(TestCase):
             result["total"],
             result["school_days"] + result["vacation_days"] + result["public_holidays"],
         )
+
+
+class SupervisionPdfViewTests(TestCase):
+    """Smoke-Tests für SupervisionPdfView — erfordert weasyprint."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from django.test import Client
+
+        User = get_user_model()
+        self.user = User.objects.create_superuser(
+            username="pdf_admin", email="pdf@example.com", password="password"
+        )
+        self.client = Client()
+        self.client.login(username="pdf_admin", password="password")
+
+        self.payer = CostPayer.objects.create(identifier="Bezirk PDF-Test")
+        self.school = School.objects.create(name="PDF-Testschule")
+        self.caretaker = Employee.objects.create(first_name="PDF", last_name="Betreuer")
+        self.student = Student.objects.create(
+            first_name="Max", last_name="Muster", payer=self.payer
+        )
+        self.fee_agreement = FeeAgreement.objects.create(
+            valid_from=date(2024, 1, 1),
+            valid_to=date(2024, 12, 31),
+            price_standard=Decimal("25.47"),
+            price_tandem=Decimal("20.00"),
+            price_coordination=Decimal("30.00"),
+            responsible_payer=self.payer,
+        )
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
+        )
+        self.supervision = Supervision.objects.create(
+            student=self.student,
+            caretaker=self.caretaker,
+            school=self.school,
+            start_date=date(2024, 9, 1),
+            end_date=date(2024, 9, 30),
+            weekly_hours=timedelta(hours=20),
+        )
+
+    def _pdf_url(self, **params):
+        from django.urls import reverse
+
+        url = reverse(
+            "admin:pedagogy_supervision_calculator_pdf", args=[self.supervision.pk]
+        )
+        if params:
+            from urllib.parse import urlencode
+
+            url += "?" + urlencode(params)
+        return url
+
+    def test_pdf_view_returns_pdf(self):
+        """GET liefert HTTP 200 mit content-type application/pdf."""
+        response = self.client.get(self._pdf_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+
+    def test_pdf_view_has_content_disposition(self):
+        """Response enthält Content-Disposition mit Dateinamen."""
+        response = self.client.get(self._pdf_url())
+        self.assertIn("attachment", response["Content-Disposition"])
+        self.assertIn("Muster", response["Content-Disposition"])
+
+    def test_pdf_view_with_school_days_override(self):
+        """Override wird von der PDF-View tatsächlich an die Kalkulation weitergegeben."""
+        from unittest.mock import patch
+        from pedagogy.calculators import SupervisionCalculatorInput
+
+        captured = {}
+
+        original_run = __import__(
+            "pedagogy.calculators", fromlist=["run_supervision_calculation"]
+        ).run_supervision_calculation
+
+        def capturing_run(inp: SupervisionCalculatorInput):
+            captured["input"] = inp
+            return original_run(inp)
+
+        with patch(
+            "pedagogy.calculators.run_supervision_calculation", side_effect=capturing_run
+        ):
+            response = self.client.get(
+                self._pdf_url(
+                    school_days_override=5,
+                    vacation_days_override=0,
+                    public_holidays_override=0,
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("input", captured)
+        self.assertEqual(captured["input"].school_days_override, 5)
+        self.assertEqual(captured["input"].vacation_days_override, 0)
+        self.assertEqual(captured["input"].public_holidays_override, 0)
+
+    def test_pdf_view_404_for_missing_supervision(self):
+        """Nicht existierende pk liefert HTTP 404."""
+        from django.urls import reverse
+
+        url = reverse("admin:pedagogy_supervision_calculator_pdf", args=[9999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_pdf_view_unauthenticated_redirects(self):
+        """Nicht eingeloggter Zugriff wird auf Login weitergeleitet."""
+        from django.test import Client
+
+        anon = Client()
+        response = anon.get(self._pdf_url())
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response["Location"])

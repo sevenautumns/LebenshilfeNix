@@ -27,6 +27,7 @@ python3Packages.buildPythonApplication rec {
     django-allauth
     requests
     gunicorn
+    weasyprint
     model-bakery
     pytest
     pytest-django

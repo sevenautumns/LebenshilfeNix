@@ -1,0 +1,254 @@
+{% load i18n l10n %}<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Stunden- und Budgetkalkulation</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm 2.5cm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-align: center;
+      margin: 1.2em 0 1em 0;
+    }
+
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+    }
+
+    .meta-table td {
+      padding: 2px 6px 2px 0;
+      vertical-align: top;
+    }
+
+    .meta-table td.label {
+      font-weight: bold;
+      width: 5cm;
+      white-space: nowrap;
+    }
+
+    .meta-table td.value {
+      font-weight: bold;
+    }
+
+    .days-section {
+      margin: 1em 0 1em 3cm;
+    }
+
+    .days-table {
+      border-collapse: collapse;
+    }
+
+    .days-table td {
+      padding: 1px 0;
+    }
+
+    .days-table td.label {
+      width: 5cm;
+    }
+
+    .days-table td.value {
+      text-align: right;
+      width: 2cm;
+      padding-right: 0.3cm;
+    }
+
+    .days-table td.unit {
+      width: 2cm;
+    }
+
+    .days-table tr.total td {
+      border-top: 1px solid #000;
+      font-weight: bold;
+      font-size: 11pt;
+      padding-top: 2px;
+    }
+
+    .section-label {
+      font-weight: bold;
+      margin: 1em 0 0.3em 0;
+    }
+
+    .betreuungsbedarf {
+      margin-bottom: 1em;
+    }
+
+    .calc-section {
+      margin: 1em 0;
+    }
+
+    .calc-row {
+      display: flex;
+      align-items: baseline;
+      margin: 0.3em 0;
+      gap: 0.4em;
+    }
+
+    .calc-row .num {
+      font-weight: bold;
+    }
+
+    .calc-row .result {
+      font-weight: bold;
+      margin-left: auto;
+    }
+
+    .total-box {
+      margin: 0.5em 0;
+      display: flex;
+      align-items: baseline;
+      gap: 0.4em;
+    }
+
+    .total-box .amount {
+      font-weight: bold;
+      font-size: 11pt;
+      margin-left: auto;
+    }
+
+    .total-box .label {
+      font-weight: bold;
+    }
+
+    .installment-section {
+      margin-top: 1.2em;
+    }
+
+    .installment-section .section-label {
+      margin-bottom: 0.3em;
+    }
+
+    .installment-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4em;
+      margin-left: 2cm;
+    }
+
+    .installment-row .amount {
+      font-weight: bold;
+      font-size: 11pt;
+    }
+
+    .signature-section {
+      margin-top: 3em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Stunden- und Budgetkalkulation</h1>
+
+  {# Stammdaten #}
+  <table class="meta-table">
+    <tr>
+      <td class="label">Schulbegleitung für:</td>
+      <td class="value">{{ supervision.student.last_name }}, {{ supervision.student.first_name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Schule:</td>
+      <td class="value">{{ supervision.school }}</td>
+    </tr>
+    <tr>
+      <td class="label" style="padding-top: 0.5em; font-size: 11pt;">Zeitraum:</td>
+      <td class="value" style="padding-top: 0.5em; font-size: 11pt;">
+        {{ supervision.start_date|date:"d.m.Y" }} bis {{ supervision.end_date|date:"d.m.Y" }}
+      </td>
+    </tr>
+  </table>
+
+  {# Schultage-Breakdown #}
+  <div class="days-section">
+    <table class="days-table">
+      <tr>
+        <td class="label">Schultage:</td>
+        <td class="value">{{ result.school_days_breakdown.school_days }}</td>
+        <td class="unit">Tage</td>
+      </tr>
+      <tr>
+        <td class="label">Urlaubsanspruch:</td>
+        <td class="value">{{ result.school_days_breakdown.vacation_days }}</td>
+        <td class="unit">Tage</td>
+      </tr>
+      <tr>
+        <td class="label">Gesetzl. Feiertage</td>
+        <td class="value">{{ result.school_days_breakdown.public_holidays }}</td>
+        <td class="unit">Tage</td>
+      </tr>
+      <tr class="total">
+        <td class="label">Insgesamt:</td>
+        <td class="value">{{ result.school_days_breakdown.total }}</td>
+        <td class="unit">Tage</td>
+      </tr>
+    </table>
+  </div>
+
+  {# Betreuungsbedarf #}
+  <p class="section-label">Betreuungsbedarf lt. Stundenplan</p>
+  <div class="betreuungsbedarf">
+    <span style="margin-right: 1.5em;"><strong>{{ weekly_hours_h }} Stunden {{ weekly_hours_min }} Minuten</strong></span>
+    = Minuten pro Woche
+    <span style="margin: 0 0.5em;"><strong>{{ weekly_minutes }}</strong></span>
+    = pro Tag
+    <span style="margin-left: 0.5em;"><strong>{{ daily_minutes }}</strong></span>
+  </div>
+
+  {# Berechnung #}
+  <p class="section-label">Berechnung der Gesamtkosten und des Abschlages:</p>
+  <div class="calc-section">
+    <div class="calc-row">
+      <span>Minuten pro Tag</span>
+      <span class="num">{{ daily_minutes }}</span>
+      <span>x</span>
+      <span class="num">{{ result.school_days_breakdown.total }}</span>
+      <span>Schultage</span>
+      <span class="result">{{ total_minutes }} Minuten = <strong>{{ total_hours|floatformat:2 }} Stunden</strong></span>
+    </div>
+
+    {% if hourly_rate %}
+    <div class="calc-row" style="margin-top: 0.5em;">
+      <span class="num">{{ hourly_rate|floatformat:2 }} €</span>
+      <span>x Stunden</span>
+      <span class="result"><strong>{{ result.calculated_total_amount|floatformat:2 }} €</strong></span>
+    </div>
+    {% endif %}
+
+    <div class="total-box" style="margin-top: 0.3em;">
+      <span class="label">{{ result.calculated_total_amount|floatformat:2 }} € Gesamtbetrag</span>
+    </div>
+  </div>
+
+  {# Abschlag #}
+  {% if result.calculated_monthly_installment %}
+  <div class="installment-section">
+    <p class="section-label">Abschlag pro Monat:</p>
+    <div class="installment-row">
+      <span>bezogen auf</span>
+      <span class="num">{{ result.months|floatformat:0 }}</span>
+      <span>Monate</span>
+      <span class="amount">{{ result.calculated_monthly_installment|floatformat:2 }} €</span>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Datum & Unterschrift #}
+  <div class="signature-section">
+    <p>Uslar, den {% now "d.m.Y" %}</p>
+    <p style="margin-top: 2em;">Schubert, Geschäftsführer</p>
+  </div>
+
+</body>
+</html>
