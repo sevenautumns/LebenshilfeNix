@@ -57,11 +57,14 @@ class SupervisionCalculatorView(BaseCalculatorView):
 
     def get_source_fields(self, obj: Supervision):
         from base.fields import HourMinuteDurationField as HMField
+        from base.models import SchoolDays
         from django.db.models import Q
 
         is_tandem = TandemPairing.objects.filter(
             Q(supervision_a=obj) | Q(supervision_b=obj)
         ).exists()
+
+        breakdown = SchoolDays.school_days_breakdown(obj.start_date, obj.end_date)
 
         return [
             ("Schüler:in", str(obj.student)),
@@ -78,7 +81,10 @@ class SupervisionCalculatorView(BaseCalculatorView):
                 "Wochenstunden",
                 HMField.format_std(obj.weekly_hours),
             ),
-            ("Schultage (rechnerisch)", obj.calculated_school_days),
+            ("Schultage (lt. Kalender)", breakdown["school_days"]),
+            ("Urlaubstage (lt. Kalender)", breakdown["vacation_days"]),
+            ("Feiertage (lt. Kalender)", breakdown["public_holidays"]),
+            ("Gesamt Schultage (rechnerisch)", breakdown["total"]),
             (
                 "Art der Betreuung",
                 "Tandembetreuung" if is_tandem else "Einzelbetreuung",
@@ -91,6 +97,8 @@ class SupervisionCalculatorView(BaseCalculatorView):
             {
                 "months_override": i.months_override,
                 "school_days_override": i.school_days_override,
+                "vacation_days_override": i.vacation_days_override,
+                "public_holidays_override": i.public_holidays_override,
                 "fee_agreement_override": i.fee_agreement_override,
                 "use_fee_agreement": True if i.use_fee_agreement else None,
             }
@@ -185,11 +193,34 @@ class SupervisionCalculatorView(BaseCalculatorView):
             )
             rows.append(("Tandemabzug", "50 %", True))
 
+        bd = result.school_days_breakdown
         rows += [
             (
                 "Schultage (effektiv)",
-                result.school_days,
+                bd["school_days"],
                 i.school_days_override is not None,
+            ),
+            (
+                "Urlaubstage (effektiv)",
+                bd["vacation_days"],
+                i.vacation_days_override is not None,
+            ),
+            (
+                "Feiertage (effektiv)",
+                bd["public_holidays"],
+                i.public_holidays_override is not None,
+            ),
+            (
+                "Gesamt Schultage (effektiv)",
+                bd["total"],
+                any(
+                    v is not None
+                    for v in (
+                        i.school_days_override,
+                        i.vacation_days_override,
+                        i.public_holidays_override,
+                    )
+                ),
             ),
             (
                 "Monate (rechnerisch)",

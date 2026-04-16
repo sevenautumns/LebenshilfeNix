@@ -221,7 +221,12 @@ class SupervisionCalculatorTests(TestCase):
     def test_fev_total_amount_standard(self):
         """Ohne Tandem wird price_standard für den Gesamtbetrag verwendet."""
         sup = self._make_supervision()
-        result = self._calc(sup, school_days_override=10)
+        result = self._calc(
+            sup,
+            school_days_override=10,
+            vacation_days_override=0,
+            public_holidays_override=0,
+        )
         # daily_hours = 1h, 10 days → yearly = 10h → 10.00 * 10 = 100.00
         self.assertEqual(result.calculated_total_amount, Decimal("100.00"))
         self.assertFalse(result.is_pool_rate)
@@ -231,7 +236,12 @@ class SupervisionCalculatorTests(TestCase):
         sup = self._make_supervision()
         tandem_sup = self._make_supervision(student=self.tandem_student)
         TandemPairing.objects.create(supervision_a=sup, supervision_b=tandem_sup)
-        result = self._calc(sup, school_days_override=10)
+        result = self._calc(
+            sup,
+            school_days_override=10,
+            vacation_days_override=0,
+            public_holidays_override=0,
+        )
         # 15.00 * 10 * 0.5 = 75.00
         self.assertEqual(result.calculated_total_amount, Decimal("75.00"))
         self.assertTrue(result.is_tandem)
@@ -239,7 +249,12 @@ class SupervisionCalculatorTests(TestCase):
     def test_fev_monthly_installment_single_month(self):
         """Gesamtbetrag / 1 Monat = voller Betrag als Abschlag."""
         sup = self._make_supervision()
-        result = self._calc(sup, school_days_override=10)
+        result = self._calc(
+            sup,
+            school_days_override=10,
+            vacation_days_override=0,
+            public_holidays_override=0,
+        )
         self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
 
     def test_fev_monthly_installment_multi_month(self):
@@ -248,7 +263,12 @@ class SupervisionCalculatorTests(TestCase):
             start_date=date(2024, 9, 1),
             end_date=date(2024, 11, 30),
         )
-        result = self._calc(sup, school_days_override=30)
+        result = self._calc(
+            sup,
+            school_days_override=30,
+            vacation_days_override=0,
+            public_holidays_override=0,
+        )
         # total = 10.00 * 30h = 300.00, months = 3 → installment = 100.00
         self.assertEqual(result.calculated_total_amount, Decimal("300.00"))
         self.assertEqual(result.calculated_monthly_installment, Decimal("100.00"))
@@ -260,18 +280,64 @@ class SupervisionCalculatorTests(TestCase):
             start_date=date(2024, 9, 1),
             end_date=date(2024, 11, 30),
         )
-        result = self._calc(sup, school_days_override=30, months_override=Decimal("2"))
+        result = self._calc(
+            sup,
+            school_days_override=30,
+            vacation_days_override=0,
+            public_holidays_override=0,
+            months_override=Decimal("2"),
+        )
         # total = 300.00, override = 2 → installment = 150.00
         self.assertEqual(result.calculated_monthly_installment, Decimal("150.00"))
         self.assertEqual(result.months, Decimal("2"))
 
     def test_fev_school_days_override_respected(self):
-        """school_days_override überschreibt die berechneten Schultage."""
+        """school_days_override überschreibt nur die Schultage-Komponente des Breakdowns."""
         sup = self._make_supervision()
+        # DB: school_days=20, public_holidays=1, vacation_days=0
+        # Override: school_days=5 → total = 5 + 0 + 1 = 6
         result = self._calc(sup, school_days_override=5)
-        # daily_hours = 1h, 5 days → yearly = 5h → 10.00 * 5 = 50.00
-        self.assertEqual(result.calculated_total_amount, Decimal("50.00"))
-        self.assertEqual(result.school_days, 5)
+        self.assertEqual(result.school_days_breakdown["school_days"], 5)
+        self.assertEqual(result.school_days_breakdown["public_holidays"], 1)
+        self.assertEqual(result.school_days_breakdown["vacation_days"], 0)
+        self.assertEqual(result.school_days, 6)
+        # daily_hours = 1h, 6 days → 6h → 10.00 * 6 = 60.00
+        self.assertEqual(result.calculated_total_amount, Decimal("60.00"))
+
+    def test_fev_vacation_days_override_respected(self):
+        """vacation_days_override überschreibt nur die Urlaubstage-Komponente."""
+        sup = self._make_supervision()
+        result = self._calc(sup, vacation_days_override=3, public_holidays_override=0)
+        # school_days=20 (DB) + vacation=3 (override) + holidays=0 (override) = 23
+        self.assertEqual(result.school_days_breakdown["vacation_days"], 3)
+        self.assertEqual(result.school_days, 23)
+        # 1h * 23 * 10.00 = 230.00
+        self.assertEqual(result.calculated_total_amount, Decimal("230.00"))
+
+    def test_fev_public_holidays_override_respected(self):
+        """public_holidays_override überschreibt nur die Feiertage-Komponente."""
+        sup = self._make_supervision()
+        result = self._calc(sup, public_holidays_override=0)
+        # school_days=20 (DB) + vacation=0 (DB) + holidays=0 (override) = 20
+        self.assertEqual(result.school_days_breakdown["public_holidays"], 0)
+        self.assertEqual(result.school_days, 20)
+        self.assertEqual(result.calculated_total_amount, Decimal("200.00"))
+
+    def test_breakdown_structure_in_result(self):
+        """result.school_days_breakdown enthält alle vier Schlüssel korrekt."""
+        sup = self._make_supervision()
+        result = self._calc(
+            sup,
+            school_days_override=15,
+            vacation_days_override=2,
+            public_holidays_override=1,
+        )
+        bd = result.school_days_breakdown
+        self.assertEqual(bd["school_days"], 15)
+        self.assertEqual(bd["vacation_days"], 2)
+        self.assertEqual(bd["public_holidays"], 1)
+        self.assertEqual(bd["total"], 18)
+        self.assertEqual(result.school_days, 18)
 
     def test_fev_fee_agreement_override_used(self):
         """fee_agreement_override überschreibt die automatisch gefundene FEV."""
@@ -285,7 +351,11 @@ class SupervisionCalculatorTests(TestCase):
         )
         sup = self._make_supervision()
         result = self._calc(
-            sup, school_days_override=10, fee_agreement_override=other_fee
+            sup,
+            school_days_override=10,
+            vacation_days_override=0,
+            public_holidays_override=0,
+            fee_agreement_override=other_fee,
         )
         # 20.00 * 10 = 200.00
         self.assertEqual(result.calculated_total_amount, Decimal("200.00"))
@@ -312,7 +382,11 @@ class SupervisionCalculatorTests(TestCase):
         )
         sup = self._make_supervision()
         result = self._calc(
-            sup, school_days_override=10, fee_agreement_override=other_fee
+            sup,
+            school_days_override=10,
+            vacation_days_override=0,
+            public_holidays_override=0,
+            fee_agreement_override=other_fee,
         )
         self.assertFalse(result.is_pool_rate)
         self.assertEqual(result.fee_agreement, other_fee)
@@ -639,3 +713,51 @@ class NewRequestListViewTests(TestCase):
         response = anon.get(self.url)
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login/", response["Location"])
+
+
+class SchoolDaysBreakdownTests(TestCase):
+    """Tests für SchoolDays.school_days_breakdown()."""
+
+    def test_single_month_returns_correct_breakdown(self):
+        """Einzelner Monat gibt alle drei Komponenten korrekt zurück."""
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=2
+        )
+        result = SchoolDays.school_days_breakdown(date(2024, 9, 1), date(2024, 9, 30))
+        self.assertEqual(result["school_days"], 20)
+        self.assertEqual(result["vacation_days"], 2)
+        self.assertEqual(result["public_holidays"], 1)
+        self.assertEqual(result["total"], 23)
+
+    def test_multiple_months_sums_correctly(self):
+        """Mehrere Monate werden korrekt aufsummiert."""
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=20, public_holidays=1, vacation_days=0
+        )
+        SchoolDays.objects.create(
+            month=date(2024, 10, 1), school_days=21, public_holidays=0, vacation_days=5
+        )
+        result = SchoolDays.school_days_breakdown(date(2024, 9, 1), date(2024, 10, 31))
+        self.assertEqual(result["school_days"], 41)
+        self.assertEqual(result["vacation_days"], 5)
+        self.assertEqual(result["public_holidays"], 1)
+        self.assertEqual(result["total"], 47)
+
+    def test_empty_range_returns_zeros(self):
+        """Kein SchoolDays-Eintrag im Bereich ergibt Nullwerte."""
+        result = SchoolDays.school_days_breakdown(date(2024, 9, 1), date(2024, 9, 30))
+        self.assertEqual(
+            result,
+            {"school_days": 0, "vacation_days": 0, "public_holidays": 0, "total": 0},
+        )
+
+    def test_total_equals_sum_of_components(self):
+        """total ist immer exakt die Summe der drei Komponenten."""
+        SchoolDays.objects.create(
+            month=date(2024, 9, 1), school_days=18, public_holidays=3, vacation_days=4
+        )
+        result = SchoolDays.school_days_breakdown(date(2024, 9, 1), date(2024, 9, 30))
+        self.assertEqual(
+            result["total"],
+            result["school_days"] + result["vacation_days"] + result["public_holidays"],
+        )

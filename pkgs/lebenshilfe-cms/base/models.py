@@ -34,6 +34,28 @@ class SchoolDays(models.Model):
         )
         return result["total"] or 0
 
+    @classmethod
+    def school_days_breakdown(cls, from_date: date, to_date: date) -> dict[str, int]:
+        """Gibt Schultage, Urlaubstage und Feiertage einzeln zurück für alle Monate zwischen from_date und to_date."""
+        from_month = from_date.replace(day=1)
+        to_month = to_date.replace(day=1)
+        result = cls.objects.filter(
+            month__gte=from_month, month__lte=to_month
+        ).aggregate(
+            school_days=Sum("school_days"),
+            vacation_days=Sum("vacation_days"),
+            public_holidays=Sum("public_holidays"),
+        )
+        sd = result["school_days"] or 0
+        vd = result["vacation_days"] or 0
+        ph = result["public_holidays"] or 0
+        return {
+            "school_days": sd,
+            "vacation_days": vd,
+            "public_holidays": ph,
+            "total": sd + vd + ph,
+        }
+
 
 class Address(models.Model):
     primary = models.BooleanField(default=False, verbose_name="Primär")

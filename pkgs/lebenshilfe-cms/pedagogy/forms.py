@@ -24,10 +24,32 @@ class SupervisionCalculatorOverridesForm(forms.Form):
     school_days_override = forms.IntegerField(
         label="Schultage (Überschreibung)",
         required=False,
-        min_value=1,
+        min_value=0,
         widget=forms.NumberInput(
             attrs={
-                "placeholder": "z. B. 185",
+                "placeholder": "z. B. 56",
+                "class": " ".join(INPUT_CLASSES),
+            }
+        ),
+    )
+    vacation_days_override = forms.IntegerField(
+        label="Urlaubstage (Überschreibung)",
+        required=False,
+        min_value=0,
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "z. B. 5",
+                "class": " ".join(INPUT_CLASSES),
+            }
+        ),
+    )
+    public_holidays_override = forms.IntegerField(
+        label="Feiertage (Überschreibung)",
+        required=False,
+        min_value=0,
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "z. B. 2",
                 "class": " ".join(INPUT_CLASSES),
             }
         ),

@@ -30,6 +30,8 @@ class SupervisionCalculatorInput:
     supervision: object  # pedagogy.models.Supervision
     months_override: Decimal | None = None
     school_days_override: int | None = None
+    vacation_days_override: int | None = None
+    public_holidays_override: int | None = None
     fee_agreement_override: object | None = None  # finance.models.FeeAgreement
     use_fee_agreement: bool = False
 
@@ -39,6 +41,7 @@ class SupervisionCalculatorResult:
     input: SupervisionCalculatorInput
     months: Decimal | None
     school_days: int | None
+    school_days_breakdown: dict[str, int]
     fee_agreement: object | None  # finance.models.FeeAgreement
     pool_agreement: object | None  # finance.models.PoolAgreement
     calculated_total_amount: Decimal | None
@@ -65,12 +68,34 @@ def run_supervision_calculation(
         else Decimal(calculated_months)
     )
 
-    # Schultage ermitteln
-    school_days: int | None = (
+    # Schultage-Breakdown ermitteln und Overrides anwenden
+    from base.models import SchoolDays
+
+    db_breakdown = SchoolDays.school_days_breakdown(sup.start_date, sup.end_date)
+    effective_school_days = (
         inp.school_days_override
         if inp.school_days_override is not None
-        else sup.calculated_school_days
+        else db_breakdown["school_days"]
     )
+    effective_vacation_days = (
+        inp.vacation_days_override
+        if inp.vacation_days_override is not None
+        else db_breakdown["vacation_days"]
+    )
+    effective_public_holidays = (
+        inp.public_holidays_override
+        if inp.public_holidays_override is not None
+        else db_breakdown["public_holidays"]
+    )
+    effective_breakdown = {
+        "school_days": effective_school_days,
+        "vacation_days": effective_vacation_days,
+        "public_holidays": effective_public_holidays,
+        "total": effective_school_days
+        + effective_vacation_days
+        + effective_public_holidays,
+    }
+    school_days: int = effective_breakdown["total"]
 
     # Poolvereinbarung immer suchen
     pool = None
@@ -116,6 +141,7 @@ def run_supervision_calculation(
             input=inp,
             months=months,
             school_days=school_days,
+            school_days_breakdown=effective_breakdown,
             fee_agreement=fee,
             pool_agreement=pool,
             calculated_total_amount=total_amount,
@@ -152,6 +178,7 @@ def run_supervision_calculation(
         input=inp,
         months=months,
         school_days=school_days,
+        school_days_breakdown=effective_breakdown,
         fee_agreement=fee,
         pool_agreement=pool,
         calculated_total_amount=total_amount,
