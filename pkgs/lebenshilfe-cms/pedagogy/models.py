@@ -8,6 +8,15 @@ from base.fields import EuroDecimalField, HourMinuteDurationField
 class School(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="Name")
 
+    # Adresse (optional)
+    street = models.CharField(max_length=255, blank=True, verbose_name="Straße")
+    house_number = models.CharField(
+        max_length=50, blank=True, verbose_name="Hausnummer"
+    )
+    postcode = models.CharField(max_length=10, blank=True, verbose_name="PLZ")
+    city = models.CharField(max_length=255, blank=True, verbose_name="Ort")
+    district = models.CharField(max_length=255, blank=True, verbose_name="Ortsteil")
+
     class Meta:
         verbose_name = "Schule"
         verbose_name_plural = "Schulen"
