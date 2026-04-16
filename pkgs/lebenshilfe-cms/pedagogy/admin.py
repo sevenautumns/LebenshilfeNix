@@ -251,9 +251,30 @@ class SupervisionApplyInstallmentView(SupervisionBaseApplyView):
 @admin.register(Student)
 class StudentAdmin(BaseModelAdmin):
     list_display = ("full_name", "payer")
-    search_fields = ("first_name", "last_name")
+    search_fields = (
+        "first_name",
+        "last_name",
+        "guardian_first_name",
+        "guardian_last_name",
+    )
     inlines = [AddressInline, PhoneInline, EmailInline]
     autocomplete_fields = ("payer",)
+    fieldsets = [
+        (
+            "Stammdaten",
+            {
+                "fields": ["first_name", "middle_name", "last_name", "payer"],
+                "classes": ["col-span-2"],
+            },
+        ),
+        (
+            "Erziehungsberechtigte:r",
+            {
+                "fields": ["guardian_first_name", "guardian_last_name"],
+                "classes": ["col-span-1"],
+            },
+        ),
+    ]
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("payer")

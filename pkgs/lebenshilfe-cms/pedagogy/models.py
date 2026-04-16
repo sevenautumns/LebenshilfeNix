@@ -33,6 +33,16 @@ class Student(Person):
         related_name="students",
         verbose_name="Kostenträger",
     )
+    guardian_first_name = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Erziehungsberechtigte:r – Vorname",
+    )
+    guardian_last_name = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Erziehungsberechtigte:r – Nachname",
+    )
 
     class Meta:
         verbose_name = "Schüler:in"

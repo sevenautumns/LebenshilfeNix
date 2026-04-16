@@ -4,35 +4,36 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pedagogy', '0023_schoolcontact'),
+        ("pedagogy", "0023_schoolcontact"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='school',
-            name='city',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Ort'),
+            model_name="school",
+            name="city",
+            field=models.CharField(blank=True, max_length=255, verbose_name="Ort"),
         ),
         migrations.AddField(
-            model_name='school',
-            name='district',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Ortsteil'),
+            model_name="school",
+            name="district",
+            field=models.CharField(blank=True, max_length=255, verbose_name="Ortsteil"),
         ),
         migrations.AddField(
-            model_name='school',
-            name='house_number',
-            field=models.CharField(blank=True, max_length=50, verbose_name='Hausnummer'),
+            model_name="school",
+            name="house_number",
+            field=models.CharField(
+                blank=True, max_length=50, verbose_name="Hausnummer"
+            ),
         ),
         migrations.AddField(
-            model_name='school',
-            name='postcode',
-            field=models.CharField(blank=True, max_length=10, verbose_name='PLZ'),
+            model_name="school",
+            name="postcode",
+            field=models.CharField(blank=True, max_length=10, verbose_name="PLZ"),
         ),
         migrations.AddField(
-            model_name='school',
-            name='street',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Straße'),
+            model_name="school",
+            name="street",
+            field=models.CharField(blank=True, max_length=255, verbose_name="Straße"),
         ),
     ]
