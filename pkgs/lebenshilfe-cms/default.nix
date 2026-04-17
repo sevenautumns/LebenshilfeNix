@@ -20,6 +20,7 @@ python3Packages.buildPythonApplication rec {
 
   propagatedBuildInputs = with python3Packages; [
     django
+    django-stubs
     django-environ
     psycopg
     dj-database-url
