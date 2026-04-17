@@ -52,7 +52,7 @@ def get_salary_rate(agreement, contract_type: str) -> Decimal | None:
     """Gibt den Stundensatz für den gegebenen Vertragstyp zurück."""
     from hr.models import Employment
 
-    rate_map = {
+    rate_map: dict[str, Decimal | None] = {
         Employment.ContractType.SCHOOL_ACCOMPANIMENT: agreement.salary_standard,
         Employment.ContractType.TANDEM: agreement.salary_tandem,
         Employment.ContractType.SCHOOL_ACCOMPANIMENT_HONORARY: agreement.salary_honorary_standard,

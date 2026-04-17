@@ -156,7 +156,7 @@ class ListSummaryMixin(ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
-        if isinstance(response, TemplateResponse):
+        if isinstance(response, TemplateResponse) and response.context_data is not None:
             try:
                 cl = response.context_data["cl"]
                 response.context_data["summary_title"] = self.summary_title

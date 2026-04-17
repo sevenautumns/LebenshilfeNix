@@ -153,7 +153,7 @@ class CalculatorTests(TestCase):
             contract_type=Employment.ContractType.SCHOOL_ACCOMPANIMENT,
         )
         defaults.update(kwargs)
-        return CalculatorInput(**defaults)
+        return CalculatorInput(**defaults)  # type: ignore[arg-type]
 
     # --- calculate_months ---
 

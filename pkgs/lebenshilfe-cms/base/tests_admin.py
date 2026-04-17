@@ -27,15 +27,15 @@ def get_edit_models():
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_baker_generators():
-    from django.db.models.fields.generated import GeneratedField
-
     baker.generators.add("base.fields.MonthField", lambda: date.today().replace(day=1))
     baker.generators.add("base.fields.EuroDecimalField", lambda: Decimal("10.00"))
     baker.generators.add(
         "base.fields.HourMinuteDurationField", lambda: timedelta(hours=1)
     )
     # GeneratedField values are computed by the DB; return None so baker skips assignment
-    baker.generators.add(GeneratedField, lambda: None)
+    baker.generators.add(
+        "django.db.models.fields.generated.GeneratedField", lambda: None
+    )
 
 
 @pytest.fixture
