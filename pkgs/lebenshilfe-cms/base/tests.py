@@ -209,8 +209,10 @@ class AdminDisplayMixinTests(TestCase):
         self.assertTrue(hasattr(self.admin, "display_time_spent"))
 
         # Testen ob die generierte Funktion das richtige Format liefert
-        self.assertEqual(self.admin.display_time_spent(self.mock_obj), "2:00 Std.")
-        self.assertEqual(self.admin.display_amount.short_description, "Betrag")
+        display_time_spent = getattr(self.admin, "display_time_spent")
+        self.assertEqual(display_time_spent(self.mock_obj), "2:00 Std.")
+        display_amount = getattr(self.admin, "display_amount")
+        self.assertEqual(display_amount.short_description, "Betrag")
 
     @patch.object(MockAdminWithDisplay, "has_change_permission", return_value=False)
     def test_field_replacement_without_change_permission(self, mock_permission):
