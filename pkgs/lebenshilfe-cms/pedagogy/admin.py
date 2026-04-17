@@ -278,7 +278,13 @@ def build_supervision_docx(context: dict):
     bdoc = BriefbogenDocument()
 
     # 1. Titel
-    bdoc.add_title("Stunden- und Budgetkalkulation")
+    payer = obj.student.payer if obj.student_id else None
+    title = (
+        f"Stunden- und Budgetkalkulation für {payer}"
+        if payer
+        else "Stunden- und Budgetkalkulation"
+    )
+    bdoc.add_title(title)
     bdoc.add_spacer()
 
     # 2. Metadaten-Tabelle (rahmenlos)
