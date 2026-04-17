@@ -40,6 +40,8 @@ This repository contains the `lebenshilfe-cms` Django application. Assume all te
 - All Django commands must be executed from the `pkgs/lebenshilfe-cms/` directory.
 - **Mandatory Testing**: Before finalizing changes, verify that the code works:
   - **Migrations**: Always generate and apply migrations (`python manage.py makemigrations` and `python manage.py migrate`) when modifying `models.py`. Include the generated migration files in your `jj` commit.
+  - **Tests**: Run `pytest` at the end of a larger change set. All tests must pass before committing.
+  - **Type checking**: Run `ty check` after changes. The codebase must stay at 0 errors. When a new error appears, discuss the approach with the user before fixing — especially if `# type: ignore` seems like the only option.
   - **Runserver**: Run `python manage.py runserver` to ensure the application starts correctly and the Django Admin loads without crashes or syntax errors.
 - **Django Admin & Unfold Integration**: 
   - Subclass `BaseModelAdmin` from `base.admin` instead of default Django or Unfold ModelAdmins. It already integrates `unfold.admin.ModelAdmin` along with necessary custom mixins (`EditModeMixin`, `CustomWidgetsMixin`, `AdminDisplayMixin`).
