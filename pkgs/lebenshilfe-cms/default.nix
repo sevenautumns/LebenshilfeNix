@@ -51,6 +51,7 @@ python3Packages.buildPythonApplication rec {
     cp -r static $LIB_DIR/
     cp -r templates $LIB_DIR/
     cp -r locale $LIB_DIR/
+    cp -r base/data $LIB_DIR/base/
 
     makeWrapper ${python3Packages.python.interpreter} $out/bin/lebenshilfe-manage \
       --add-flags "$LIB_DIR/manage.py" \
