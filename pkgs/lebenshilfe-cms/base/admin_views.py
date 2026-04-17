@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.admin import ModelAdmin
 from django import forms
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db.models import F, QuerySet, Value, CharField
@@ -41,6 +42,8 @@ class AdminViewMixin:
     Stellt get_media() bereit, das korrekt jsi18n + Widget-Media lädt.
     Muss vor UnfoldModelAdminViewMixin in der MRO stehen.
     """
+
+    model_admin: ModelAdmin
 
     def get_media(self, form=None) -> forms.Media:
         return (
@@ -194,6 +197,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
       - get_value, save_value, error_message, success_message
     """
 
+    model_admin: ModelAdmin
     title: str = ""
     permission_required = []
     calculator_url_name: str = ""
@@ -252,7 +256,7 @@ class BaseApplyView(UnfoldModelAdminViewMixin, View):
 # ---------------------------------------------------------------------------
 
 
-class UnionListMixin(AdminViewMixin):
+class UnionListMixin(AdminViewMixin, TemplateView):
     """Mixin für Union-Listen-Views aus zwei QuerySets mit Form-Filtern und Paginierung.
 
     Sortierung: URL-Parameter ?sort=-0,2 (Spaltenindices aus get_columns(), "-" = absteigend).
@@ -260,6 +264,7 @@ class UnionListMixin(AdminViewMixin):
     sie nach vorne und togglet die Richtung. Der Pfeil-Icon togglet die Richtung in-place.
     """
 
+    title: str
     default_sort_field: str = "start_date"
     default_sort_dir: str = "desc"
     per_page: int = 50
