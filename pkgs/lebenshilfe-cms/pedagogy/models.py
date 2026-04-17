@@ -113,15 +113,11 @@ class Supervision(models.Model):
     def calculated_school_days(self) -> int:
         return SchoolDays.total_school_days(self.start_date, self.end_date)
 
-    calculated_school_days.fget.short_description = "Schultage (rechnerisch)"  # type: ignore[attr-defined]
-
     @property
     def daily_hours(self) -> timedelta | None:
         if self.weekly_hours is None:
             return None
         return self.weekly_hours / 5
-
-    daily_hours.fget.short_description = "Stunden pro Tag"  # type: ignore[attr-defined]
 
     @property
     def fee_agreement(self):
@@ -134,15 +130,11 @@ class Supervision(models.Model):
             valid_to__gte=self.start_date,
         ).first()
 
-    fee_agreement.fget.short_description = "Entgeltvereinbarung"  # type: ignore[attr-defined]
-
     @property
     def calculated_months(self) -> int:
         from pedagogy.calculators import calculate_supervision_months
 
         return calculate_supervision_months(self.start_date, self.end_date)
-
-    calculated_months.fget.short_description = "Monate (rechnerisch)"  # type: ignore[attr-defined]
 
     def __str__(self):
         return f"Betreuung {self.student.full_name} durch {self.caretaker.full_name}"
@@ -252,13 +244,9 @@ class TandemPairing(models.Model):
     def caretaker_matches(self) -> bool:
         return self.supervision_a.caretaker_id == self.supervision_b.caretaker_id
 
-    caretaker_matches.fget.short_description = "Betreuer stimmt überein"  # type: ignore[attr-defined]
-
     @property
     def hours_match(self) -> bool:
         return self.supervision_a.weekly_hours == self.supervision_b.weekly_hours
-
-    hours_match.fget.short_description = "Stunden stimmen überein"  # type: ignore[attr-defined]
 
 
 class SchoolReport(Supervision):
