@@ -1,14 +1,12 @@
-from __future__ import annotations
-
 import calendar
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from finance.models import FeeAgreement, PoolAgreement
-    from pedagogy.models import Supervision
+from django.db.models import Q
+
+from finance.models import FeeAgreement, PoolAgreement
+from pedagogy.models import Supervision, TandemPairing
 
 
 def calculate_supervision_months(start_date: date, end_date: date) -> int:
@@ -62,7 +60,7 @@ def run_supervision_calculation(
     inp: SupervisionCalculatorInput,
 ) -> SupervisionCalculatorResult:
     """Berechnet Gesamtbetrag und Abschlag für eine Betreuung. Einzige Funktion mit DB-Zugriff."""
-    from finance.models import PoolAgreement
+    from base.models import SchoolDays
 
     warnings: list[str] = []
     sup = inp.supervision
@@ -76,7 +74,6 @@ def run_supervision_calculation(
     )
 
     # Schultage-Breakdown ermitteln und Overrides anwenden
-    from base.models import SchoolDays
 
     db_breakdown = SchoolDays.school_days_breakdown(sup.start_date, sup.end_date)
     effective_school_days = (
@@ -123,9 +120,6 @@ def run_supervision_calculation(
     )
 
     # Tandem-Status immer ermitteln (vor Pool/FEV-Split)
-    from pedagogy.models import TandemPairing
-    from django.db.models import Q
-
     is_tandem = (
         sup.pk is not None
         and TandemPairing.objects.filter(
