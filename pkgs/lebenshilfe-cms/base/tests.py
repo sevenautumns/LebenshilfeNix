@@ -108,7 +108,7 @@ class FieldTests(TestCase):
         field = EuroDecimalField(max_digits=10, decimal_places=2)
 
         with translation.override("de"):
-            self.assertEqual(field.get_admin_format(Decimal("1234.50")), "1234,50 €")
+            self.assertEqual(field.get_admin_format(Decimal("1234.50")), "1.234,50 €")
             self.assertEqual(field.get_admin_format(Decimal("42")), "42,00 €")
 
         self.assertEqual(field.get_admin_format(None), "-")
@@ -322,10 +322,10 @@ class MonthFieldTests(TestCase):
         self.assertEqual(field.to_python(date(2024, 3, 1)), date(2024, 3, 1))
 
     def test_get_admin_format(self):
-        """Prüft die Ausgabe im MM/YYYY Format."""
+        """Prüft die Ausgabe im MM.YYYY Format."""
         field = MonthField()
-        self.assertEqual(field.get_admin_format(date(2024, 3, 1)), "03/2024")
-        self.assertEqual(field.get_admin_format(date(2024, 12, 1)), "12/2024")
+        self.assertEqual(field.get_admin_format(date(2024, 3, 1)), "03.2024")
+        self.assertEqual(field.get_admin_format(date(2024, 12, 1)), "12.2024")
 
     def test_get_admin_format_none(self):
         """Prüft, dass None als '-' dargestellt wird."""

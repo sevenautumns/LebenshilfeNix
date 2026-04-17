@@ -31,7 +31,7 @@ class MonthField(models.DateField):
     def get_admin_format(self, value):
         if value is None:
             return "-"
-        return value.strftime("%m/%Y")
+        return value.strftime("%m.%Y")
 
 
 class HourMinuteDurationField(models.DurationField):

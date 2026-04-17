@@ -1,5 +1,5 @@
 {% extends "admin/custom_admin_base.html" %}
-{% load i18n unfold %}
+{% load i18n unfold l10n_extras %}
 
 {% block content %}
 {% component "unfold/components/flex.html" with class="mb-4 items-center justify-between" %}
@@ -63,7 +63,7 @@
           
           <div class="mt-1 text-3xl font-bold text-font-important-light dark:text-font-important-dark">
             {% if r.value is not None %}
-              {{ r.value|floatformat:2 }} <span class="text-lg font-semibold">{{ r.unit }}</span>
+              {{ r.value|localfloat:2 }} <span class="text-lg font-semibold">{{ r.unit }}</span>
             {% else %}
               <span class="text-base-300 dark:text-base-600">—</span>
             {% endif %}
@@ -83,7 +83,7 @@
           {% endcomponent %}
           
           {% component "unfold/components/text.html" with class="font-semibold text-font-important-light dark:text-font-important-dark mt-0.5" %}
-            {% if r.stored_value is not None %}{{ r.stored_value|floatformat:2 }} {{ r.unit }}{% else %}<span class="text-base-400">—</span>{% endif %}
+            {% if r.stored_value is not None %}{{ r.stored_value|localfloat:2 }} {{ r.unit }}{% else %}<span class="text-base-400">—</span>{% endif %}
           {% endcomponent %}
         </div>
         

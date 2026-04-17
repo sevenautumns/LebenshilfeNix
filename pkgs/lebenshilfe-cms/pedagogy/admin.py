@@ -326,30 +326,37 @@ def build_supervision_docx(context: dict):
     # 5. Berechnungsabschnitt
     total_school_days = bd.get("total", 0)
     bdoc.add_paragraph("Berechnung der Gesamtkosten und des Abschlages:", bold=True)
+    total_hours_fmt = number_format(
+        context["total_hours"], decimal_pos=2, use_l10n=True
+    )
     bdoc.add_paragraph(
         f"{context['daily_minutes']} × {total_school_days} Schultage"
         f" = {context['total_minutes']} Minuten"
-        f" = {context['total_hours']:.2f} Stunden"
+        f" = {total_hours_fmt} Stunden"
     )
     if context["hourly_rate"] is not None:
+        total_amount_fmt = number_format(
+            result.calculated_total_amount, decimal_pos=2, use_l10n=True
+        )
         bdoc.add_paragraph(
-            f"{context['hourly_rate']} € × {context['total_hours']:.2f} Stunden"
-            f" = {result.calculated_total_amount:.2f} €"
+            f"{context['hourly_rate']} € × {total_hours_fmt} Stunden"
+            f" = {total_amount_fmt} €"
         )
     if result.calculated_total_amount is not None:
-        bdoc.add_paragraph(
-            f"{result.calculated_total_amount:.2f} € Gesamtbetrag", bold=True
+        total_amount_fmt = number_format(
+            result.calculated_total_amount, decimal_pos=2, use_l10n=True
         )
+        bdoc.add_paragraph(f"{total_amount_fmt} € Gesamtbetrag", bold=True)
 
     bdoc.add_spacer()
 
     # 6. Abschlag (optional)
     if result.calculated_monthly_installment is not None:
-        bdoc.add_paragraph("Abschlag pro Monat:", bold=True)
-        bdoc.add_paragraph(
-            f"bezogen auf {result.months} Monate"
-            f" = {result.calculated_monthly_installment:.2f} €"
+        monthly_fmt = number_format(
+            result.calculated_monthly_installment, decimal_pos=2, use_l10n=True
         )
+        bdoc.add_paragraph("Abschlag pro Monat:", bold=True)
+        bdoc.add_paragraph(f"bezogen auf {result.months} Monate = {monthly_fmt} €")
         bdoc.add_spacer()
 
     # 7. Signaturblock
