@@ -10,7 +10,7 @@ dependencies = [
     "psycopg",
     "dj-database-url",
     "django-unfold",
-    "weasyprint",
+    "python-docx",
 ]
 
 [tool.setuptools]
