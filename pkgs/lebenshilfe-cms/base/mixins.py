@@ -1,3 +1,5 @@
+from django.contrib.admin import ModelAdmin
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.http import HttpRequest
 from django.shortcuts import redirect
@@ -6,7 +8,7 @@ from unfold.enums import ActionVariant
 import types
 
 
-class EditModeMixin:
+class EditModeMixin(ModelAdmin):
     actions_detail = ["edit_action"]
 
     def _get_change_url(self, object_id: int) -> str:
@@ -40,7 +42,7 @@ class EditModeMixin:
         return self.is_edit(request)
 
 
-class AdminDisplayMixin:
+class AdminDisplayMixin(ModelAdmin):
     def __init__(self, model, admin_site):
         super().__init__(model, admin_site)
 
@@ -138,7 +140,7 @@ class AdminDisplayMixin:
 # ---------------------------------------------------------------------------
 
 
-class ListSummaryMixin:
+class ListSummaryMixin(ModelAdmin):
     """Mixin für ModelAdmin-Klassen mit generischer Zusammenfassungs-Footer-Karte.
 
     Subklassen implementieren get_summary_sections(cl) und geben eine Liste von
@@ -154,10 +156,13 @@ class ListSummaryMixin:
 
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
-        try:
-            cl = response.context_data["cl"]
-            response.context_data["summary_title"] = self.summary_title
-            response.context_data["summary_sections"] = self.get_summary_sections(cl)
-        except (AttributeError, KeyError):
-            pass
+        if isinstance(response, TemplateResponse):
+            try:
+                cl = response.context_data["cl"]
+                response.context_data["summary_title"] = self.summary_title
+                response.context_data["summary_sections"] = self.get_summary_sections(
+                    cl
+                )
+            except KeyError:
+                pass
         return response
