@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -311,7 +311,6 @@ class CalculatorTests(TestCase):
 
 class CalculatorViewTests(TestCase):
     def setUp(self):
-        User = get_user_model()
         self.user = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="password"
         )

@@ -4,9 +4,7 @@ from django.contrib import admin
 from model_bakery import baker
 from datetime import date, timedelta
 from decimal import Decimal
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from django.contrib.auth.models import User
 
 
 # Helper to lazily load models during test collection.

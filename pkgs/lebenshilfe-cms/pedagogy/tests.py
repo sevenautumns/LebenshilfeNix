@@ -1,7 +1,8 @@
 from decimal import Decimal
 from datetime import date, timedelta
 
-from django.test import TestCase
+from django.contrib.auth.models import User
+from django.test import TestCase, Client
 from django.urls import reverse
 
 from base.models import SchoolDays
@@ -507,10 +508,6 @@ class SupervisionCalculatorViewTests(TestCase):
     """Smoke-Tests für die SupervisionCalculatorView in pedagogy/admin.py."""
 
     def setUp(self):
-        from django.contrib.auth import get_user_model
-        from django.test import Client
-
-        User = get_user_model()
         self.user = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="password"
         )
@@ -620,10 +617,6 @@ class NewRequestListViewTests(TestCase):
     """Smoke-Tests für die NewRequestListView."""
 
     def setUp(self):
-        from django.contrib.auth import get_user_model
-        from django.test import Client
-
-        User = get_user_model()
         self.user = User.objects.create_superuser(
             username="union_admin", email="union@example.com", password="password"
         )
@@ -767,10 +760,6 @@ class SupervisionDocxViewTests(TestCase):
     """Smoke-Tests für SupervisionDocxView."""
 
     def setUp(self):
-        from django.contrib.auth import get_user_model
-        from django.test import Client
-
-        User = get_user_model()
         self.user = User.objects.create_superuser(
             username="docx_admin", email="docx@example.com", password="password"
         )
