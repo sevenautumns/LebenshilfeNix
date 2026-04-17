@@ -70,7 +70,7 @@ class SupervisionCalculatorView(BaseCalculatorView):
             ("Schüler:in", str(obj.student)),
             (
                 "Kostenträger",
-                str(obj.student.payer) if obj.student_id else "—",
+                str(obj.student.payer) if obj.student_id else "—",  # type: ignore[attr-defined]
             ),
             ("Schule", str(obj.school)),
             (
@@ -658,7 +658,7 @@ class TandemPairingForm(forms.ModelForm):
         fields = "__all__"
 
     def clean(self):
-        cleaned = super().clean()
+        cleaned = super().clean() or {}
         a = cleaned.get("supervision_a")
         b = cleaned.get("supervision_b")
         if a and b:
@@ -839,4 +839,4 @@ class SchoolReportAdmin(ReadOnlyAdminMixin, ListSummaryMixin, BaseModelAdmin):
 
     @display(description="Tandem", boolean=True)
     def display_is_tandem(self, obj: SchoolReport) -> bool:
-        return bool(obj.is_tandem)
+        return bool(obj.is_tandem)  # type: ignore[attr-defined]

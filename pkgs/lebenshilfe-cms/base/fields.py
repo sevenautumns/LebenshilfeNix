@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 
 class EuroDecimalField(models.DecimalField):
-    def formfield(self, **kwargs):
+    def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         kwargs["widget"] = EuroDecimalWidget
         return super().formfield(**kwargs)
 
@@ -19,7 +19,7 @@ class EuroDecimalField(models.DecimalField):
 class MonthField(models.DateField):
     """DateField that stores only year+month (always normalized to the 1st of the month)."""
 
-    def formfield(self, **kwargs):
+    def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         kwargs["widget"] = MonthWidget
         return super().formfield(**kwargs)
 
@@ -35,7 +35,7 @@ class MonthField(models.DateField):
 
 
 class HourMinuteDurationField(models.DurationField):
-    def formfield(self, **kwargs):
+    def formfield(self, form_class=None, choices_form_class=None, **kwargs):
         kwargs["widget"] = HourMinuteDurationWidget
         return super().formfield(**kwargs)
 

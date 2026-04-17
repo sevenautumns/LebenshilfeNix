@@ -356,7 +356,7 @@ class Absence(models.Model):
         ]
 
     def __str__(self):
-        return f"Abwesenheit: {self.employee.full_name} ({self.get_reason_display()})"
+        return f"Abwesenheit: {self.employee.full_name} ({self.get_reason_display()})"  # type: ignore[attr-defined]
 
 
 class TrainingRecord(models.Model):

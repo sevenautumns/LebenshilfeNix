@@ -3,6 +3,7 @@ import zipfile
 from io import BytesIO
 
 from docx import Document
+from docx.document import Document as DocumentType
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt
@@ -10,7 +11,7 @@ from docx.shared import Pt
 _TEMPLATE_PATH = pathlib.Path(__file__).parent / "data" / "briefbogen.dotx"
 
 
-def _open_dotx(path: pathlib.Path) -> Document:
+def _open_dotx(path: pathlib.Path) -> DocumentType:
     """Öffnet eine .dotx-Vorlage als python-docx Document.
 
     python-docx lehnt .dotx-Dateien wegen des abweichenden Content-Types ab.
@@ -78,7 +79,7 @@ class BriefbogenDocument:
     # ------------------------------------------------------------------ #
 
     @property
-    def doc(self) -> Document:
+    def doc(self) -> DocumentType:
         """Zugriff auf das rohe python-docx Document für Sonderfälle."""
         return self._doc
 

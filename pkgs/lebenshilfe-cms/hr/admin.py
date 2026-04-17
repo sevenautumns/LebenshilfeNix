@@ -55,7 +55,7 @@ class EmploymentCalculatorView(BaseCalculatorView):
         end = obj.end_date.strftime("%d.%m.%Y") if obj.end_date else "laufend"
         return [
             ("Mitarbeiter:in", str(obj.employee)),
-            ("Art des Vertrags", obj.get_contract_type_display() or "—"),
+            ("Art des Vertrags", obj.get_contract_type_display() or "—"),  # type: ignore[attr-defined]
             ("Zeitraum", f"{obj.start_date.strftime('%d.%m.%Y')} – {end}"),
             (
                 "Wochenstunden",

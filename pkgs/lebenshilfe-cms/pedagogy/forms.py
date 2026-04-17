@@ -75,7 +75,7 @@ class SupervisionCalculatorOverridesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(
+        self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(  # type: ignore[attr-defined]
             "-valid_from"
         )
 
@@ -114,7 +114,7 @@ class NewRequestFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["school"].queryset = School.objects.order_by("name")
+        self.fields["school"].queryset = School.objects.order_by("name")  # type: ignore[attr-defined]
         start, end = _school_year_bounds()
         self.fields["start_date_from"].initial = start
         self.fields["start_date_to"].initial = end

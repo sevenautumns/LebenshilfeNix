@@ -2,6 +2,11 @@ import calendar
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from finance.models import FeeAgreement, PoolAgreement
+    from pedagogy.models import Supervision
 
 
 def calculate_supervision_months(start_date: date, end_date: date) -> int:
@@ -27,12 +32,12 @@ def calculate_supervision_months(start_date: date, end_date: date) -> int:
 
 @dataclass
 class SupervisionCalculatorInput:
-    supervision: object  # pedagogy.models.Supervision
+    supervision: Supervision
     months_override: Decimal | None = None
     school_days_override: int | None = None
     vacation_days_override: int | None = None
     public_holidays_override: int | None = None
-    fee_agreement_override: object | None = None  # finance.models.FeeAgreement
+    fee_agreement_override: FeeAgreement | None = None
     use_fee_agreement: bool = False
 
 
@@ -42,8 +47,8 @@ class SupervisionCalculatorResult:
     months: Decimal | None
     school_days: int | None
     school_days_breakdown: dict[str, int]
-    fee_agreement: object | None  # finance.models.FeeAgreement
-    pool_agreement: object | None  # finance.models.PoolAgreement
+    fee_agreement: FeeAgreement | None
+    pool_agreement: PoolAgreement | None
     calculated_total_amount: Decimal | None
     calculated_monthly_installment: Decimal | None
     is_pool_rate: bool
@@ -99,7 +104,7 @@ def run_supervision_calculation(
 
     # Poolvereinbarung immer suchen
     pool = None
-    if sup.student_id and sup.school_id:
+    if sup.student_id and sup.school_id:  # type: ignore[attr-defined]
         payer = sup.student.payer
         pool = PoolAgreement.objects.filter(
             payer=payer,
@@ -135,6 +140,7 @@ def run_supervision_calculation(
     )
 
     if use_pool:
+        assert pool is not None
         total_amount = pool.flat_rate * months
         monthly_installment = pool.flat_rate
         return SupervisionCalculatorResult(

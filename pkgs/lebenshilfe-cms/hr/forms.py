@@ -33,4 +33,4 @@ class CalculatorOverridesForm(forms.Form):
 
         self.fields[
             "salary_agreement_override"
-        ].queryset = SalaryAgreement.objects.order_by("-valid_from")
+        ].queryset = SalaryAgreement.objects.order_by("-valid_from")  # type: ignore[attr-defined]

@@ -216,7 +216,7 @@ class Request(models.Model):
         ]
 
     def __str__(self):
-        return f"Antrag: {self.student.full_name} ({self.get_state_display()})"
+        return f"Antrag: {self.student.full_name} ({self.get_state_display()})"  # type: ignore[attr-defined]
 
 
 class TandemPairing(models.Model):
