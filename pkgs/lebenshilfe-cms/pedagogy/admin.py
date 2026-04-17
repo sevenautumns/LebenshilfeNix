@@ -267,79 +267,37 @@ class SupervisionCalculatorView(BaseCalculatorView):
 def build_supervision_docx(context: dict):
     from datetime import date
 
-    from docx import Document
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
-    from docx.shared import Pt, Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    from base.docx import BriefbogenDocument
 
     obj = context["supervision"]
     result = context["result"]
     bd = result.school_days_breakdown
 
-    doc = Document()
-
-    # Seitenränder: 2,5 cm links/rechts, 2 cm oben/unten
-    section = doc.sections[0]
-    section.top_margin = Cm(2)
-    section.bottom_margin = Cm(2)
-    section.left_margin = Cm(2.5)
-    section.right_margin = Cm(2.5)
-
-    # Standardschrift auf Arial 10pt setzen
-    style = doc.styles["Normal"]
-    style.font.name = "Arial"
-    style.font.size = Pt(10)
+    bdoc = BriefbogenDocument()
 
     # 1. Titel
-    heading = doc.add_heading("Stunden- und Budgetkalkulation", level=1)
-    heading.runs[0].font.name = "Arial"
+    bdoc.add_title("Stunden- und Budgetkalkulation")
+    bdoc.add_spacer()
 
-    doc.add_paragraph()
-
-    # 2. Metadaten-Tabelle (2 Spalten, keine sichtbaren Rahmen)
-    meta_table = doc.add_table(rows=3, cols=2)
-    meta_table.style = "Table Grid"
-
-    def _remove_table_borders(table):
-        tbl = table._tbl
-        tblPr = tbl.find(qn("w:tblPr"))
-        if tblPr is None:
-            tblPr = OxmlElement("w:tblPr")
-            tbl.insert(0, tblPr)
-        tblBorders = OxmlElement("w:tblBorders")
-        for side in ("top", "left", "bottom", "right", "insideH", "insideV"):
-            border = OxmlElement(f"w:{side}")
-            border.set(qn("w:val"), "none")
-            tblBorders.append(border)
-        tblPr.append(tblBorders)
-
-    _remove_table_borders(meta_table)
-
+    # 2. Metadaten-Tabelle (rahmenlos)
+    meta_table = bdoc.add_borderless_table(rows=3, cols=2)
     meta_data = [
-        (
-            "Schulbegleitung für:",
-            f"{obj.student.last_name}, {obj.student.first_name}",
-        ),
+        ("Schulbegleitung für:", f"{obj.student.last_name}, {obj.student.first_name}"),
         ("Schule:", obj.school.name if obj.school else "–"),
-        (
-            "Zeitraum:",
-            f"{obj.start_date.strftime('%d.%m.%Y')} – {obj.end_date.strftime('%d.%m.%Y')}",
-        ),
+        ("Zeitraum:", f"{obj.start_date:%d.%m.%Y} – {obj.end_date:%d.%m.%Y}"),
     ]
     for i, (label, value) in enumerate(meta_data):
         row = meta_table.rows[i]
-        label_cell = row.cells[0]
-        label_cell.text = label
-        label_cell.paragraphs[0].runs[0].bold = True
+        row.cells[0].text = label
+        row.cells[0].paragraphs[0].runs[0].bold = True
         row.cells[1].text = value
 
-    doc.add_paragraph()
+    bdoc.add_spacer()
 
     # 3. Schultage-Tabelle (Label | Zahl | "Tage")
-    days_table = doc.add_table(rows=4, cols=3)
-    days_table.style = "Table Grid"
-
+    days_table = bdoc.add_grid_table(rows=4, cols=3)
     days_data = [
         ("Schultage:", bd.get("school_days", 0)),
         ("Urlaubsanspruch:", bd.get("vacation_days", 0)),
@@ -348,69 +306,58 @@ def build_supervision_docx(context: dict):
     ]
     for i, (label, count) in enumerate(days_data):
         row = days_table.rows[i]
-        lbl_para = row.cells[0].paragraphs[0]
-        lbl_run = lbl_para.add_run(label)
-        lbl_run.bold = i == 3  # "Insgesamt" fett
+        run = row.cells[0].paragraphs[0].add_run(label)
+        run.bold = i == 3  # "Insgesamt" fett
         row.cells[1].text = str(count)
         row.cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
         row.cells[2].text = "Tage"
 
-    doc.add_paragraph()
+    bdoc.add_spacer()
 
     # 4. Betreuungsbedarf
-    p_need_label = doc.add_paragraph()
-    p_need_label.add_run("Betreuungsbedarf lt. Stundenplan").bold = True
-
-    doc.add_paragraph(
+    bdoc.add_paragraph("Betreuungsbedarf lt. Stundenplan", bold=True)
+    bdoc.add_paragraph(
         f"{context['weekly_hours_h']} Stunden {context['weekly_hours_min']} Minuten"
         f" = {context['weekly_minutes']} Minuten/Woche"
         f" = {context['daily_minutes']} Minuten/Tag"
     )
-
-    doc.add_paragraph()
+    bdoc.add_spacer()
 
     # 5. Berechnungsabschnitt
-    p_calc_label = doc.add_paragraph()
-    p_calc_label.add_run("Berechnung der Gesamtkosten und des Abschlages:").bold = True
-
     total_school_days = bd.get("total", 0)
-    doc.add_paragraph(
+    bdoc.add_paragraph("Berechnung der Gesamtkosten und des Abschlages:", bold=True)
+    bdoc.add_paragraph(
         f"{context['daily_minutes']} × {total_school_days} Schultage"
         f" = {context['total_minutes']} Minuten"
         f" = {context['total_hours']:.2f} Stunden"
     )
-
     if context["hourly_rate"] is not None:
-        doc.add_paragraph(
+        bdoc.add_paragraph(
             f"{context['hourly_rate']} € × {context['total_hours']:.2f} Stunden"
             f" = {result.calculated_total_amount:.2f} €"
         )
-
     if result.calculated_total_amount is not None:
-        p_total = doc.add_paragraph()
-        run_total = p_total.add_run(
-            f"{result.calculated_total_amount:.2f} € Gesamtbetrag"
+        bdoc.add_paragraph(
+            f"{result.calculated_total_amount:.2f} € Gesamtbetrag", bold=True
         )
-        run_total.bold = True
 
-    doc.add_paragraph()
+    bdoc.add_spacer()
 
     # 6. Abschlag (optional)
     if result.calculated_monthly_installment is not None:
-        p_inst_label = doc.add_paragraph()
-        p_inst_label.add_run("Abschlag pro Monat:").bold = True
-        doc.add_paragraph(
+        bdoc.add_paragraph("Abschlag pro Monat:", bold=True)
+        bdoc.add_paragraph(
             f"bezogen auf {result.months} Monate"
             f" = {result.calculated_monthly_installment:.2f} €"
         )
-        doc.add_paragraph()
+        bdoc.add_spacer()
 
     # 7. Signaturblock
-    doc.add_paragraph(f"Uslar, den {date.today().strftime('%d.%m.%Y')}")
-    doc.add_paragraph()
-    doc.add_paragraph("Schubert, Geschäftsführer")
+    bdoc.add_paragraph(f"Uslar, den {date.today():%d.%m.%Y}")
+    bdoc.add_spacer()
+    bdoc.add_paragraph("Schubert, Geschäftsführer")
 
-    return doc
+    return bdoc
 
 
 class SupervisionDocxView(BaseCalculatorView):
@@ -423,9 +370,6 @@ class SupervisionDocxView(BaseCalculatorView):
 
     def get(self, request, *args, **kwargs):
         from decimal import Decimal
-        from io import BytesIO
-
-        from django.http import HttpResponse
 
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
 
@@ -466,18 +410,9 @@ class SupervisionDocxView(BaseCalculatorView):
             "hourly_rate": hourly_rate,
         }
 
-        document = build_supervision_docx(context)
-        buffer = BytesIO()
-        document.save(buffer)
-        buffer.seek(0)
-
+        bdoc = build_supervision_docx(context)
         filename = f"kalkulation_{obj.student.last_name}_{obj.student.first_name}.docx"
-        response = HttpResponse(
-            buffer.read(),
-            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
-        return response
+        return bdoc.to_response(filename)
 
 
 class SupervisionBaseApplyView(BaseApplyView):
