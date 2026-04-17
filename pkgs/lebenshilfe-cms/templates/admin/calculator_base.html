@@ -122,11 +122,11 @@
       {% endfor %}
     {% endcomponent %}
 
-    {% if pdf_url %}
+    {% if docx_url %}
       {% component "unfold/components/separator.html" with class="-mx-6" %}{% endcomponent %}
       {% component "unfold/components/flex.html" with class="justify-end" %}
-        {% component "unfold/components/button.html" with href=pdf_url icon="picture_as_pdf" %}
-          PDF generieren
+        {% component "unfold/components/button.html" with href=docx_url icon="description" %}
+          Word generieren
         {% endcomponent %}
       {% endcomponent %}
     {% endif %}

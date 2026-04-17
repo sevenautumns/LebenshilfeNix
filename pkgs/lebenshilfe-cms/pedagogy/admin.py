@@ -258,13 +258,162 @@ class SupervisionCalculatorView(BaseCalculatorView):
                     "use_fee_agreement": True if i.use_fee_agreement else None,
                 }
             )
-            ctx["pdf_url"] = self.build_apply_url(
-                obj, "admin:pedagogy_supervision_calculator_pdf", override_params
+            ctx["docx_url"] = self.build_apply_url(
+                obj, "admin:pedagogy_supervision_calculator_docx", override_params
             )
         return ctx
 
 
-class SupervisionPdfView(BaseCalculatorView):
+def build_supervision_docx(context: dict):
+    from datetime import date
+
+    from docx import Document
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    from docx.shared import Pt, Cm
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    obj = context["supervision"]
+    result = context["result"]
+    bd = result.school_days_breakdown
+
+    doc = Document()
+
+    # Seitenränder: 2,5 cm links/rechts, 2 cm oben/unten
+    section = doc.sections[0]
+    section.top_margin = Cm(2)
+    section.bottom_margin = Cm(2)
+    section.left_margin = Cm(2.5)
+    section.right_margin = Cm(2.5)
+
+    # Standardschrift auf Arial 10pt setzen
+    style = doc.styles["Normal"]
+    style.font.name = "Arial"
+    style.font.size = Pt(10)
+
+    # 1. Titel
+    heading = doc.add_heading("Stunden- und Budgetkalkulation", level=1)
+    heading.runs[0].font.name = "Arial"
+
+    doc.add_paragraph()
+
+    # 2. Metadaten-Tabelle (2 Spalten, keine sichtbaren Rahmen)
+    meta_table = doc.add_table(rows=3, cols=2)
+    meta_table.style = "Table Grid"
+
+    def _remove_table_borders(table):
+        tbl = table._tbl
+        tblPr = tbl.find(qn("w:tblPr"))
+        if tblPr is None:
+            tblPr = OxmlElement("w:tblPr")
+            tbl.insert(0, tblPr)
+        tblBorders = OxmlElement("w:tblBorders")
+        for side in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            border = OxmlElement(f"w:{side}")
+            border.set(qn("w:val"), "none")
+            tblBorders.append(border)
+        tblPr.append(tblBorders)
+
+    _remove_table_borders(meta_table)
+
+    meta_data = [
+        (
+            "Schulbegleitung für:",
+            f"{obj.student.last_name}, {obj.student.first_name}",
+        ),
+        ("Schule:", obj.school.name if obj.school else "–"),
+        (
+            "Zeitraum:",
+            f"{obj.start_date.strftime('%d.%m.%Y')} – {obj.end_date.strftime('%d.%m.%Y')}",
+        ),
+    ]
+    for i, (label, value) in enumerate(meta_data):
+        row = meta_table.rows[i]
+        label_cell = row.cells[0]
+        label_cell.text = label
+        label_cell.paragraphs[0].runs[0].bold = True
+        row.cells[1].text = value
+
+    doc.add_paragraph()
+
+    # 3. Schultage-Tabelle (Label | Zahl | "Tage")
+    days_table = doc.add_table(rows=4, cols=3)
+    days_table.style = "Table Grid"
+
+    days_data = [
+        ("Schultage:", bd.get("school_days", 0)),
+        ("Urlaubsanspruch:", bd.get("vacation_days", 0)),
+        ("Gesetzl. Feiertage:", bd.get("public_holidays", 0)),
+        ("Insgesamt:", bd.get("total", 0)),
+    ]
+    for i, (label, count) in enumerate(days_data):
+        row = days_table.rows[i]
+        lbl_para = row.cells[0].paragraphs[0]
+        lbl_run = lbl_para.add_run(label)
+        lbl_run.bold = i == 3  # "Insgesamt" fett
+        row.cells[1].text = str(count)
+        row.cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        row.cells[2].text = "Tage"
+
+    doc.add_paragraph()
+
+    # 4. Betreuungsbedarf
+    p_need_label = doc.add_paragraph()
+    p_need_label.add_run("Betreuungsbedarf lt. Stundenplan").bold = True
+
+    doc.add_paragraph(
+        f"{context['weekly_hours_h']} Stunden {context['weekly_hours_min']} Minuten"
+        f" = {context['weekly_minutes']} Minuten/Woche"
+        f" = {context['daily_minutes']} Minuten/Tag"
+    )
+
+    doc.add_paragraph()
+
+    # 5. Berechnungsabschnitt
+    p_calc_label = doc.add_paragraph()
+    p_calc_label.add_run("Berechnung der Gesamtkosten und des Abschlages:").bold = True
+
+    total_school_days = bd.get("total", 0)
+    doc.add_paragraph(
+        f"{context['daily_minutes']} × {total_school_days} Schultage"
+        f" = {context['total_minutes']} Minuten"
+        f" = {context['total_hours']:.2f} Stunden"
+    )
+
+    if context["hourly_rate"] is not None:
+        doc.add_paragraph(
+            f"{context['hourly_rate']} € × {context['total_hours']:.2f} Stunden"
+            f" = {result.calculated_total_amount:.2f} €"
+        )
+
+    if result.calculated_total_amount is not None:
+        p_total = doc.add_paragraph()
+        run_total = p_total.add_run(
+            f"{result.calculated_total_amount:.2f} € Gesamtbetrag"
+        )
+        run_total.bold = True
+
+    doc.add_paragraph()
+
+    # 6. Abschlag (optional)
+    if result.calculated_monthly_installment is not None:
+        p_inst_label = doc.add_paragraph()
+        p_inst_label.add_run("Abschlag pro Monat:").bold = True
+        doc.add_paragraph(
+            f"bezogen auf {result.months} Monate"
+            f" = {result.calculated_monthly_installment:.2f} €"
+        )
+        doc.add_paragraph()
+
+    # 7. Signaturblock
+    doc.add_paragraph(f"Uslar, den {date.today().strftime('%d.%m.%Y')}")
+    doc.add_paragraph()
+    doc.add_paragraph("Schubert, Geschäftsführer")
+
+    return doc
+
+
+class SupervisionDocxView(BaseCalculatorView):
     title = "Betreuungsrechner"
 
     def get_form_class(self):
@@ -274,10 +423,9 @@ class SupervisionPdfView(BaseCalculatorView):
 
     def get(self, request, *args, **kwargs):
         from decimal import Decimal
+        from io import BytesIO
 
         from django.http import HttpResponse
-        from django.template.loader import render_to_string
-        from weasyprint import HTML
 
         from .calculators import SupervisionCalculatorInput, run_supervision_calculation
 
@@ -287,7 +435,7 @@ class SupervisionPdfView(BaseCalculatorView):
             SupervisionCalculatorInput(supervision=obj, **overrides)
         )
 
-        # Vorberechnete Minutenwerte für das Template
+        # Vorberechnete Minutenwerte
         weekly_seconds = obj.weekly_hours.total_seconds() if obj.weekly_hours else 0
         weekly_hours_h = int(weekly_seconds // 3600)
         weekly_hours_min = int((weekly_seconds % 3600) // 60)
@@ -317,14 +465,17 @@ class SupervisionPdfView(BaseCalculatorView):
             "total_hours": total_hours,
             "hourly_rate": hourly_rate,
         }
-        html_string = render_to_string(
-            "admin/supervision_pdf.html", context, request=request
+
+        document = build_supervision_docx(context)
+        buffer = BytesIO()
+        document.save(buffer)
+        buffer.seek(0)
+
+        filename = f"kalkulation_{obj.student.last_name}_{obj.student.first_name}.docx"
+        response = HttpResponse(
+            buffer.read(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
-        pdf = HTML(
-            string=html_string, base_url=request.build_absolute_uri("/")
-        ).write_pdf()
-        filename = f"kalkulation_{obj.student.last_name}_{obj.student.first_name}.pdf"
-        response = HttpResponse(pdf, content_type="application/pdf")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
@@ -525,11 +676,11 @@ class SupervisionAdmin(BaseModelAdmin):
                 name="pedagogy_supervision_calculator_apply_installment",
             ),
             path(
-                "<int:pk>/calculator/pdf/",
+                "<int:pk>/calculator/docx/",
                 self.admin_site.admin_view(
-                    SupervisionPdfView.as_view(model_admin=self)
+                    SupervisionDocxView.as_view(model_admin=self)
                 ),
-                name="pedagogy_supervision_calculator_pdf",
+                name="pedagogy_supervision_calculator_docx",
             ),
         ]
         return custom + super().get_urls()
