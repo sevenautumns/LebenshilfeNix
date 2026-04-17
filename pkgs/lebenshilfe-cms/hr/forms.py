@@ -3,11 +3,13 @@ from decimal import Decimal
 from django import forms
 from unfold.widgets import INPUT_CLASSES, UnfoldAdminSelect2Widget
 
+from finance.models import SalaryAgreement
+
 
 class CalculatorOverridesForm(forms.Form):
     salary_agreement_override = forms.ModelChoiceField(
         label="Tarifvertrag (Überschreibung)",
-        queryset=None,  # gesetzt in __init__
+        queryset=SalaryAgreement.objects.order_by("-valid_from"),
         required=False,
         empty_label="— automatisch nach Startdatum —",
         widget=UnfoldAdminSelect2Widget(),
@@ -26,11 +28,3 @@ class CalculatorOverridesForm(forms.Form):
             }
         ),
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from finance.models import SalaryAgreement
-
-        self.fields[
-            "salary_agreement_override"
-        ].queryset = SalaryAgreement.objects.order_by("-valid_from")  # type: ignore[attr-defined]

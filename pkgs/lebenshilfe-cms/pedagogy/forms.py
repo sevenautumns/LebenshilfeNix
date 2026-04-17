@@ -16,7 +16,7 @@ from pedagogy.models import Request, School
 class SupervisionCalculatorOverridesForm(forms.Form):
     fee_agreement_override = forms.ModelChoiceField(
         label="Entgeltvereinbarung (Überschreibung)",
-        queryset=None,  # gesetzt in __init__
+        queryset=FeeAgreement.objects.order_by("-valid_from"),
         required=False,
         empty_label="— automatisch nach Kostenträger + Startdatum —",
         widget=UnfoldAdminSelect2Widget(),
@@ -73,12 +73,6 @@ class SupervisionCalculatorOverridesForm(forms.Form):
         required=False,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["fee_agreement_override"].queryset = FeeAgreement.objects.order_by(  # type: ignore[attr-defined]
-            "-valid_from"
-        )
-
 
 def _school_year_bounds() -> tuple[date, date]:
     today = date.today()
@@ -89,7 +83,7 @@ def _school_year_bounds() -> tuple[date, date]:
 
 class NewRequestFilterForm(forms.Form):
     school = forms.ModelChoiceField(
-        queryset=None,  # gesetzt in __init__
+        queryset=School.objects.order_by("name"),
         required=False,
         label="Schule",
         empty_label="— Alle Schulen —",
@@ -114,7 +108,6 @@ class NewRequestFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["school"].queryset = School.objects.order_by("name")  # type: ignore[attr-defined]
         start, end = _school_year_bounds()
         self.fields["start_date_from"].initial = start
         self.fields["start_date_to"].initial = end
